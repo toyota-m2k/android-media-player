@@ -61,7 +61,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-
+// ./gradlew publishToMavenLocal
 publishing {
     publications {
         // Creates a Maven publication called "release".
