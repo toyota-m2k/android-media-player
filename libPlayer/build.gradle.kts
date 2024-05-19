@@ -12,7 +12,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 28
+        minSdk = 26
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -65,7 +65,7 @@ dependencies {
 publishing {
     publications {
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        register<MavenPublication>("release") {
             groupId = "com.github.toyota-m2k"
             artifactId = "android-media-player"
             version = "1.0"
