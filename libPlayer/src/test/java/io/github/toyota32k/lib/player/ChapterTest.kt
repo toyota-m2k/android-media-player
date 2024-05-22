@@ -1,6 +1,7 @@
 package io.github.toyota32k.lib.player
 
 import io.github.toyota32k.lib.player.model.Range
+import io.github.toyota32k.lib.player.model.addChapter
 import io.github.toyota32k.lib.player.model.chapter.Chapter
 import io.github.toyota32k.lib.player.model.chapter.ChapterList
 import io.github.toyota32k.lib.player.model.chapter.MutableChapterList
@@ -254,5 +255,67 @@ class ChapterTest {
         assertEquals(Range(0,4000), ranges[0])
         assertEquals(Range(5000,0), ranges[1])
 
+    }
+
+    @Test
+    fun adjustWithEnabledRanges() {
+        ChapterList.MIN_CHAPTER_INTERVAL = 100L
+        val chapterList = MutableChapterList()
+
+        chapterList.addChapter(Chapter(0, "d0", true))
+        chapterList.addChapter(Chapter(10000L, "e0", false))
+        chapterList.addChapter(Chapter(30000L, "d1", true))
+        chapterList.addChapter(Chapter(60000L, "e1", false))
+        chapterList.addChapter(Chapter(100000L, "d2", true))
+
+        var enabledRanges = chapterList.enabledRanges()
+        assertEquals(2, enabledRanges.size)
+        var adjustedChapter = chapterList.adjustWithEnabledRanges(enabledRanges)
+        assertEquals(2, adjustedChapter.size)
+
+        assertEquals(0, adjustedChapter[0].position)
+        assertEquals("e0", adjustedChapter[0].label)
+        assertFalse(adjustedChapter[0].skip)
+
+        assertEquals(20000, adjustedChapter[1].position)
+        assertEquals("e1", adjustedChapter[1].label)
+        assertFalse(adjustedChapter[0].skip)
+
+        chapterList.addChapter(Chapter(70000L, "ex", false))
+        enabledRanges = chapterList.enabledRanges()
+        assertEquals(2, enabledRanges.size)
+        adjustedChapter = chapterList.adjustWithEnabledRanges(enabledRanges)
+        assertEquals(3, adjustedChapter.size)
+
+        assertEquals(0, adjustedChapter[0].position)
+        assertEquals("e0", adjustedChapter[0].label)
+        assertFalse(adjustedChapter[0].skip)
+
+        assertEquals(20000, adjustedChapter[1].position)
+        assertEquals("e1", adjustedChapter[1].label)
+        assertFalse(adjustedChapter[0].skip)
+
+        assertEquals(30000, adjustedChapter[2].position)
+        assertEquals("ex", adjustedChapter[2].label)
+        assertFalse(adjustedChapter[2].skip)
+
+        val adjustedEnabledRange = enabledRanges.map {
+            val end = if(it.end>0) it.end - 500L else 0L
+            Range(it.start+500L, end)
+        }
+        adjustedChapter = chapterList.adjustWithEnabledRanges(adjustedEnabledRange)
+        assertEquals(3, adjustedChapter.size)
+
+        assertEquals(0, adjustedChapter[0].position)
+        assertEquals("e0", adjustedChapter[0].label)
+        assertFalse(adjustedChapter[0].skip)
+
+        assertEquals(19000, adjustedChapter[1].position)
+        assertEquals("e1", adjustedChapter[1].label)
+        assertFalse(adjustedChapter[0].skip)
+
+        assertEquals(28500, adjustedChapter[2].position)
+        assertEquals("ex", adjustedChapter[2].label)
+        assertFalse(adjustedChapter[2].skip)
     }
 }

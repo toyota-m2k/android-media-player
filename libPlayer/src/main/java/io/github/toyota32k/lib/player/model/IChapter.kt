@@ -43,7 +43,10 @@ interface IChapterList {
 
     val isNotEmpty:Boolean get() = !isEmpty
 
+    @Deprecated("buggy!")
     fun defrag(trimming: Range=Range.empty):List<IChapter>
+
+    fun adjustWithEnabledRanges(enabledRanges:List<Range>):List<IChapter>
 
     object Empty : IChapterList {
         override val chapters: List<IChapter>
@@ -78,9 +81,15 @@ interface IChapterList {
             return -1
         }
 
+        @Deprecated("buggy!", ReplaceWith("adjustWithEnabledRanges()"))
         override fun defrag(trimming: Range): List<IChapter> {
             return emptyList()
         }
+
+        override fun adjustWithEnabledRanges(enabledRanges:List<Range>):List<IChapter> {
+            return emptyList()
+        }
+
     }
 }
 

@@ -10,6 +10,7 @@ import io.github.toyota32k.utils.onTrue
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.math.abs
 
 open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IChapterList {
     protected val sortedList = UtSortedList(mutableList, actionOnDuplicate = UtSorter.ActionOnDuplicate.REJECT, comparator = ::chapterComparator)
@@ -258,6 +259,7 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
     /**
      * 動画ファイルのトリミングによって無効範囲がカットされた状態に合わせてチャプターリストを再構成する。
      */
+    @Deprecated("buggy!")
     override fun defrag(trimming: Range): List<IChapter> {
         val ranges = enabledRanges()
         val list = mutableListOf<IChapter>()
@@ -272,6 +274,57 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
             start += span
         }
         return list
+    }
+
+
+
+    override fun adjustWithEnabledRanges(enabledRanges: List<Range>): List<IChapter> {
+        // result: addChapterのロジックを利用するため、MutableChapterListを使う
+        val list = MutableChapterList()
+
+        // まず、enabledRangesのソースとなったChapterを復元する。
+        // ただし、enabledRangesは、converterによって補正されている可能性があるので、ある程度の threshold (1.5secとした）内で最も近いものを探す。
+        fun closestChapterAt(pos:Long):IChapter? {
+            var delta = Long.MAX_VALUE
+            var candidate:IChapter? = null
+            for(c in chapters) {
+                if(!c.skip) {
+                    val d = abs(c.position-pos)
+                    if(d<delta) {
+                        delta = d
+                        candidate = c
+                    }
+                }
+            }
+            return if(delta<1500) candidate else null
+        }
+        val consumedChapters = mutableSetOf<IChapter>()
+        var start = 0L
+        for(r in enabledRanges) {
+            val cs = closestChapterAt(r.start)
+            val ce = closestChapterAt(r.end)
+            list.addChapter(start, cs?.label?:"", false)
+            if(cs!=null) consumedChapters.add(cs)
+            if(ce!=null) consumedChapters.add(ce)
+            if(r.end<=0L) break
+            start += (r.end - r.start)
+        }
+
+        // enabledRangesと関係のない真のChapterを復元する
+        for(c in chapters) {
+            if(!c.skip && !consumedChapters.contains(c)) {
+                start = 0L
+                for(r in enabledRanges) {
+                    if(r.contains(c.position)) {
+                        list.addChapter(start+c.position-r.start, c.label, false)
+                        break
+                    }
+                    if(r.end<=0L) break
+                    start += (r.end - r.start)
+                }
+            }
+        }
+        return list.chapters
     }
 }
 
