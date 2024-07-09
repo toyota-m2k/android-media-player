@@ -69,9 +69,19 @@ publishing {
         register<MavenPublication>("release") {
             groupId = "com.github.toyota-m2k"
             artifactId = "android-media-player"
-            version = "1.0"
+            version = project.findProperty("githubReleaseTag") as String? ?: "LOCAL"
             afterEvaluate {
                 from(components["release"])
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/toyota-m2k/android-media-player")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.token") as String? ?: System.getenv("TOKEN")
             }
         }
     }
