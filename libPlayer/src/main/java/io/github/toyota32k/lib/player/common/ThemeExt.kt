@@ -1,4 +1,6 @@
-package io.github.toyota32k.boodroid.common
+@file:Suppress("unused")
+
+package io.github.toyota32k.lib.player.common
 
 import android.content.res.Resources
 import android.content.res.TypedArray

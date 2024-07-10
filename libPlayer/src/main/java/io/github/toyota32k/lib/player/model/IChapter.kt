@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package io.github.toyota32k.lib.player.model
 
 import io.github.toyota32k.utils.Listeners
@@ -131,7 +133,7 @@ interface IMutableChapterList : IChapterList {
 
     /**
      * チャプターを削除する
-     * @param position 削除するチャプターのposition
+     * @param index 削除するチャプターのindex
      * @return true: 変更した / false: 変更しなかった（チャプターが存在しない　or 削除禁止の先頭チャプター）
      */
     fun removeChapterAt(index:Int):Boolean

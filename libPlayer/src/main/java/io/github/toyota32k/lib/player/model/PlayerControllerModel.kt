@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.net.Uri
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import io.github.toyota32k.binder.command.LiteCommand
 import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.lib.player.TpLib
@@ -21,6 +23,7 @@ import java.io.Closeable
  *   + FullControlPanelModel      フル機能プレイヤー（AmvPlayerUnitView）用
  *   + TrimmingControlPanelModel  トリミング画面(AMvTrimmingPlayerView)用
  */
+@Suppress("unused")
 open class PlayerControllerModel(
     val playerModel: IPlayerModel,
     val supportFullscreen:Boolean,
@@ -130,6 +133,7 @@ open class PlayerControllerModel(
 
 //        private val scope:CoroutineScope by lazy { CoroutineScope(Dispatchers.Main+ SupervisorJob()) }
 
+        @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
             val playerModel = when {
                 mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mHideChapterViewIfEmpty)

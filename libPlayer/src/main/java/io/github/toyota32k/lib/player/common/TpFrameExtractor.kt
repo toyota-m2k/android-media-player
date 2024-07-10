@@ -60,6 +60,7 @@ class TpFrameExtractor(context: Context, uri: Uri) : AutoCloseable {
         return Size((width * r).roundToInt(), (height * r).roundToInt())
     }
 
+    @Suppress("unused")
     val hd720Fitter: UtFitter by lazy {
         UtFitter(FitMode.Fit, calcHD720Size(size.width, size.height))
     }

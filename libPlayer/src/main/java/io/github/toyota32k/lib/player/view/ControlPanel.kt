@@ -20,8 +20,8 @@ import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.sliderBinding
 import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.binder.visibilityBinding
-import io.github.toyota32k.boodroid.common.getColorAsDrawable
-import io.github.toyota32k.boodroid.common.getColorAwareOfTheme
+import io.github.toyota32k.lib.player.common.getColorAsDrawable
+import io.github.toyota32k.lib.player.common.getColorAwareOfTheme
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.model.*

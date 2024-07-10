@@ -3,6 +3,7 @@ package io.github.toyota32k.lib.player.model
 import kotlin.math.max
 import kotlin.math.min
 
+@Suppress("unused")
 data class Range (val start:Long, val end:Long=0) {
     /**
      * pos が start-end 内に収まるようクリップする
@@ -38,7 +39,7 @@ data class Range (val start:Long, val end:Long=0) {
             return if(range.end>0) range else Range(range.start, duration)
         }
 
-        fun terminate(ranges:Sequence<Range>, duration:Long) = sequence<Range> {
+        fun terminate(ranges:Sequence<Range>, duration:Long) = sequence {
             for(r in ranges) {
                 yield(terminate(r, duration))
             }

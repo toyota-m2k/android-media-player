@@ -1,13 +1,16 @@
 package io.github.toyota32k.lib.player.model.chapter
 
-import androidx.annotation.MainThread
-import io.github.toyota32k.lib.player.model.*
+import io.github.toyota32k.lib.player.model.IChapter
+import io.github.toyota32k.lib.player.model.IChapterList
+import io.github.toyota32k.lib.player.model.IMutableChapterList
+import io.github.toyota32k.lib.player.model.NeighborChapter
+import io.github.toyota32k.lib.player.model.Range
+import io.github.toyota32k.lib.player.model.chapterOn
 import io.github.toyota32k.shared.UtSortedList
 import io.github.toyota32k.shared.UtSorter
 import io.github.toyota32k.utils.Listeners
 import io.github.toyota32k.utils.UtLog
 import io.github.toyota32k.utils.onTrue
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.math.abs
@@ -98,7 +101,7 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
     override fun getNeighborChapters(pivot:Long): NeighborChapter {
         val count:Int = sortedList.size
         fun clipIndex(index:Int):Int {
-            return if(index in 0 until count) index else -1;
+            return if(index in 0 until count) index else -1
         }
         for (i in 0 until count) {
             if(pivot == sortedList[i].position) {
@@ -127,7 +130,7 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
         return null
     }
 
-    fun enabledRangesNoTrimming() = sequence<Range> {
+    fun enabledRangesNoTrimming() = sequence {
         var skipping = false
         var checking = 0L
         for(r in sortedList) {
@@ -151,7 +154,7 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
         }
     }
 
-    private fun enabledRangesWithTrimming(trimming: Range) = sequence<Range> {
+    private fun enabledRangesWithTrimming(trimming: Range) = sequence {
         for(r in enabledRangesNoTrimming()) {
             if(r.end>0 && r.end < trimming.start) {
                 // 有効領域 r が、trimming.start によって無効化されるのでスキップ
@@ -207,7 +210,7 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
         }
     }
 
-    private fun disabledRangesSub(trimming: Range)= sequence<Range> {
+    private fun disabledRangesSub(trimming: Range)= sequence {
         var checking = 0L
         for(r in enabledRangesSub(trimming)) {
             if(checking<r.start) {
@@ -353,10 +356,10 @@ class MutableChapterList : ChapterList(), IMutableChapterList {
         if(neighbor.hit>0) {
             return false
         }
-        if(neighbor.prevChapter()?.let{ position - it.position < ChapterList.MIN_CHAPTER_INTERVAL } == true) {
+        if(neighbor.prevChapter()?.let{ position - it.position < MIN_CHAPTER_INTERVAL } == true) {
             return false
         }
-        if(neighbor.nextChapter()?.let { it.position - position < ChapterList.MIN_CHAPTER_INTERVAL } == true ) {
+        if(neighbor.nextChapter()?.let { it.position - position < MIN_CHAPTER_INTERVAL } == true ) {
             return false
         }
         return sortedList.add(Chapter(position,label,skip?:neighbor.prevChapter()?.skip?:false)).onTrue(::invalidate)
@@ -381,18 +384,9 @@ class MutableChapterList : ChapterList(), IMutableChapterList {
 
     /**
      * チャプターを削除する
-     * @param position 削除するチャプターのposition
+     * @param index 削除するチャプターのindex
      * @return true: 変更した / false: 変更しなかった（チャプターが存在しない　or 削除禁止の先頭チャプター）
      */
-//    override fun removeChapter(position: Long): Boolean {
-//        if(position == 0L) return false  // 先頭のChapterは必ず存在し、削除は禁止
-//        val i = indexOf(position)
-//        if(i<0) return false    // 存在しない
-//        sortedList.removeAt(i)
-//        invalidate()
-//        return true
-//    }
-
     override fun removeChapterAt(index: Int): Boolean {
         if(index<=0||sortedList.size<=index) return false
         sortedList.removeAt(index)

@@ -221,7 +221,7 @@
             android:layout_weight="1"
             android:layout_marginHorizontal="5dp"
             >
-            <io.github.toyota32k.video.view.ChapterView
+            <io.github.toyota32k.lib.player.view.ChapterView
                 android:id="@+id/chapter_view"
                 android:layout_width="match_parent"
                 android:layout_height="20dp"

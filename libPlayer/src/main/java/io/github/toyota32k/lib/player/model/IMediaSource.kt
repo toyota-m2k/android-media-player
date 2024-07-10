@@ -2,6 +2,7 @@ package io.github.toyota32k.lib.player.model
 
 import java.util.concurrent.atomic.AtomicLong
 
+@Suppress("unused")
 interface IMediaSource {
     val id:String
     val name:String

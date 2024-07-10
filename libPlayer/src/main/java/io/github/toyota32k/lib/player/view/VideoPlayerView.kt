@@ -1,4 +1,4 @@
-package io.github.toyota32k.video.view
+package io.github.toyota32k.lib.player.view
 
 import android.content.Context
 import android.util.AttributeSet
@@ -12,6 +12,7 @@ import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
 import io.github.toyota32k.utils.UtLog
 
+@Suppress("unused")
 class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
     companion object {

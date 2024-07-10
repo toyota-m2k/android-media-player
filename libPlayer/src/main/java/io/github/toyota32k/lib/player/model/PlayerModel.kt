@@ -5,7 +5,7 @@ import io.github.toyota32k.lib.player.model.option.ChapterHandlerImpl
 import io.github.toyota32k.lib.player.model.option.PlaylistHandlerImpl
 import kotlinx.coroutines.CoroutineScope
 
-open class PlaylistPlayerModel constructor(private val playerModel: IPlayerModel, private val playlistHandler: IPlaylistHandler)
+open class PlaylistPlayerModel (private val playerModel: IPlayerModel, private val playlistHandler: IPlaylistHandler)
     : IPlayerModel by playerModel, IPlaylistHandler by playlistHandler {
 
     override fun onPlaybackCompleted() {
@@ -24,7 +24,7 @@ fun PlaylistPlayerModel(context:Context, coroutineScope: CoroutineScope, playlis
     return PlaylistPlayerModel(playerModel, playlistHandler)
 }
 
-class ChapterPlayerModel constructor(private val playerModel: IPlayerModel, private val chapterHandler: ChapterHandlerImpl)
+class ChapterPlayerModel (private val playerModel: IPlayerModel, private val chapterHandler: ChapterHandlerImpl)
     : IPlayerModel by playerModel, IChapterHandler by chapterHandler
 
 fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChapterViewIfEmpty: Boolean):ChapterPlayerModel {
@@ -33,7 +33,7 @@ fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChap
     return ChapterPlayerModel(playerModel, chapterHandler)
 }
 
-class PlaylistChapterPlayerModel constructor(playerModel: IPlayerModel, playlistHandler: IPlaylistHandler, private val chapterHandler: ChapterHandlerImpl)
+class PlaylistChapterPlayerModel (playerModel: IPlayerModel, playlistHandler: IPlaylistHandler, private val chapterHandler: ChapterHandlerImpl)
     : PlaylistPlayerModel(playerModel, playlistHandler), IChapterHandler by chapterHandler
 fun PlaylistChapterPlayerModel(context: Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, autoPlay: Boolean, continuousPlay: Boolean, hideChapterViewIfEmpty:Boolean):PlaylistChapterPlayerModel {
     val playerModel = BasicPlayerModel(context, coroutineScope)

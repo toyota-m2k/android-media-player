@@ -24,6 +24,7 @@ interface IChapterEditor : IMutableChapterList {
 /**
  * IMutableChapterList にUndo/Redoの機能を授けるｗ
  */
+@Suppress("unused")
 class ChapterEditor(private val target:IMutableChapterList) : IChapterEditor, IChapterList by target {
     interface IOperation {
         fun redo()
@@ -31,7 +32,7 @@ class ChapterEditor(private val target:IMutableChapterList) : IChapterEditor, IC
     }
 
     private val history = mutableListOf<IOperation>()
-    private val current = MutableStateFlow<Int>(0)     // 次回挿入位置を指している（undoされていなければ buffer.size と等しい）
+    private val current = MutableStateFlow(0)     // 次回挿入位置を指している（undoされていなければ buffer.size と等しい）
     private var dirtyMark = 0   // 編集開始時はゼロ、編集後保存すると、保存時の"current" の値となる。current.value == dirtyMark なら編集ナシと判断する。
 
     inner class AddOperation(private val position:Long, private val label:String, private val skip:Boolean?):IOperation {

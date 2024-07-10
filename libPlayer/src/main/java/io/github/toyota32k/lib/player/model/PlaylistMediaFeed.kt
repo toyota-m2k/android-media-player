@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.map
 import kotlin.math.max
 import kotlin.math.min
 
+@Suppress("unused")
 class PlaylistMediaFeed : IMediaFeed {
     override val hasNext = MutableStateFlow(false)
     override val hasPrevious = MutableStateFlow(false)

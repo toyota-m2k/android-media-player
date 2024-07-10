@@ -12,6 +12,7 @@ enum class Rotation(val degree:Int) {
         fun normalize(degree:Int):Int {
             return degree%360
         }
+        @Suppress("unused")
         fun transposeSize(degree:Int, size:Size): Size {
             return if(abs(degree%180) == 90) {
                 Size(size.height, size.width)

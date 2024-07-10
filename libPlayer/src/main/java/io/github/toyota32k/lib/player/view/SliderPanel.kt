@@ -10,8 +10,8 @@ import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.sliderBinding
 import io.github.toyota32k.binder.textBinding
-import io.github.toyota32k.boodroid.common.getColorAsDrawable
-import io.github.toyota32k.boodroid.common.getColorAwareOfTheme
+import io.github.toyota32k.lib.player.common.getColorAsDrawable
+import io.github.toyota32k.lib.player.common.getColorAwareOfTheme
 import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.R
@@ -45,6 +45,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
         }
     }
 
+    @Suppress("unused")
     fun bindViewModel(model: PlayerControllerModel, binder: Binder) {
         this.model = model
         controls.slider.addOnChangeListener(this)

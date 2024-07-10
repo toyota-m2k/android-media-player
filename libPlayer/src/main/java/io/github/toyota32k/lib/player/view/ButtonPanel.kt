@@ -1,32 +1,5 @@
 package io.github.toyota32k.lib.player.view
 
-import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Color
-import android.util.AttributeSet
-import android.view.LayoutInflater
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import androidx.core.view.children
-import io.github.toyota32k.binder.Binder
-import io.github.toyota32k.binder.BoolConvert
-import io.github.toyota32k.binder.VisibilityBinding
-import io.github.toyota32k.binder.command.bindCommand
-import io.github.toyota32k.binder.enableBinding
-import io.github.toyota32k.binder.multiEnableBinding
-import io.github.toyota32k.binder.multiVisibilityBinding
-import io.github.toyota32k.binder.visibilityBinding
-import io.github.toyota32k.boodroid.common.getColorAsDrawable
-import io.github.toyota32k.boodroid.common.getColorAwareOfTheme
-import io.github.toyota32k.lib.player.model.IChapterHandler
-import io.github.toyota32k.lib.player.model.IPlaylistHandler
-import io.github.toyota32k.lib.player.model.PlayerControllerModel
-import io.github.toyota32k.lib.player.model.Rotation
-import io.github.toyota32k.shared.gesture.UtClickRepeater
-import io.github.toyota32k.utils.ConstantLiveData
-import io.github.toyota32k.utils.UtLog
-import kotlinx.coroutines.flow.map
-
 //class ButtonPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
 //    : FrameLayout(context, attrs, defStyleAttr) {
 //    companion object {

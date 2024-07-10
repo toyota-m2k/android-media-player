@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.net.Uri
 import io.github.toyota32k.lib.player.TpLib
-import java.io.File
 import java.io.FileDescriptor
 
+@Suppress("unused")
 class TpAndroidUri(val uri:Uri):AutoCloseable {
     private var afd: AssetFileDescriptor? = null
 

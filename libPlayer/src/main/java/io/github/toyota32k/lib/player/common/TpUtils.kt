@@ -4,6 +4,8 @@
  * @author M.TOYOTA 2018.07.11 Created
  * Copyright © 2018 M.TOYOTA  All Rights Reserved.
  */
+@file:Suppress("unused")
+
 package io.github.toyota32k.lib.player.common
 
 import android.content.Context
@@ -126,13 +128,13 @@ class TpTimeSpan(private val ms : Long) {
         get() = (ms / 1000 / 60 / 60)
 
     fun formatH() : String {
-        return String.format("%02d:%02d.%02d", hours, minutes, seconds)
+        return String.format(Locale.US, "%02d:%02d.%02d", hours, minutes, seconds)
     }
     fun formatM() : String {
-        return String.format("%02d'%02d\"", minutes, seconds)
+        return String.format(Locale.US, "%02d'%02d\"", minutes, seconds)
     }
     fun formatS() : String {
-        return String.format("%02d\".%02d", seconds, milliseconds/10)
+        return String.format(Locale.US, "%02d\".%02d", seconds, milliseconds/10)
     }
 }
 
@@ -182,6 +184,6 @@ fun formatSize(bytes:Long):String {
     } else if(bytes>1000) {
         return "${bytes/1000f} KB"
     } else {
-        return "${bytes} B"
+        return "$bytes B"
     }
 }

@@ -12,7 +12,7 @@ import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
 import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.binder.visibilityBinding
-import io.github.toyota32k.boodroid.common.getColorAsDrawable
+import io.github.toyota32k.lib.player.common.getColorAsDrawable
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.FitMode
 import io.github.toyota32k.lib.player.common.UtFitter
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlin.math.abs
 
+@Suppress("unused")
 class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
     companion object {

@@ -1,4 +1,4 @@
-package io.github.toyota32k.video.view
+package io.github.toyota32k.lib.player.view
 
 import android.content.Context
 import android.graphics.Canvas
@@ -12,7 +12,7 @@ import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import io.github.toyota32k.binder.Binder
-import io.github.toyota32k.boodroid.common.getAttrColor
+import io.github.toyota32k.lib.player.common.getAttrColor
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.model.*
 import io.github.toyota32k.lib.player.R

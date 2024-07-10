@@ -3,10 +3,12 @@ package io.github.toyota32k.lib.player.model
 import android.app.Application
 import android.content.Context
 import android.util.Size
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
@@ -20,7 +22,6 @@ import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.SuspendableEvent
 import io.github.toyota32k.utils.UtLog
 import io.github.toyota32k.utils.UtManualIncarnateResetableValue
-import io.github.toyota32k.utils.UtResetableValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -37,7 +38,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 
-@androidx.media3.common.util.UnstableApi
+@OptIn(UnstableApi::class)
 open class BasicPlayerModel(
     context: Context,
     coroutineScope: CoroutineScope
@@ -140,6 +141,7 @@ open class BasicPlayerModel(
     /**
      * （外部から）エラーメッセージを設定する
      */
+    @Suppress("unused")
     fun setErrorMessage(msg:String?) {
         errorMessage.mutable.value = msg
     }
@@ -487,6 +489,7 @@ open class BasicPlayerModel(
     /**
      * バックグラウンド再生（PlayerNotificationManager）対応用
      */
+    @Suppress("unused")
     fun associateNotificationManager(manager: PlayerNotificationManager) {
         withPlayer { player ->
             manager.setPlayer(player)
@@ -508,6 +511,7 @@ open class BasicPlayerModel(
 
     // region Handling Media Sources
 
+    @Suppress("unused")
     fun MediaItem.getAmvSource(): IMediaSource {
         return this.localConfiguration!!.tag as IMediaSource
     }
