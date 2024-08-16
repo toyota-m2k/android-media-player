@@ -1,7 +1,7 @@
 [versions]
 #plugins
 kotlin = "2.0.0"
-agp = "8.5.0"
+agp = "8.5.1"
 
 #libraries
 androidBinding = "1.1.4"
@@ -14,9 +14,9 @@ espressoCore = "3.6.1"
 appcompat = "1.7.0"
 kotlinxSerializationJson = "1.7.1"
 material = "1.12.0"
-activity = "1.9.0"
+activity = "1.9.1"
 constraintlayout = "2.1.4"
-media3ExoplayerVersion = "1.3.1"
+media3ExoplayerVersion = "1.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
