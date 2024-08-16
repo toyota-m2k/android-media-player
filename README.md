@@ -8,8 +8,8 @@ ExoPlayer を利用したビデオ再生用コンポーネントです。
 4. プレイリストによる連続再生
 5. チャプターの設定、および、無効チャプターの読み飛ばし
 
-[android-media-processor ](https://github.com/toyota-m2k/android-media-processor)
-を使うことで、回転した動画の保存や、無効チャプターのトリミングなどの編集も可能になります。
+[android-media-processor](https://github.com/toyota-m2k/android-media-processor)
+を組み合わせて使うことで、回転した動画の保存や、無効チャプターのトリミングなどの編集も可能になります。
 
 ## インストール
 
