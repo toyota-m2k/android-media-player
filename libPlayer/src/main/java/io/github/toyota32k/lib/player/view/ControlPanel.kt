@@ -115,7 +115,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .multiVisibilityBinding(arrayOf(controls.prevChapterButton, controls.nextChapterButton), ConstantLiveData(chapterHandler!=null), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevVideoButton, controls.nextVideoButton), ConstantLiveData(playlistHandler!=null && model.showNextPreviousButton), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiEnableBinding(arrayOf(controls.playButton, controls.pauseButton, controls.seekBackLButton, controls.seekBackMButton, controls.seekBackSButton, controls.seekForwardLButton, controls.seekForwardMButton, controls.seekForwardSButton, controls.fullscreenButton, controls.pinpButton, controls.slider), model.playerModel.isReady)
-            .textBinding(findViewById(R.id.counter_label), combine(model.playerModel.playerSeekPosition, model.playerModel.naturalDuration) { pos,dur->formatTime(pos, dur) })
+            .textBinding(findViewById(R.id.counter_label), model.counterText)
             .textBinding(findViewById(R.id.duration_label), model.playerModel.naturalDuration.map { formatTime(it,it) } )
             .sliderBinding(controls.slider, model.playerModel.playerSeekPosition.map { it.toFloat() }, min=null, max= model.playerModel.naturalDuration.map { max(100f, it.toFloat())})
             .enableBinding(controls.snapshotButton, model.canSnapshot)

@@ -11,6 +11,7 @@ import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.TpFrameExtractor
 import io.github.toyota32k.lib.player.common.formatTime
+import io.github.toyota32k.lib.player.common.formatTimeMs
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.UtLog
 import kotlinx.coroutines.*
@@ -39,6 +40,7 @@ open class PlayerControllerModel(
     val seekSmall:RelativeSeek?,
     val seekMedium:RelativeSeek?,
     val seekLarge:RelativeSeek?,
+    val counterInMs:Boolean,
 
 ) : Closeable, IUtPropOwner {
     companion object {
@@ -64,6 +66,7 @@ open class PlayerControllerModel(
         private var mSeekSmall:RelativeSeek? = null
         private var mSeekMedium:RelativeSeek? = null
         private var mSeekLarge:RelativeSeek? = null
+        private var mCounterInMs:Boolean = false
 
         private var mHideChapterViewIfEmpty = false
 //        private var mScope:CoroutineScope? = null
@@ -131,6 +134,11 @@ open class PlayerControllerModel(
             return this
         }
 
+        fun counterInMs(sw:Boolean=true):Builder {
+            mCounterInMs = sw
+            return this
+        }
+
 //        private val scope:CoroutineScope by lazy { CoroutineScope(Dispatchers.Main+ SupervisorJob()) }
 
         @OptIn(UnstableApi::class)
@@ -154,6 +162,7 @@ open class PlayerControllerModel(
                 seekSmall = mSeekSmall,
                 seekMedium = mSeekMedium,
                 seekLarge = mSeekLarge,
+                counterInMs = mCounterInMs,
 //                seekRelativeForward = mSeekForward,
 //                seekRelativeBackword = mSeekBackword
             )
@@ -284,8 +293,11 @@ open class PlayerControllerModel(
     /**
      * スライダーのカウンター表示文字列
      */
+    val fullCounterText:Flow<String> = combine(playerModel.playerSeekPosition, playerModel.naturalDuration) { pos, duration->
+        if(!counterInMs) "${formatTime(pos,duration)} / ${formatTime(duration,duration)}" else "${formatTimeMs(pos,duration)} / ${formatTimeMs(duration,duration)}"
+    }
     val counterText:Flow<String> = combine(playerModel.playerSeekPosition, playerModel.naturalDuration) { pos, duration->
-        "${formatTime(pos,duration)} / ${formatTime(duration,duration)}"
+        if(!counterInMs) formatTime(pos,duration) else formatTimeMs(pos,duration)
     }
 
     // endregion

@@ -128,13 +128,19 @@ class TpTimeSpan(private val ms : Long) {
         get() = (ms / 1000 / 60 / 60)
 
     fun formatH() : String {
-        return String.format(Locale.US, "%02d:%02d.%02d", hours, minutes, seconds)
+        return String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
     }
     fun formatM() : String {
-        return String.format(Locale.US, "%02d'%02d\"", minutes, seconds)
+        return String.format(Locale.US, "%02d:%02d", minutes, seconds)
     }
     fun formatS() : String {
-        return String.format(Locale.US, "%02d\".%02d", seconds, milliseconds/10)
+        return String.format(Locale.US, "%02d.%02d", seconds, milliseconds/10)
+    }
+    fun formatMsH() : String {
+        return String.format(Locale.US, "%02d:%02d:02d.%02d", hours, minutes, seconds, milliseconds/10)
+    }
+    fun formatMsM() : String {
+        return String.format(Locale.US, "%02d:%02d.%02d", minutes, seconds, milliseconds/10)
     }
 }
 
@@ -170,6 +176,15 @@ fun formatTime(time:Long, duration:Long) : String {
     return when {
         t.hours>0 -> v.formatH()
         t.minutes>0 -> v.formatM()
+        else -> v.formatS()
+    }
+}
+fun formatTimeMs(time:Long, duration:Long) : String {
+    val v = TpTimeSpan(time)
+    val t = TpTimeSpan(duration)
+    return when {
+        t.hours>0 -> v.formatMsH()
+        t.minutes>0 -> v.formatMsM()
         else -> v.formatS()
     }
 }
