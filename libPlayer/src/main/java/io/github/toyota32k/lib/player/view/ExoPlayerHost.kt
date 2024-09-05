@@ -30,7 +30,7 @@ import kotlin.math.abs
 class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
     companion object {
-        val logger by lazy { UtLog("Exo", TpLib.logger) }
+        val logger get() = TpLib.logger
     }
 
     // 使う人（ActivityやFragment）がセットすること

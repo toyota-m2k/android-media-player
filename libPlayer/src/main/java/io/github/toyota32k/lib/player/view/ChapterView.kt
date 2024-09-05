@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
 
 class ChapterView @JvmOverloads constructor(context: Context, attrs: AttributeSet?=null, defStyleAttr:Int=0) : View(context, attrs, defStyleAttr) {
     companion object {
-        val logger by lazy { UtLog("Chapter", TpLib.logger) }
+        val logger get() = TpLib.logger
     }
     private var mWidth:Int = 0
     private var mHeight:Int = 0

@@ -38,7 +38,7 @@ import kotlin.math.roundToLong
 class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), Slider.OnChangeListener {
     companion object {
-        val logger by lazy { UtLog("ControlPanel", TpLib.logger) }
+        val logger get() = TpLib.logger
     }
 
     val controls:V2ControlPanelBinding

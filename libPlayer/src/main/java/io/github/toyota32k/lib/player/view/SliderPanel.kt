@@ -15,6 +15,7 @@ import io.github.toyota32k.lib.player.common.getColorAwareOfTheme
 import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.R
+import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
 import io.github.toyota32k.utils.UtLog
 import kotlinx.coroutines.flow.combine
@@ -25,7 +26,7 @@ import kotlin.math.roundToLong
 class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), Slider.OnChangeListener  {
     companion object {
-        val logger by lazy { UtLog("Slider", ControlPanel.logger) }
+        val logger get() = TpLib.logger
     }
 
     val controls:V2SliderPanelBinding

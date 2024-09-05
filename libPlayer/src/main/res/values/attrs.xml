@@ -24,4 +24,24 @@
         <attr name="buttonTintColor" format="color"/>
         <attr name="buttonDisabledTintColor" format="color"/>
     </declare-styleable>
+
+    <declare-styleable name="PlayerSlider">
+        <attr name="thumb" format="integer" />                  <!-- ThumbのDrawable (IntRes) -->
+        <attr name="thumbVerticalOffset" format="integer" />           <!-- ベースラインに対するThumbの垂直方向オフセット -->
+        <attr name="thumbWidth" format="integer" />           <!-- Thumbの幅（無指定ならdrawableから取得） -->
+        <attr name="thumbHeight" format="integer" />           <!-- Thumbの高さ（無指定ならdrawableから取得） -->
+        <attr name="thumbHorizontalCenter" format="integer" />           <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
+
+        <attr name="marker" format="integer" />                  <!-- MarkerのDrawable (IntRes) -->
+        <attr name="markerVerticalOffset" format="integer" />           <!-- ベースラインに対するMarkerの垂直方向オフセット -->
+        <attr name="markerWidth" format="integer" />           <!-- Markerの幅（無指定ならdrawableから取得） -->
+        <attr name="markerHeight" format="integer" />           <!-- Markerの高さ（無指定ならdrawableから取得） -->
+        <attr name="markerHorizontalCenter" format="integer" />           <!-- Markerの左端から中央までの距離（無指定なら width/2） -->
+
+
+        <attr name="railGuideColor" format="color" />           <!-- Railのガイド色 -->
+        <attr name="railGuideHeight" format="integer" />           <!-- Railのガイド高さ -->
+        <attr name="railVerticalOffset" format="integer" />           <!-- ベースラインに対するRailの垂直方向オフセット -->
+        <attr name="railZOrder" format="integer" />           <!-- RailのZOrder -->
+    </declare-styleable>
 </resources>
