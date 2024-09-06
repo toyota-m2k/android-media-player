@@ -17,14 +17,21 @@ import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
+import io.github.toyota32k.lib.player.model.IMediaSourceWithChapter
+import io.github.toyota32k.lib.player.model.IMutableChapterList
+import io.github.toyota32k.utils.GenericDisposable
+import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.UtLog
+import io.github.toyota32k.utils.disposableObserve
+import io.github.toyota32k.utils.lifecycleOwner
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlin.math.max
 import kotlin.math.roundToLong
 
 class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), Slider.OnChangeListener  {
+    : FrameLayout(context, attrs, defStyleAttr)  {
     companion object {
         val logger get() = TpLib.logger
     }
@@ -49,19 +56,20 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
     @Suppress("unused")
     fun bindViewModel(model: PlayerControllerModel, binder: Binder) {
         this.model = model
-        controls.slider.addOnChangeListener(this)
-        controls.chapterView.bindViewModel(model.playerModel, binder)
+        controls.playerSlider.setValueChangedByUserListener {
+            model.playerModel.seekManager.requestedPositionFromSlider.value = it
+        }
 
         binder
             .textBinding(controls.counterLabel, combine(model.playerModel.playerSeekPosition, model.playerModel.naturalDuration) { pos,dur-> formatTime(pos, dur) })
             .textBinding(controls.durationLabel, model.playerModel.naturalDuration.map { formatTime(it,it) } )
-            .sliderBinding(controls.slider, model.playerModel.playerSeekPosition.map { it.toFloat() }, min=null, max= model.playerModel.naturalDuration.map { max(100f, it.toFloat()) })
-            .enableBinding(controls.slider, model.playerModel.isReady)
+            .playerSliderBinding(controls.playerSlider, model.playerModel.playerSeekPosition, duration = model.playerModel.naturalDuration)
+            .enableBinding(controls.playerSlider, model.playerModel.isReady)
+            .add( GenericDisposable { controls.playerSlider.setValueChangedByUserListener(null) } )
+            .add( model.playerModel.currentSource.disposableObserve(binder.requireOwner) {src->
+                val sourceWithChapter = src as? IMediaSourceWithChapter ?: return@disposableObserve
+                controls.playerSlider.setChapterList(sourceWithChapter.chapterList)
+            })
     }
 
-    override fun onValueChange(slider: Slider, value: Float, fromUser: Boolean) {
-        if(fromUser) {
-            model.playerModel.seekManager.requestedPositionFromSlider.value = value.roundToLong()
-        }
-    }
 }
