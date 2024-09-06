@@ -112,6 +112,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             disposer.lifecycleOwner = lifecycleOwner()!!
             disposer + chapterList.modifiedListener.addForever { updateChapters() }
         }
+        updateChapters()
     }
     /**
      * （チャプター編集中に）IChapterListの中味が変化した場合に呼び出す。
@@ -139,6 +140,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     // region Draw Parts
 
     interface IPartsInfo {
+        val description: String // for debug
         val verticalOffset:Int
         val height:Int
         val zOrder:Int
@@ -177,6 +179,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
      * Thumb アイコン
      */
     inner class ThumbPartsInfo(drawable:Drawable, verticalOffset:Int, width:Int, height:Int, horizontalCenter: Float): IconPartsInfo(drawable, verticalOffset, width, height, horizontalCenter) {
+        override val description: String = "Thumb"
         override val zOrder: Int = Int.MAX_VALUE
         override fun draw(canvas: Canvas) {
             drawAt(canvas, position)
@@ -185,15 +188,19 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     private lateinit var thumbPartsInfo:ThumbPartsInfo
     private fun getDefaultThumbDrawable(context:Context):Drawable = AppCompatResources.getDrawable(context, R.drawable.ic_player_slider_thumb)!!
 
-    private fun <T:IconPartsInfo> createIconPartsInfo(dr: Drawable, width: Int, height: Int, horizontalCenter: Float, creator:(Drawable, Int, Int, Float)->T) : T {
+    private fun <T:IconPartsInfo> createIconPartsInfo(dr: Drawable, width: Int, height: Int, horizontalCenter: Float, creator:(Int, Int, Float)->T) : T {
         val w = if (width<0) dr.intrinsicWidth else width
         val h = if (height<0) dr.intrinsicHeight else height
         val center = if (horizontalCenter<0) w.toFloat()/2f else horizontalCenter
-        return creator(dr, w, h, center)
+        return creator(w, h, center)
     }
 
-    private fun setThumbAttrs(drawable: Drawable?, verticalOffset: Int, width: Int=-1, height: Int=-1, horizontalCenter: Float=-1f) :ThumbPartsInfo {
-        return createIconPartsInfo(drawable ?: getDefaultThumbDrawable(context), width, height, horizontalCenter) {dr,w,h,center ->
+    private fun setThumbAttrs(drawable: Drawable?, verticalOffset: Int, width: Int=-1, height: Int=-1, horizontalCenter: Float=-1f, tintColor:Int=0) :ThumbPartsInfo {
+        val dr = drawable ?: getDefaultThumbDrawable(context)
+        if(tintColor != 0) {
+            dr.setTint(tintColor)
+        }
+        return createIconPartsInfo(dr, width, height, horizontalCenter) { w,h,center ->
             ThumbPartsInfo(dr, verticalOffset, w, h, center)
         }.apply { thumbPartsInfo = this }
     }
@@ -202,6 +209,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
      * Marker Icon
      */
     inner class MarkerPartsInfo(drawable: Drawable, verticalOffset: Int, width: Int, height: Int, horizontalCenter: Float) : IconPartsInfo(drawable, verticalOffset, width, height, horizontalCenter) {
+        override val description: String = "Marker"
         override val zOrder: Int = Int.MAX_VALUE-1
         var markers:List<Long> = emptyList()
         override val isValid: Boolean
@@ -219,8 +227,12 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
     lateinit var markerPartsInfo: MarkerPartsInfo
     private fun getDefaultMarkerDrawable(context:Context):Drawable = AppCompatResources.getDrawable(context, R.drawable.ic_marker)!!
-    private fun setMarkerAttrs(drawable: Drawable?, verticalOffset: Int, width: Int=-1, height: Int=-1, horizontalCenter: Float=-1f) :MarkerPartsInfo {
-        return createIconPartsInfo(drawable ?: getDefaultThumbDrawable(context), width, height, horizontalCenter) {dr,w,h,center ->
+    private fun setMarkerAttrs(drawable: Drawable?, verticalOffset: Int, width: Int=-1, height: Int=-1, horizontalCenter: Float=-1f, tintColor:Int=0) :MarkerPartsInfo {
+        val dr = drawable ?: getDefaultThumbDrawable(context)
+        if(tintColor != 0) {
+            dr.setTint(tintColor)
+        }
+        return createIconPartsInfo(dr, width, height, horizontalCenter) {w,h,center ->
             MarkerPartsInfo(dr, verticalOffset, w, h, center)
         }.apply { markerPartsInfo = this }
     }
@@ -237,8 +249,8 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
     }
 
-    abstract inner class RangePartsInfo(val paint: Paint, final override val height:Int, override val verticalOffset:Int, override val zOrder:Int) : IPartsInfo {
-        constructor(@ColorInt color:Int, height:Int, verticalOffset:Int, zOrder:Int) : this(paintOfColor(color), height, verticalOffset, zOrder)
+    abstract inner class RangePartsInfo(override val description: String, val paint: Paint, final override val height:Int, override val verticalOffset:Int, override val zOrder:Int) : IPartsInfo {
+        constructor(description:String, @ColorInt color:Int, height:Int, verticalOffset:Int, zOrder:Int) : this(description, paintOfColor(color), height, verticalOffset, zOrder)
 
         init {
             paint.strokeWidth = height.toFloat()
@@ -256,7 +268,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         height:Int,
         verticalOffset:Int,
         zOrder:Int
-    ) : RangePartsInfo(color,height,verticalOffset,zOrder) {
+    ) : RangePartsInfo("RailRight",color,height,verticalOffset,zOrder) {
         override fun draw(canvas: Canvas) {
             drawRange(canvas, position, duration)
         }
@@ -271,7 +283,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         height:Int,
         verticalOffset:Int,
         zOrder:Int
-    ) : RangePartsInfo(color,height,verticalOffset,zOrder) {
+    ) : RangePartsInfo("RailLeft", color,height,verticalOffset,zOrder) {
         override fun draw(canvas: Canvas) {
             drawRange(canvas, 0, position)
         }
@@ -283,11 +295,12 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     var showChapterBar = true
     inner class ChapterPartsInfo(
+        description: String,
         @ColorInt color: Int,
         height:Int,
         verticalOffset:Int,
         zOrder:Int
-    ) : RangePartsInfo(color,height,verticalOffset,zOrder) {
+    ) : RangePartsInfo(description, color,height,verticalOffset,zOrder) {
         private var ranges:List<Range> = emptyList()
         override val isValid: Boolean
             get() = height>0 && showChapterBar
@@ -305,10 +318,10 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     private lateinit var disabledChapterInfo:ChapterPartsInfo
     private lateinit var enableedChapterInfo:ChapterPartsInfo
     private fun setEnabledChapterAttrs(@ColorInt color: Int, height:Int, verticalOffset:Int, zOrder:Int) :ChapterPartsInfo {
-        return ChapterPartsInfo(color,height,verticalOffset,zOrder).apply { enableedChapterInfo = this }
+        return ChapterPartsInfo("EnabledChapters", color,height,verticalOffset,zOrder).apply { enableedChapterInfo = this }
     }
     private fun setDisabledChapterAttrs(@ColorInt color: Int, height:Int, verticalOffset:Int, zOrder:Int) :ChapterPartsInfo {
-        return ChapterPartsInfo(color,height,verticalOffset,zOrder).apply { disabledChapterInfo = this }
+        return ChapterPartsInfo("DisabledChapters",color,height,verticalOffset,zOrder).apply { disabledChapterInfo = this }
     }
 
     inner class MarkerTickPartsInfo(
@@ -316,7 +329,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         val width: Int,
         height:Int,
         verticalOffset:Int,
-        zOrder:Int) : RangePartsInfo(color,height,verticalOffset,zOrder) {
+        zOrder:Int) : RangePartsInfo("MarkerTick", color,height,verticalOffset,zOrder) {
 
         override val isValid: Boolean
             get() = height>0 && showChapterBar
@@ -341,24 +354,31 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     init {
         val sa = context.theme.obtainStyledAttributes(attrs, R.styleable.PlayerSlider, defStyleAttr, 0)
         try {
-            val primaryColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorPrimary, 0xFFff80ab.toInt())
-            val primaryDarkColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorPrimaryDark, 0xFFc94f7c.toInt())
-            val secondaryColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorSecondary, 0xFFaeea00.toInt())
-            val disabledColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorOnSurface, 0xFF808080.toInt())
-            val baseColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorOnSurface, 0xFF000000.toInt())
+//            val primaryColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorPrimary, 0xFFff80ab.toInt())
+//            val primaryDarkColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorPrimaryDark, 0xFFc94f7c.toInt())
+//            val secondaryColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorSecondary, 0xFFaeea00.toInt())
+//            val disabledColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorOnSurface, 0xFF808080.toInt())
+//            val baseColor = context.theme.getAttrColor(com.google.android.material.R.attr.colorOnSurface, 0xFF000000.toInt())
+            val primaryColor = 0xFFFF0000.toInt()
+            val primaryDarkColor = 0xFF00FF00.toInt()
+            val secondaryColor = 0xFF0000FF.toInt()
+            val disabledColor = 0xFF808080.toInt()
+            val baseColor = 0xFF000000.toInt()
 
             setThumbAttrs(
                 sa.getDrawable(R.styleable.PlayerSlider_thumb) ?: getDefaultThumbDrawable(context),
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_thumbVerticalOffset, 0),
-                sa.getDimensionPixelSize(R.styleable.PlayerSlider_thumbWidth, -1),
-                sa.getDimensionPixelSize(R.styleable.PlayerSlider_thumbHeight, -1),
-                sa.getDimensionPixelSize(R.styleable.PlayerSlider_thumbHorizontalCenter, -1).toFloat())
+                sa.getDimensionPixelSize(R.styleable.PlayerSlider_thumbIconWidth, -1),
+                sa.getDimensionPixelSize(R.styleable.PlayerSlider_thumbIconHeight, -1),
+                sa.getDimensionPixelSize(R.styleable.PlayerSlider_thumbHorizontalCenter, -1).toFloat(),
+                sa.getColor(R.styleable.PlayerSlider_thumbTintColor, 0))
             setMarkerAttrs(
                 sa.getDrawable(R.styleable.PlayerSlider_marker),
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_markerVerticalOffset, 0),
-                sa.getDimensionPixelSize(R.styleable.PlayerSlider_markerWidth, -1),
-                sa.getDimensionPixelSize(R.styleable.PlayerSlider_markerHeight, -1),
-                sa.getDimensionPixelSize(R.styleable.PlayerSlider_markerHorizontalCenter, -1).toFloat())
+                sa.getDimensionPixelSize(R.styleable.PlayerSlider_markerIconWidth, -1),
+                sa.getDimensionPixelSize(R.styleable.PlayerSlider_markerIconHeight, -1),
+                sa.getDimensionPixelSize(R.styleable.PlayerSlider_markerHorizontalCenter, -1).toFloat(),
+                sa.getColor(R.styleable.PlayerSlider_markerTintColor, 0))
 
             setRailRightAttrs(
                 sa.getColor(R.styleable.PlayerSlider_railRightColor,primaryDarkColor),
@@ -371,7 +391,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_railLeftVerticalOffset, DEF_RAIL_HEIGHT/2),
                 sa.getInt(R.styleable.PlayerSlider_railLeftZOrder, 1))
             setEnabledChapterAttrs(
-                sa.getColor(R.styleable.PlayerSlider_rangeDisabledColor,secondaryColor),
+                sa.getColor(R.styleable.PlayerSlider_rangeEnabledColor,secondaryColor),
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_rangeEnabledHeight, DEF_ENABLED_RANGE_HEIGHT),
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_rangeEnabledVerticalOffset, DEF_ENABLED_RANGE_HEIGHT/2),
                 sa.getInt(R.styleable.PlayerSlider_rangeEnabledZOrder, 0))
@@ -381,7 +401,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_rangeDisabledVerticalOffset, DEF_ENABLED_RANGE_HEIGHT/2),
                 sa.getInt(R.styleable.PlayerSlider_rangeDisabledZOrder, 2))
             setMarkerTickAttrs(
-                sa.getColor(R.styleable.PlayerSlider_rangeTickColor,0),
+                sa.getColor(R.styleable.PlayerSlider_rangeTickColor,0xFFFFFFFF.toInt()),
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_rangeTickHeight, DEF_ENABLED_RANGE_HEIGHT),
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_rangeTickWidth, 2),
                 sa.getDimensionPixelSize(R.styleable.PlayerSlider_rangeTickVerticalOffset, DEF_ENABLED_RANGE_HEIGHT/2),
@@ -445,6 +465,8 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         if(viewWidth == w && viewHeight == h) {
             return
         }
+        viewWidth = w
+        viewHeight = h
         sliderRange = viewWidth - horizontalMargin
         sliderTop = (viewHeight - allOverHeight.toFloat())/2f
     }

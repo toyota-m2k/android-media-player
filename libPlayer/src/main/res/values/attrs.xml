@@ -24,41 +24,43 @@
 
     <declare-styleable name="PlayerSlider">
         <attr name="thumb" format="integer" />                  <!-- ThumbのDrawable (IntRes) -->
-        <attr name="thumbVerticalOffset" format="integer" />           <!-- ベースラインに対するThumbの垂直方向オフセット -->
-        <attr name="thumbWidth" format="integer" />           <!-- Thumbの幅（無指定ならdrawableから取得） -->
-        <attr name="thumbHeight" format="integer" />           <!-- Thumbの高さ（無指定ならdrawableから取得） -->
-        <attr name="thumbHorizontalCenter" format="integer" />           <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
+        <attr name="thumbVerticalOffset" format="dimension" />           <!-- ベースラインに対するThumbの垂直方向オフセット -->
+        <attr name="thumbIconWidth" format="dimension" />           <!-- Thumbの幅（無指定ならdrawableから取得） -->
+        <attr name="thumbIconHeight" format="dimension" />           <!-- Thumbの高さ（無指定ならdrawableから取得） -->
+        <attr name="thumbHorizontalCenter" format="dimension" />           <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
+        <attr name="thumbTintColor" format="color" />           <!-- Thumbの色 -->
 
         <attr name="marker" format="integer" />                  <!-- MarkerのDrawable (IntRes) -->
-        <attr name="markerVerticalOffset" format="integer" />           <!-- ベースラインに対するMarkerの垂直方向オフセット -->
-        <attr name="markerWidth" format="integer" />           <!-- Markerの幅（無指定ならdrawableから取得） -->
-        <attr name="markerHeight" format="integer" />           <!-- Markerの高さ（無指定ならdrawableから取得） -->
-        <attr name="markerHorizontalCenter" format="integer" />           <!-- Markerの左端から中央までの距離（無指定なら width/2） -->
+        <attr name="markerVerticalOffset" format="dimension" />           <!-- ベースラインに対するMarkerの垂直方向オフセット -->
+        <attr name="markerIconWidth" format="dimension" />           <!-- Markerの幅（無指定ならdrawableから取得） -->
+        <attr name="markerIconHeight" format="dimension" />           <!-- Markerの高さ（無指定ならdrawableから取得） -->
+        <attr name="markerHorizontalCenter" format="dimension" />           <!-- Markerの左端から中央までの距離（無指定なら width/2） -->
+        <attr name="markerTintColor" format="color" />           <!-- Markerの色 -->
 
         <attr name="railRightColor" format="color" />           <!-- Railの未再生部分の色 -->
-        <attr name="railRightHeight" format="integer" />           <!-- Railの未再生部分の高さ -->
-        <attr name="railRightVerticalOffset" format="integer" />           <!-- ベースラインに対するRailの未再生部分の垂直方向オフセット -->
-        <attr name="railRightZOrder" format="integer" />           <!-- Railの未再生部分のZOrder -->
+        <attr name="railRightHeight" format="dimension" />           <!-- Railの未再生部分の高さ -->
+        <attr name="railRightVerticalOffset" format="dimension" />           <!-- ベースラインに対するRailの未再生部分の垂直方向オフセット -->
+        <attr name="railRightZOrder" format="dimension" />           <!-- Railの未再生部分のZOrder -->
 
         <attr name="railLeftColor" format="color" />           <!-- Railの再生済み部分の色 -->
-        <attr name="railLeftHeight" format="integer" />           <!-- Railの再生済み部分の高さ -->
-        <attr name="railLeftVerticalOffset" format="integer" />           <!-- ベースラインに対するRailの再生済み部分の垂直方向オフセット -->
+        <attr name="railLeftHeight" format="dimension" />           <!-- Railの再生済み部分の高さ -->
+        <attr name="railLeftVerticalOffset" format="dimension" />           <!-- ベースラインに対するRailの再生済み部分の垂直方向オフセット -->
         <attr name="railLeftZOrder" format="integer" />           <!-- Railの再生済み部分のZOrder -->
 
         <attr name="rangeEnabledColor" format="color" />           <!-- 有効範囲の色 -->
-        <attr name="rangeEnabledHeight" format="integer" />           <!-- 有効範囲の高さ -->
-        <attr name="rangeEnabledVerticalOffset" format="integer" />           <!-- ベースラインに対する有効範囲の垂直方向オフセット -->
+        <attr name="rangeEnabledHeight" format="dimension" />           <!-- 有効範囲の高さ -->
+        <attr name="rangeEnabledVerticalOffset" format="dimension" />           <!-- ベースラインに対する有効範囲の垂直方向オフセット -->
         <attr name="rangeEnabledZOrder" format="integer" />           <!-- 有効範囲のZOrder -->
 
         <attr name="rangeDisabledColor" format="color" />           <!-- 無効範囲の色 -->
-        <attr name="rangeDisabledHeight" format="integer" />           <!-- 無効範囲の高さ -->
-        <attr name="rangeDisabledVerticalOffset" format="integer" />           <!-- ベースラインに対する無効範囲の垂直方向オフセット -->
+        <attr name="rangeDisabledHeight" format="dimension" />           <!-- 無効範囲の高さ -->
+        <attr name="rangeDisabledVerticalOffset" format="dimension" />           <!-- ベースラインに対する無効範囲の垂直方向オフセット -->
         <attr name="rangeDisabledZOrder" format="integer" />           <!-- 無効範囲のZOrder -->
 
         <attr name="rangeTickColor" format="color" />           <!-- Tickの色 -->
-        <attr name="rangeTickWidth" format="integer" />           <!-- Tickの幅 -->
-        <attr name="rangeTickHeight" format="integer" />           <!-- Tickの高さ -->
-        <attr name="rangeTickVerticalOffset" format="integer" />           <!-- ベースラインに対するTickの垂直方向オフセット -->
+        <attr name="rangeTickWidth" format="dimension" />           <!-- Tickの幅 -->
+        <attr name="rangeTickHeight" format="dimension" />           <!-- Tickの高さ -->
+        <attr name="rangeTickVerticalOffset" format="dimension" />           <!-- ベースラインに対するTickの垂直方向オフセット -->
         <attr name="rangeTickZOrder" format="integer" />           <!-- TickのZOrder -->
 
         <attr name="showChapterBar" format="boolean" />           <!-- Chaper Bar (RangeBar) を表示するか（デフォルト:true） -->

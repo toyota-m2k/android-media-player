@@ -7,13 +7,16 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <io.github.toyota32k.lib.player.view.PlayerSlider
+        android:id="@+id/player_slider"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:thumbTintColor="@android:color/white"
+        app:markerTintColor="@android:color/white"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
