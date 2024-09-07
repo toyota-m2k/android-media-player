@@ -16,7 +16,7 @@ import io.github.toyota32k.utils.UtLog
 class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
     companion object {
-        val logger by lazy { UtLog("PlayerView", TpLib.logger) }
+        val logger get() = TpLib.logger
     }
 
     val controls:V2PlayerViewBinding

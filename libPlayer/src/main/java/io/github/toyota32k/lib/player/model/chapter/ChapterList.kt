@@ -210,9 +210,9 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
         }
     }
 
-    private fun disabledRangesSub(trimming: Range)= sequence {
+    private fun disabledRangesSub(enabledRanges:List<Range>)= sequence {
         var checking = 0L
-        for(r in enabledRangesSub(trimming)) {
+        for(r in enabledRanges) {
             if(checking<r.start) {
                 yield(Range(checking, r.start))
             }
@@ -246,7 +246,7 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
             if(mTrimming!==trimming) {
                 mDisabledRange = null
             }
-            return mDisabledRange ?: disabledRangesSub(trimming).toList().apply { mDisabledRange = this }
+            return mDisabledRange ?: disabledRangesSub(enabledRange(trimming)).toList().apply { mDisabledRange = this }
         }
     }
     protected val rangeCache by lazy { RangeCache() }

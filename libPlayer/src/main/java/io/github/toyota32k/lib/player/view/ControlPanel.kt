@@ -38,7 +38,7 @@ import kotlin.math.roundToLong
 class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), Slider.OnChangeListener {
     companion object {
-        val logger by lazy { UtLog("ControlPanel", TpLib.logger) }
+        val logger get() = TpLib.logger
     }
 
     val controls:V2ControlPanelBinding
@@ -46,7 +46,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
     init {
         val sa = context.theme.obtainStyledAttributes(attrs,R.styleable.ControlPanel, defStyleAttr,0)
         val panelBackground = sa.getColorAsDrawable(R.styleable.ControlPanel_panelBackgroundColor, context.theme, com.google.android.material.R.attr.colorSurface, Color.WHITE)
-        val panelText = sa.getColorAwareOfTheme(R.styleable.ControlPanel_panelTextColor, context.theme, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
+        val panelText = sa.getColorAwareOfTheme(R.styleable.ControlPanel_panelForegroundColor, context.theme, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
 
         val buttonEnabled = sa.getColorAwareOfTheme(R.styleable.ControlPanel_buttonTintColor, context.theme, com.google.android.material.R.attr.colorPrimaryVariant, Color.WHITE)
         val disabledDefault = Color.argb(0x80, Color.red(panelText), Color.green(panelText), Color.blue(panelText))
@@ -63,8 +63,6 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
             controlPanelRoot.background = panelBackground
-            counterLabel.setTextColor(panelText)
-            durationLabel.setTextColor(panelText)
             controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
         }
     }
@@ -73,28 +71,10 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     fun bindViewModel(model: PlayerControllerModel, binder: Binder) {
         this.model = model
-//        val owner = lifecycleOwner()!!
-//        val scope = owner.lifecycleScope
 
-//        val playButton = findViewById<ImageButton>(R.id.play_button)
-//        val pauseButton = findViewById<ImageButton>(R.id.pause_button)
-//        val prevVideoButton = findViewById<ImageButton>(R.id.prev_video_button)
-//        val nextVideoButton = findViewById<ImageButton>(R.id.next_video_button)
-//        val prevChapterButton = findViewById<ImageButton>(R.id.prev_chapter_button)
-//        val nextChapterButton = findViewById<ImageButton>(R.id.next_chapter_button)
-//        val seekBackButton = findViewById<ImageButton>(R.id.seek_back_button)
-//        val seekForwardButton = findViewById<ImageButton>(R.id.seek_forward_button)
-//        val pinpButton = findViewById<ImageButton>(R.id.pinp_button)
-//        val fullscreenButton = findViewById<ImageButton>(R.id.fullscreen_button)
-//        val collapseButton = findViewById<ImageButton>(R.id.collapse_button)
-////        val closeButton = findViewById<ImageButton>(R.id.close_button)
-//        val snapshotButton = findViewById<ImageButton>(R.id.snapshot_button)
-//        val slider = findViewById<Slider>(R.id.slider)
-
-        controls.slider.addOnChangeListener(this)
-//        slider.addOnSliderTouchListener(this)
-
-        controls.chapterView.bindViewModel(model.playerModel, binder)
+//        controls.slider.addOnChangeListener(this)
+//        controls.chapterView.bindViewModel(model.playerModel, binder)
+        controls.sliderPanel.bindViewModel(model, binder)
 
         val chapterHandler = model.playerModel as? IChapterHandler
         val playlistHandler = model.playerModel as? IPlaylistHandler
@@ -114,10 +94,8 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .multiVisibilityBinding(arrayOf(controls.seekBackSButton,controls.seekForwardSButton), ConstantLiveData(model.seekSmall!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevChapterButton, controls.nextChapterButton), ConstantLiveData(chapterHandler!=null), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevVideoButton, controls.nextVideoButton), ConstantLiveData(playlistHandler!=null && model.showNextPreviousButton), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
-            .multiEnableBinding(arrayOf(controls.playButton, controls.pauseButton, controls.seekBackLButton, controls.seekBackMButton, controls.seekBackSButton, controls.seekForwardLButton, controls.seekForwardMButton, controls.seekForwardSButton, controls.fullscreenButton, controls.pinpButton, controls.slider), model.playerModel.isReady)
-            .textBinding(findViewById(R.id.counter_label), model.counterText)
-            .textBinding(findViewById(R.id.duration_label), model.playerModel.naturalDuration.map { formatTime(it,it) } )
-            .sliderBinding(controls.slider, model.playerModel.playerSeekPosition.map { it.toFloat() }, min=null, max= model.playerModel.naturalDuration.map { max(100f, it.toFloat())})
+            .multiEnableBinding(arrayOf(controls.playButton, controls.pauseButton, controls.seekBackLButton, controls.seekBackMButton, controls.seekBackSButton, controls.seekForwardLButton, controls.seekForwardMButton, controls.seekForwardSButton, controls.fullscreenButton, controls.pinpButton), model.playerModel.isReady)
+//            .sliderBinding(controls.slider, model.playerModel.playerSeekPosition.map { it.toFloat() }, min=null, max= model.playerModel.naturalDuration.map { max(100f, it.toFloat())})
             .enableBinding(controls.snapshotButton, model.canSnapshot)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)

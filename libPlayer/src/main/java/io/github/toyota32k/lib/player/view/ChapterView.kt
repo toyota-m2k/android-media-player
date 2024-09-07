@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
 
 class ChapterView @JvmOverloads constructor(context: Context, attrs: AttributeSet?=null, defStyleAttr:Int=0) : View(context, attrs, defStyleAttr) {
     companion object {
-        val logger by lazy { UtLog("Chapter", TpLib.logger) }
+        val logger get() = TpLib.logger
     }
     private var mWidth:Int = 0
     private var mHeight:Int = 0
@@ -81,7 +81,7 @@ class ChapterView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         model.currentSource.onEach(::bindChapterList).launchIn(scope)
 
         val flow = if(model is IChapterHandler) {
-            combine(model.currentSource, model.naturalDuration) { src, dur->
+                combine(model.currentSource, model.naturalDuration) { src, dur->
                 src !=null && dur>0
             }
         } else model.naturalDuration.filter { it>0 }
