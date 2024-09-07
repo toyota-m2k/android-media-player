@@ -43,7 +43,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val sa = context.theme.obtainStyledAttributes(attrs,
             R.styleable.ControlPanel, defStyleAttr,0)
         val panelBackground = sa.getColorAsDrawable(R.styleable.ControlPanel_panelBackgroundColor, context.theme, com.google.android.material.R.attr.colorSurface, Color.WHITE)
-        val panelText = sa.getColorAwareOfTheme(R.styleable.ControlPanel_panelTextColor, context.theme, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
+        val panelText = sa.getColorAwareOfTheme(R.styleable.ControlPanel_panelForegroundColor, context.theme, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
         sa.recycle()
 
         controls = V2SliderPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
@@ -61,7 +61,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
         }
 
         binder
-            .textBinding(controls.counterLabel, combine(model.playerModel.playerSeekPosition, model.playerModel.naturalDuration) { pos,dur-> formatTime(pos, dur) })
+            .textBinding(controls.counterLabel, model.counterText)
             .textBinding(controls.durationLabel, model.playerModel.naturalDuration.map { formatTime(it,it) } )
             .playerSliderBinding(controls.playerSlider, model.playerModel.playerSeekPosition, duration = model.playerModel.naturalDuration)
             .enableBinding(controls.playerSlider, model.playerModel.isReady)

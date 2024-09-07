@@ -81,7 +81,7 @@ class ChapterView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         model.currentSource.onEach(::bindChapterList).launchIn(scope)
 
         val flow = if(model is IChapterHandler) {
-            combine(model.currentSource, model.naturalDuration) { src, dur->
+                combine(model.currentSource, model.naturalDuration) { src, dur->
                 src !=null && dur>0
             }
         } else model.naturalDuration.filter { it>0 }

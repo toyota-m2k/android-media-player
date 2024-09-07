@@ -17,7 +17,8 @@
     </declare-styleable>
     <declare-styleable name="ControlPanel">
         <attr name="panelBackgroundColor" format="color"/>
-        <attr name="panelTextColor" format="color"/>
+        <attr name="panelForegroundColor" format="color"/>
+<!--        <attr name="panelTextColor" format="color"/>-->
         <attr name="buttonTintColor" format="color"/>
         <attr name="buttonDisabledTintColor" format="color"/>
     </declare-styleable>
