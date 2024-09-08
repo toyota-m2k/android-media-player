@@ -381,7 +381,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
                 0xFFff80ab.toInt()
             )
             var primaryDarkColor = context.theme.getAttrColor(
-                com.google.android.material.R.attr.colorPrimaryDark,
+                com.google.android.material.R.attr.colorPrimaryVariant,
                 0xFFc94f7c.toInt()
             )
             if (primaryDarkColor == primaryColor) {
