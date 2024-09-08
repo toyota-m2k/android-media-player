@@ -91,7 +91,10 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     fun setDuration(max:Long, chapterList:IChapterList?=null, notify:Boolean=false) {
         mPosition = 0L
         mDuration = max
-        this.chapterList = chapterList
+        if(chapterList!=null) {
+            this.chapterList = chapterList
+            updateChapters(false)
+        }
         invalidate()
         if(notify) {
             onValueChanged?.invoke(0L)
@@ -119,11 +122,13 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     /**
      * （チャプター編集中に）IChapterListの中味が変化した場合に呼び出す。
      */
-    private fun updateChapters() {
+    private fun updateChapters(redraw:Boolean=true) {
         markerPartsInfo.setMarkers(chapterList)
         enableedChapterInfo.setRanges(chapterList?.enabledRanges() ?: emptyList())
         disabledChapterInfo.setRanges(chapterList?.disabledRanges() ?: emptyList())
-        invalidate()
+        if(redraw) {
+            invalidate()
+        }
     }
 
     // endregion
@@ -218,7 +223,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             get() = height>0 && showChapterBar
 
         fun setMarkers(chapterList: IChapterList?) {
-            markers = chapterList?.chapters?.map { it.position } ?: emptyList()
+            markers = chapterList?.chapters?.drop(1)?.map { it.position } ?: emptyList()
         }
 
         override fun draw(canvas: Canvas) {

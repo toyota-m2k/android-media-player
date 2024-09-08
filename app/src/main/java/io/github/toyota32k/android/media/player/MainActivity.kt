@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import io.github.toyota32k.android.media.player.databinding.ActivityMainBinding
+import io.github.toyota32k.binder.Binder
+import io.github.toyota32k.binder.clickBinding
 import io.github.toyota32k.lib.player.model.IMutableChapterList
 import io.github.toyota32k.lib.player.model.chapter.Chapter
 import io.github.toyota32k.lib.player.model.chapter.MutableChapterList
@@ -14,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var controls: ActivityMainBinding
     private lateinit var chapterList: IMutableChapterList
 
-
+    val binder = Binder()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -35,5 +37,10 @@ class MainActivity : AppCompatActivity() {
                 Chapter(6000, skip=true))
         )
         controls.playerSlider.setChapterList(chapterList)
+
+        binder.owner(this)
+            .clickBinding(controls.addChapter) {
+                chapterList.addChapter(controls.playerSlider.position, "", false)
+            }
     }
 }

@@ -15,6 +15,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/addChapter"
+        android:text="Add Chapter"
+        />
     <io.github.toyota32k.lib.player.view.SliderPanel
         android:id="@+id/slider_panel"
         android:layout_width="match_parent"
