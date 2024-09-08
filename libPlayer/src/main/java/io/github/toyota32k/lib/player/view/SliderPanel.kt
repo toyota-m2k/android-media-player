@@ -23,6 +23,7 @@ import io.github.toyota32k.utils.GenericDisposable
 import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.UtLog
 import io.github.toyota32k.utils.disposableObserve
+import io.github.toyota32k.utils.dp2px
 import io.github.toyota32k.utils.lifecycleOwner
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -44,10 +45,12 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             R.styleable.ControlPanel, defStyleAttr,0)
         val panelBackground = sa.getColorAsDrawable(R.styleable.ControlPanel_panelBackgroundColor, context.theme, com.google.android.material.R.attr.colorSurface, Color.WHITE)
         val panelText = sa.getColorAwareOfTheme(R.styleable.ControlPanel_panelForegroundColor, context.theme, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
+        val panelBottomPadding = sa.getDimensionPixelSize(R.styleable.ControlPanel_panelBottomPadding, context.dp2px(5))
         sa.recycle()
 
         controls = V2SliderPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
             sliderPanelRoot.background = panelBackground
+            sliderPanelRoot.setPadding(0,0,0, panelBottomPadding)
             counterLabel.setTextColor(panelText)
             durationLabel.setTextColor(panelText)
         }

@@ -21,6 +21,7 @@
 <!--        <attr name="panelTextColor" format="color"/>-->
         <attr name="buttonTintColor" format="color"/>
         <attr name="buttonDisabledTintColor" format="color"/>
+        <attr name="panelBottomPadding" format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="PlayerSlider">
@@ -37,6 +38,7 @@
         <attr name="markerIconHeight" format="dimension" />           <!-- Markerの高さ（無指定ならdrawableから取得） -->
         <attr name="markerHorizontalCenter" format="dimension" />           <!-- Markerの左端から中央までの距離（無指定なら width/2） -->
         <attr name="markerTintColor" format="color" />           <!-- Markerの色 -->
+        <attr name="markerZOrder" format="integer"/>
 
         <attr name="railRightColor" format="color" />           <!-- Railの未再生部分の色 -->
         <attr name="railRightHeight" format="dimension" />           <!-- Railの未再生部分の高さ -->
