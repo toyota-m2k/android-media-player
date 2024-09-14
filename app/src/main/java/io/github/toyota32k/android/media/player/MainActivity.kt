@@ -34,7 +34,10 @@ class MainActivity : AppCompatActivity() {
             listOf(
                 Chapter(1000),
                 Chapter(3000, skip=true),
-                Chapter(6000, skip=true))
+                Chapter(5000, skip=false),
+                Chapter(7000, skip=true),
+                Chapter(9000, skip=false),
+            )
         )
         controls.playerSlider.setChapterList(chapterList)
 

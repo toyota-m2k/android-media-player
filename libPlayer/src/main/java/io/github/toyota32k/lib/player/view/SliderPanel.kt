@@ -5,31 +5,20 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import com.google.android.material.slider.Slider
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.enableBinding
-import io.github.toyota32k.binder.sliderBinding
 import io.github.toyota32k.binder.textBinding
-import io.github.toyota32k.lib.player.common.getColorAsDrawable
-import io.github.toyota32k.lib.player.common.getColorAwareOfTheme
-import io.github.toyota32k.lib.player.common.formatTime
-import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.lib.player.common.StyledAttrRetriever
+import io.github.toyota32k.lib.player.common.dp
+import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
 import io.github.toyota32k.lib.player.model.IMediaSourceWithChapter
-import io.github.toyota32k.lib.player.model.IMutableChapterList
+import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.utils.GenericDisposable
-import io.github.toyota32k.utils.IDisposable
-import io.github.toyota32k.utils.UtLog
 import io.github.toyota32k.utils.disposableObserve
-import io.github.toyota32k.utils.dp2px
-import io.github.toyota32k.utils.lifecycleOwner
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlin.math.max
-import kotlin.math.roundToLong
 
 class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr)  {
@@ -41,18 +30,30 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private lateinit var model: PlayerControllerModel
 
     init {
-        val sa = context.theme.obtainStyledAttributes(attrs,
-            R.styleable.ControlPanel, defStyleAttr,0)
-        val panelBackground = sa.getColorAsDrawable(R.styleable.ControlPanel_panelBackgroundColor, context.theme, com.google.android.material.R.attr.colorSurface, Color.WHITE)
-        val panelText = sa.getColorAwareOfTheme(R.styleable.ControlPanel_panelForegroundColor, context.theme, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
-        val panelBottomPadding = sa.getDimensionPixelSize(R.styleable.ControlPanel_panelBottomPadding, context.dp2px(5))
-        sa.recycle()
+        StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
+//            val panelBackground = sar.getDrawableWithAlphaOnFallback(
+//                R.styleable.ControlPanel_ampPanelBackgroundColor,
+//                com.google.android.material.R.attr.colorSurface,
+//                def = Color.WHITE, alpha = 0x50
+//            )
 
-        controls = V2SliderPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
-            sliderPanelRoot.background = panelBackground
-            sliderPanelRoot.setPadding(0,0,0, panelBottomPadding)
-            counterLabel.setTextColor(panelText)
-            durationLabel.setTextColor(panelText)
+            val panelText = sar.getColor(
+                R.styleable.ControlPanel_ampPanelForegroundColor,
+                com.google.android.material.R.attr.colorOnSurface,
+                def = Color.BLACK
+            )
+
+            val panelBottomPadding = sar.getDimensionPixelSize(
+                R.styleable.ControlPanel_ampPanelBottomPadding,
+                def = 5.dp
+            )
+
+            controls = V2SliderPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
+//                    sliderPanelRoot.background = panelBackground
+                    sliderPanelRoot.setPadding(0, 0, 0, panelBottomPadding)
+                    counterLabel.setTextColor(panelText)
+                    durationLabel.setTextColor(panelText)
+                }
         }
     }
 

@@ -1,72 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="ExoPlayerHost">
-        <attr name="showControlBar" format="boolean"/>
-        <attr name="fitParent" format="boolean"/>
-        <attr name="playerBackground" format="color"/>
-    </declare-styleable>
-    <declare-styleable name="ChapterView">
-        <attr name="defaultColor" format="color"/>
-        <attr name="enabledColor" format="color"/>
-        <attr name="disabledColor" format="color"/>
-        <attr name="tickColor" format="color"/>
-        <attr name="markerColor" format="color"/>
-        <attr name="bar_height" format="dimension"/>
-        <attr name="bar_marker_margin" format="dimension"/>
-        <attr name="marker_drawable" format="integer"/>
+        <!--
+            playerBackground: ExoPlayerの背景色（デフォルト：colorSurface）
+        -->
+        <attr name="ampPlayerBackground" format="color"/>
     </declare-styleable>
     <declare-styleable name="ControlPanel">
-        <attr name="panelBackgroundColor" format="color"/>
-        <attr name="panelForegroundColor" format="color"/>
-<!--        <attr name="panelTextColor" format="color"/>-->
-        <attr name="buttonTintColor" format="color"/>
-        <attr name="buttonDisabledTintColor" format="color"/>
-        <attr name="panelBottomPadding" format="dimension"/>
+        <!--
+            panelBackgroundColor: コントロールパネルの背景色（デフォルト：colorSurface）
+            panelForegroundColor: コントロールパネルの文字色（デフォルト：colorOnSurface）
+            buttonTintColor: コントロールパネルのボタンのアイコン色（デフォルト：colorPrimary）
+            buttonDisabledTintColor: コントロールパネルのボタンのアイコンの無効色（デフォルト：panelForegroundColorの80%）
+            panelBottomPadding: コントロールパネル下側のパディング（画面最下部の配置したとき、ちょっとマージンがあった方が見やすい：デフォルト: 5dp）
+         -->
+        <attr name="ampPanelBackgroundColor" format="color|reference"/>
+        <attr name="ampPanelForegroundColor" format="color"/>
+        <attr name="ampButtonTintColor" format="color"/>
+        <attr name="ampButtonDisabledTintColor" format="color"/>
+        <attr name="ampPanelBottomPadding" format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="PlayerSlider">
-        <attr name="thumb" format="integer" />                  <!-- ThumbのDrawable (IntRes) -->
-        <attr name="thumbVerticalOffset" format="dimension" />           <!-- ベースラインに対するThumbの垂直方向オフセット -->
-        <attr name="thumbIconWidth" format="dimension" />           <!-- Thumbの幅（無指定ならdrawableから取得） -->
-        <attr name="thumbIconHeight" format="dimension" />           <!-- Thumbの高さ（無指定ならdrawableから取得） -->
-        <attr name="thumbHorizontalCenter" format="dimension" />           <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
-        <attr name="thumbTintColor" format="color" />           <!-- Thumbの色 -->
+        <!--
+        スライダーサム（ノブ）
+        ampThumbIcon:   スライダーサムのアイコン(drawable: 伸縮可能な vector pathを想定）
+        ampThumbVerticalOffset:     ベースラインからサムアイコンの上端までのオフセット(dp)
+        ampThumbIconWidth:          サムアイコンの描画幅（無指定なら drawable.width）
+        ampThumbIconHeight:         サムアイコンの描画高さ（無指定なら drawable.height）
+        ampThumbHorizontalCenter:   サムアイコンの左端から中央までの距離（無指定なら width/2）
+        ampThumbTintColor:          サムアイコンの色（デフォルト：colorTertiaryContainer / colorAccent)
+        -->
+        <attr name="ampThumbIcon" format="reference" />                  <!-- ThumbのDrawable -->
+        <attr name="ampThumbVerticalOffset" format="dimension" />           <!-- ベースラインに対するThumbの垂直方向オフセット -->
+        <attr name="ampThumbIconWidth" format="dimension" />           <!-- Thumbの幅（無指定ならdrawableから取得） -->
+        <attr name="ampThumbIconHeight" format="dimension" />           <!-- Thumbの高さ（無指定ならdrawableから取得） -->
+        <attr name="ampThumbHorizontalCenter" format="dimension" />           <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
+        <attr name="ampThumbTintColor" format="color" />           <!-- Thumbの色 -->
 
-        <attr name="marker" format="integer" />                  <!-- MarkerのDrawable (IntRes) -->
-        <attr name="markerVerticalOffset" format="dimension" />           <!-- ベースラインに対するMarkerの垂直方向オフセット -->
-        <attr name="markerIconWidth" format="dimension" />           <!-- Markerの幅（無指定ならdrawableから取得） -->
-        <attr name="markerIconHeight" format="dimension" />           <!-- Markerの高さ（無指定ならdrawableから取得） -->
-        <attr name="markerHorizontalCenter" format="dimension" />           <!-- Markerの左端から中央までの距離（無指定なら width/2） -->
-        <attr name="markerTintColor" format="color" />           <!-- Markerの色 -->
-        <attr name="markerZOrder" format="integer"/>
+        <!--
+        スライダーサムの下に描画するシャドウ的なやつ。
+        ampThumbIcon に自前のアイコンをセットしている場合にのみ有効（それ以外は無視される）
+        ampUnderThumbTintColor:          色（デフォルト：colorSurface）
+        -->
+        <attr name="ampUnderThumbIcon" format="reference" />                  <!-- ThumbのDrawable -->
+        <attr name="ampUnderThumbVerticalOffset" format="dimension" />           <!-- ベースラインに対するThumbの垂直方向オフセット -->
+        <attr name="ampUnderThumbIconWidth" format="dimension" />           <!-- Thumbの幅（無指定ならdrawableから取得） -->
+        <attr name="ampUnderThumbIconHeight" format="dimension" />           <!-- Thumbの高さ（無指定ならdrawableから取得） -->
+        <attr name="ampUnderThumbHorizontalCenter" format="dimension" />           <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
+        <attr name="ampUnderThumbTintColor" format="color" />           <!-- Thumbの色 -->
 
-        <attr name="railRightColor" format="color" />           <!-- Railの未再生部分の色 -->
-        <attr name="railRightHeight" format="dimension" />           <!-- Railの未再生部分の高さ -->
-        <attr name="railRightVerticalOffset" format="dimension" />           <!-- ベースラインに対するRailの未再生部分の垂直方向オフセット -->
-        <attr name="railRightZOrder" format="dimension" />           <!-- Railの未再生部分のZOrder -->
 
-        <attr name="railLeftColor" format="color" />           <!-- Railの再生済み部分の色 -->
-        <attr name="railLeftHeight" format="dimension" />           <!-- Railの再生済み部分の高さ -->
-        <attr name="railLeftVerticalOffset" format="dimension" />           <!-- ベースラインに対するRailの再生済み部分の垂直方向オフセット -->
-        <attr name="railLeftZOrder" format="integer" />           <!-- Railの再生済み部分のZOrder -->
+        <!--
+        チャプターマーカーのアイコン
+        RangeTick の位置に表示されるので、RangeTickとセットでデザインする。
+        ampMarkerTintColor:          色（デフォルト：colorOnSurface）
+        ampMarkerZOrder: マーカーのzOrder（デフォルト: Int.MAX_VALUE）
+        -->
+        <attr name="ampMarkerIcon" format="reference" />                  <!-- MarkerのDrawable -->
+        <attr name="ampMarkerVerticalOffset" format="dimension" />           <!-- ベースラインに対するMarkerの垂直方向オフセット -->
+        <attr name="ampMarkerIconWidth" format="dimension" />           <!-- Markerの幅（無指定ならdrawableから取得） -->
+        <attr name="ampMarkerIconHeight" format="dimension" />           <!-- Markerの高さ（無指定ならdrawableから取得） -->
+        <attr name="ampMarkerHorizontalCenter" format="dimension" />           <!-- Markerの左端から中央までの距離（無指定なら width/2） -->
+        <attr name="ampMarkerTintColor" format="color" />           <!-- Markerの色 -->
+        <attr name="ampMarkerZOrder" format="integer"/>
 
-        <attr name="rangeEnabledColor" format="color" />           <!-- 有効範囲の色 -->
-        <attr name="rangeEnabledHeight" format="dimension" />           <!-- 有効範囲の高さ -->
-        <attr name="rangeEnabledVerticalOffset" format="dimension" />           <!-- ベースラインに対する有効範囲の垂直方向オフセット -->
-        <attr name="rangeEnabledZOrder" format="integer" />           <!-- 有効範囲のZOrder -->
+        <!--
+        レール：再生済み部分（サムの左）
+        ampRailLeftColor: 再生済み部分の Rail の色（デフォルト：colorPrimary）
+        -->
+        <attr name="ampRailLeftColor" format="color" />           <!-- Railの再生済み部分の色 -->
+        <attr name="ampRailLeftHeight" format="dimension" />           <!-- Railの再生済み部分の高さ -->
+        <attr name="ampRailLeftVerticalOffset" format="dimension" />           <!-- ベースラインに対するRailの再生済み部分の垂直方向オフセット -->
+        <attr name="ampRailLeftZOrder" format="integer" />           <!-- Railの再生済み部分のZOrder -->
 
-        <attr name="rangeDisabledColor" format="color" />           <!-- 無効範囲の色 -->
-        <attr name="rangeDisabledHeight" format="dimension" />           <!-- 無効範囲の高さ -->
-        <attr name="rangeDisabledVerticalOffset" format="dimension" />           <!-- ベースラインに対する無効範囲の垂直方向オフセット -->
-        <attr name="rangeDisabledZOrder" format="integer" />           <!-- 無効範囲のZOrder -->
 
-        <attr name="rangeTickColor" format="color" />           <!-- Tickの色 -->
-        <attr name="rangeTickWidth" format="dimension" />           <!-- Tickの幅 -->
-        <attr name="rangeTickHeight" format="dimension" />           <!-- Tickの高さ -->
-        <attr name="rangeTickVerticalOffset" format="dimension" />           <!-- ベースラインに対するTickの垂直方向オフセット -->
-        <attr name="rangeTickZOrder" format="integer" />           <!-- TickのZOrder -->
+        <!--
+        レール：未再生部分（サムの右）
+        ampRailRightColor: 未再生部分の Rail の色 （デフォルト：colorPrimaryContainer / colorPrimaryVariant）
+        -->
+        <attr name="ampRailRightColor" format="color" />           <!-- Railの未再生部分の色 -->
+        <attr name="ampRailRightHeight" format="dimension" />           <!-- Railの未再生部分の高さ -->
+        <attr name="ampRailRightVerticalOffset" format="dimension" />           <!-- ベースラインに対するRailの未再生部分の垂直方向オフセット -->
+        <attr name="ampRailRightZOrder" format="dimension" />           <!-- Railの未再生部分のZOrder -->
 
-        <attr name="showChapterBar" format="boolean" />           <!-- Chaper Bar (RangeBar) を表示するか（デフォルト:true） -->
+        <!--
+        有効なチャプター範囲
+        ampRangeEnabledColor: 有効なチャプター範囲の色（デフォルト: colorSecondary)
+        -->
+        <attr name="ampRangeEnabledColor" format="color" />           <!-- 有効範囲の色 -->
+        <attr name="ampRangeEnabledHeight" format="dimension" />           <!-- 有効範囲の高さ -->
+        <attr name="ampRangeEnabledVerticalOffset" format="dimension" />           <!-- ベースラインに対する有効範囲の垂直方向オフセット -->
+        <attr name="ampRangeEnabledZOrder" format="integer" />           <!-- 有効範囲のZOrder -->
+
+        <!--
+        無効なチャプター範囲
+        ampRangeEnabledColor: 無効なチャプター範囲の色（デフォルト: colorSurfaceContainerHighest)
+        -->
+        <attr name="ampRangeDisabledColor" format="color" />           <!-- 無効範囲の色 -->
+        <attr name="ampRangeDisabledHeight" format="dimension" />           <!-- 無効範囲の高さ -->
+        <attr name="ampRangeDisabledVerticalOffset" format="dimension" />           <!-- ベースラインに対する無効範囲の垂直方向オフセット -->
+        <attr name="ampRangeDisabledZOrder" format="integer" />           <!-- 無効範囲のZOrder -->
+
+        <attr name="ampRangeTickColor" format="color" />           <!-- Tickの色 -->
+        <attr name="ampRangeTickWidth" format="dimension" />           <!-- Tickの幅 -->
+        <attr name="ampRangeTickHeight" format="dimension" />           <!-- Tickの高さ -->
+        <attr name="ampRangeTickVerticalOffset" format="dimension" />           <!-- ベースラインに対するTickの垂直方向オフセット -->
+        <attr name="ampRangeTickZOrder" format="integer" />           <!-- TickのZOrder -->
+
+        <attr name="ampShowChapterBar" format="boolean" />           <!-- Chaper Bar (RangeBar) を表示するか（デフォルト:true） -->
     </declare-styleable>
 
 </resources>

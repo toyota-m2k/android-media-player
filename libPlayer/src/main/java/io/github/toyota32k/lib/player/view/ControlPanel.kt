@@ -17,22 +17,18 @@ import io.github.toyota32k.binder.command.bindCommand
 import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.multiEnableBinding
 import io.github.toyota32k.binder.multiVisibilityBinding
-import io.github.toyota32k.binder.sliderBinding
-import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.binder.visibilityBinding
-import io.github.toyota32k.lib.player.common.getColorAsDrawable
-import io.github.toyota32k.lib.player.common.getColorAwareOfTheme
-import io.github.toyota32k.lib.player.TpLib
-import io.github.toyota32k.lib.player.common.formatTime
-import io.github.toyota32k.lib.player.model.*
 import io.github.toyota32k.lib.player.R
+import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.lib.player.common.StyledAttrRetriever
 import io.github.toyota32k.lib.player.databinding.V2ControlPanelBinding
+import io.github.toyota32k.lib.player.model.IChapterHandler
+import io.github.toyota32k.lib.player.model.IPlaylistHandler
+import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.lib.player.model.Rotation
 import io.github.toyota32k.shared.gesture.UtClickRepeater
 import io.github.toyota32k.utils.ConstantLiveData
-import io.github.toyota32k.utils.UtLog
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlin.math.max
 import kotlin.math.roundToLong
 
 class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -44,26 +40,40 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
     val controls:V2ControlPanelBinding
 
     init {
-        val sa = context.theme.obtainStyledAttributes(attrs,R.styleable.ControlPanel, defStyleAttr,0)
-        val panelBackground = sa.getColorAsDrawable(R.styleable.ControlPanel_panelBackgroundColor, context.theme, com.google.android.material.R.attr.colorSurface, Color.WHITE)
-        val panelText = sa.getColorAwareOfTheme(R.styleable.ControlPanel_panelForegroundColor, context.theme, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
+        StyledAttrRetriever(context, attrs,R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
+            val panelBackground = sar.getDrawableWithAlphaOnFallback(
+                R.styleable.ControlPanel_ampPanelBackgroundColor,
+                com.google.android.material.R.attr.colorSurface,
+                def = Color.WHITE, alpha = 0x50
+            )
+//            val panelForeground = sar.getColor(
+//                R.styleable.ControlPanel_ampPanelForegroundColor,
+//                com.google.android.material.R.attr.colorOnSurface,
+//                Color.BLACK
+//            )
 
-        val buttonEnabled = sa.getColorAwareOfTheme(R.styleable.ControlPanel_buttonTintColor, context.theme, com.google.android.material.R.attr.colorPrimaryVariant, Color.WHITE)
-        val disabledDefault = Color.argb(0x80, Color.red(panelText), Color.green(panelText), Color.blue(panelText))
-        val buttonDisabled = sa.getColor(R.styleable.ControlPanel_buttonDisabledTintColor, disabledDefault)
-        val buttonTint = ColorStateList(
-            arrayOf(
-                intArrayOf(android.R.attr.state_enabled),
-                intArrayOf(),
-            ),
-            intArrayOf(buttonEnabled, buttonDisabled)
-        )
+            val buttonEnabled = sar.getColor(
+                R.styleable.ControlPanel_ampButtonTintColor,
+                com.google.android.material.R.attr.colorPrimary,
+                Color.BLACK
+            )
+            val buttonDisabled = sar.getColorWithAlphaOnFallback(
+                R.styleable.ControlPanel_ampButtonDisabledTintColor,
+                com.google.android.material.R.attr.colorOnSurface,
+                Color.BLACK, alpha = 0x50
+            )
+            val buttonTint = ColorStateList(
+                arrayOf(
+                    intArrayOf(android.R.attr.state_enabled),
+                    intArrayOf(),
+                ),
+                intArrayOf(buttonEnabled, buttonDisabled)
+            )
 
-        sa.recycle()
-
-        controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
-            controlPanelRoot.background = panelBackground
-            controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
+            controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
+                controlPanelRoot.background = panelBackground
+                controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
+            }
         }
     }
 

@@ -12,11 +12,11 @@ import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
 import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.binder.visibilityBinding
-import io.github.toyota32k.lib.player.common.getColorAsDrawable
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.FitMode
 import io.github.toyota32k.lib.player.common.UtFitter
 import io.github.toyota32k.lib.player.R
+import io.github.toyota32k.lib.player.common.StyledAttrRetriever
 import io.github.toyota32k.lib.player.databinding.V2VideoExoPlayerBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.utils.*
@@ -44,41 +44,16 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         get() = playerView.useController
         set(v) { playerView.useController = v }
 
-    val fitParent:Boolean
-
     private val rootViewSize = MutableStateFlow<Size?>(null)
-//    val playOnTouch:Boolean
 
     init {
         controls = V2VideoExoPlayerBinding.inflate(LayoutInflater.from(context), this, true)
-        val sa = context.theme.obtainStyledAttributes(attrs, R.styleable.ExoPlayerHost,defStyleAttr,0)
-        val showControlBar: Boolean
-        try {
-            // タッチで再生/一時停止をトグルさせる動作の有効・無効
-            //
-            // デフォルト有効
-            //      ユニットプレーヤー以外は無効化
-//            playOnTouch = sa.getBoolean(R.styleable.ExoVideoPlayer_playOnTouch, false)
-            // ExoPlayerのControllerを表示するかしないか・・・表示する場合も、カスタマイズされたControllerが使用される
-            //
-            // デフォルト無効
-            //      フルスクリーン再生の場合のみ有効
-            showControlBar = sa.getBoolean(R.styleable.ExoPlayerHost_showControlBar, false)
-
-            // AmvExoVideoPlayerのサイズに合わせて、プレーヤーサイズを自動調整するかどうか
-            // 汎用的には、AmvExoVideoPlayer.setLayoutHint()を呼び出すことで動画プレーヤー画面のサイズを変更するが、
-            // 実装によっては、この指定の方が便利なケースもありそう。
-            //
-            // デフォルト無効
-            //      フルスクリーン再生の場合のみ有効
-            fitParent = sa.getBoolean(R.styleable.ExoPlayerHost_fitParent, false)
-
-            controls.expPlayerRoot.background = sa.getColorAsDrawable(R.styleable.ExoPlayerHost_playerBackground, context.theme, com.google.android.material.R.attr.colorOnSurfaceInverse, Color.BLACK)
-        } finally {
-            sa.recycle()
-        }
-        if(showControlBar) {
-            playerView.useController = true
+        StyledAttrRetriever(context,attrs,R.styleable.ExoPlayerHost,defStyleAttr,0).use { sar ->
+            controls.expPlayerRoot.background = sar.getDrawable(
+                R.styleable.ExoPlayerHost_ampPlayerBackground,
+                com.google.android.material.R.attr.colorSurface,
+                Color.BLACK
+            )
         }
     }
 
