@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.core.view.children
+import androidx.core.view.setPadding
 import com.google.android.material.slider.Slider
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
@@ -21,6 +22,7 @@ import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.StyledAttrRetriever
+import io.github.toyota32k.lib.player.common.px
 import io.github.toyota32k.lib.player.databinding.V2ControlPanelBinding
 import io.github.toyota32k.lib.player.model.IChapterHandler
 import io.github.toyota32k.lib.player.model.IPlaylistHandler
@@ -69,9 +71,15 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 ),
                 intArrayOf(buttonEnabled, buttonDisabled)
             )
+            val padding = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPadding, 0)
+            val paddingStart = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingStart, padding)
+            val paddingTop = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingTop, padding)
+            val paddingEnd = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingEnd, padding)
+            val paddingBottom = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingBottom, padding)
 
             controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
                 controlPanelRoot.background = panelBackground
+                controlPanelRoot.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
                 controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
             }
         }

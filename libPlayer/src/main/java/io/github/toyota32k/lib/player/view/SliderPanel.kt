@@ -43,14 +43,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
                 def = Color.BLACK
             )
 
-            val panelBottomPadding = sar.getDimensionPixelSize(
-                R.styleable.ControlPanel_ampPanelBottomPadding,
-                def = 5.dp
-            )
-
             controls = V2SliderPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
-//                    sliderPanelRoot.background = panelBackground
-                    sliderPanelRoot.setPadding(0, 0, 0, panelBottomPadding)
                     counterLabel.setTextColor(panelText)
                     durationLabel.setTextColor(panelText)
                 }

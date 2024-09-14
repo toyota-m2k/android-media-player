@@ -18,7 +18,12 @@
         <attr name="ampPanelForegroundColor" format="color"/>
         <attr name="ampButtonTintColor" format="color"/>
         <attr name="ampButtonDisabledTintColor" format="color"/>
-        <attr name="ampPanelBottomPadding" format="dimension"/>
+
+        <attr name="ampPanelPadding" format="dimension"/>
+        <attr name="ampPanelPaddingStart" format="dimension"/>
+        <attr name="ampPanelPaddingTop" format="dimension"/>
+        <attr name="ampPanelPaddingEnd" format="dimension"/>
+        <attr name="ampPanelPaddingBottom" format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="PlayerSlider">
