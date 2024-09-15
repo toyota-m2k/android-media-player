@@ -10,7 +10,6 @@ import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
-import io.github.toyota32k.utils.UtLog
 
 @Suppress("unused")
 class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -19,11 +18,8 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
         val logger get() = TpLib.logger
     }
 
-    val controls:V2PlayerViewBinding
-
-    init {
-        controls = V2PlayerViewBinding.inflate(LayoutInflater.from(context), this, true)
-    }
+    private val controls:V2PlayerViewBinding =
+        V2PlayerViewBinding.inflate(LayoutInflater.from(context), this, true)
 
     private lateinit var model: PlayerControllerModel
 

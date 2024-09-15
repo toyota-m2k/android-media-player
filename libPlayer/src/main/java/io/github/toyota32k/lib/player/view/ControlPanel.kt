@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.core.view.children
-import androidx.core.view.setPadding
 import com.google.android.material.slider.Slider
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
@@ -21,8 +20,6 @@ import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
-import io.github.toyota32k.lib.player.common.StyledAttrRetriever
-import io.github.toyota32k.lib.player.common.px
 import io.github.toyota32k.lib.player.databinding.V2ControlPanelBinding
 import io.github.toyota32k.lib.player.model.IChapterHandler
 import io.github.toyota32k.lib.player.model.IPlaylistHandler
@@ -30,6 +27,7 @@ import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.model.Rotation
 import io.github.toyota32k.shared.gesture.UtClickRepeater
 import io.github.toyota32k.utils.ConstantLiveData
+import io.github.toyota32k.utils.StyledAttrRetriever
 import kotlinx.coroutines.flow.map
 import kotlin.math.roundToLong
 
@@ -39,7 +37,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
         val logger get() = TpLib.logger
     }
 
-    val controls:V2ControlPanelBinding
+    private val controls:V2ControlPanelBinding
 
     init {
         StyledAttrRetriever(context, attrs,R.styleable.ControlPanel, defStyleAttr,0).use { sar ->

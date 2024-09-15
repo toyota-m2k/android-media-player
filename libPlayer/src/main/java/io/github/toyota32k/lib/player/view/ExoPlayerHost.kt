@@ -16,7 +16,6 @@ import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.FitMode
 import io.github.toyota32k.lib.player.common.UtFitter
 import io.github.toyota32k.lib.player.R
-import io.github.toyota32k.lib.player.common.StyledAttrRetriever
 import io.github.toyota32k.lib.player.databinding.V2VideoExoPlayerBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.utils.*
@@ -35,9 +34,10 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
     // 使う人（ActivityやFragment）がセットすること
     private lateinit var model: PlayerControllerModel
-    val controls: V2VideoExoPlayerBinding
+    private val controls: V2VideoExoPlayerBinding =
+        V2VideoExoPlayerBinding.inflate(LayoutInflater.from(context), this, true)
 
-    val playerView get() = controls.expPlayerView
+    private val playerView get() = controls.expPlayerView
     val rootView get() = controls.expPlayerRoot
 
     var useExoController:Boolean
@@ -47,7 +47,6 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
     private val rootViewSize = MutableStateFlow<Size?>(null)
 
     init {
-        controls = V2VideoExoPlayerBinding.inflate(LayoutInflater.from(context), this, true)
         StyledAttrRetriever(context,attrs,R.styleable.ExoPlayerHost,defStyleAttr,0).use { sar ->
             controls.expPlayerRoot.background = sar.getDrawable(
                 R.styleable.ExoPlayerHost_ampPlayerBackground,

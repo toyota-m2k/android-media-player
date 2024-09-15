@@ -10,13 +10,12 @@ import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
-import io.github.toyota32k.lib.player.common.StyledAttrRetriever
-import io.github.toyota32k.lib.player.common.dp
 import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
 import io.github.toyota32k.lib.player.model.IMediaSourceWithChapter
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.utils.GenericDisposable
+import io.github.toyota32k.utils.StyledAttrRetriever
 import io.github.toyota32k.utils.disposableObserve
 import kotlinx.coroutines.flow.map
 
@@ -26,7 +25,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val logger get() = TpLib.logger
     }
 
-    val controls:V2SliderPanelBinding
+    private val controls:V2SliderPanelBinding
     private lateinit var model: PlayerControllerModel
 
     init {

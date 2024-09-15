@@ -19,18 +19,18 @@ import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BindingMode
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
-import io.github.toyota32k.lib.player.common.IDimension
-import io.github.toyota32k.lib.player.common.StyledAttrRetriever
-import io.github.toyota32k.lib.player.common.dp
-import io.github.toyota32k.lib.player.common.px
 import io.github.toyota32k.lib.player.model.IChapterList
 import io.github.toyota32k.lib.player.model.IMutableChapterList
 import io.github.toyota32k.lib.player.model.Range
+import io.github.toyota32k.utils.IDimension
 import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.LifecycleDisposer
+import io.github.toyota32k.utils.StyledAttrRetriever
 import io.github.toyota32k.utils.asMutableLiveData
 import io.github.toyota32k.utils.disposableObserve
+import io.github.toyota32k.utils.dp
 import io.github.toyota32k.utils.lifecycleOwner
+import io.github.toyota32k.utils.px
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.max
@@ -129,7 +129,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
      */
     private fun updateChapters(redraw:Boolean=true) {
         markerPartsInfo.setMarkers(chapterList)
-        enableedChapterInfo.setRanges(chapterList?.enabledRanges() ?: emptyList())
+        enabledChapterInfo.setRanges(chapterList?.enabledRanges() ?: emptyList())
         disabledChapterInfo.setRanges(chapterList?.disabledRanges() ?: emptyList())
         if(redraw) {
             invalidate()
@@ -162,7 +162,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         fun draw(canvas: Canvas)
     }
-    private val allParts get() = listOf(thumbPartsInfo, markerPartsInfo, railRightInfo, railLeftInfo, enableedChapterInfo, disabledChapterInfo, markerTickPartsInfo)
+    private val allParts get() = listOf(thumbPartsInfo, markerPartsInfo, railRightInfo, railLeftInfo, enabledChapterInfo, disabledChapterInfo, markerTickPartsInfo)
     private var drawingParts:List<IPartsInfo> = emptyList()
     private fun updateDrawableParts() {
         drawingParts = allParts.filter { it.isValid }.sortedBy { it.zOrder }
@@ -190,7 +190,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     /**
      * Thumb アイコン
      */
-    inner class ThumbPartsInfo(drawable:Drawable, verticalOffset:Int, width:Int, height:Int, horizontalCenter: Float, val underThumbInfo:ThumbPartsInfo?=null): IconPartsInfo(drawable, verticalOffset, width, height, horizontalCenter) {
+    inner class ThumbPartsInfo(drawable:Drawable, verticalOffset:Int, width:Int, height:Int, horizontalCenter: Float, private val underThumbInfo:ThumbPartsInfo?=null): IconPartsInfo(drawable, verticalOffset, width, height, horizontalCenter) {
         override val description: String = "Thumb"
         override val zOrder: Int = Int.MAX_VALUE
         override fun draw(canvas: Canvas) {
@@ -381,9 +381,9 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
     }
     private lateinit var disabledChapterInfo:ChapterPartsInfo
-    private lateinit var enableedChapterInfo:ChapterPartsInfo
+    private lateinit var enabledChapterInfo:ChapterPartsInfo
     private fun setEnabledChapterAttrs(@ColorInt color: Int, height:Int, verticalOffset:Int, zOrder:Int) :ChapterPartsInfo {
-        return ChapterPartsInfo("EnabledChapters", color,height,verticalOffset,zOrder).apply { enableedChapterInfo = this }
+        return ChapterPartsInfo("EnabledChapters", color,height,verticalOffset,zOrder).apply { enabledChapterInfo = this }
     }
     private fun setDisabledChapterAttrs(@ColorInt color: Int, height:Int, verticalOffset:Int, zOrder:Int) :ChapterPartsInfo {
         return ChapterPartsInfo("DisabledChapters",color,height,verticalOffset,zOrder).apply { disabledChapterInfo = this }
