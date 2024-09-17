@@ -18,7 +18,8 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
         val logger get() = TpLib.logger
     }
 
-    private val controls:V2PlayerViewBinding =
+    @Suppress("MemberVisibilityCanBePrivate")
+    val controls:V2PlayerViewBinding =
         V2PlayerViewBinding.inflate(LayoutInflater.from(context), this, true)
 
     private lateinit var model: PlayerControllerModel
