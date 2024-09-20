@@ -18,6 +18,7 @@ import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.lib.player.model.Range.Companion.clamp
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.SuspendableEvent
 import io.github.toyota32k.utils.UtLog
@@ -125,7 +126,7 @@ open class BasicPlayerModel(
     /**
      * 現在再生中の動画のソース
      */
-    override val currentSource = MutableStateFlow<IMediaSource?>(null)
+    override val currentSource:StateFlow<IMediaSource?> = MutableStateFlow<IMediaSource?>(null)
 
     /**
      * 動画の全再生時間
@@ -137,6 +138,11 @@ open class BasicPlayerModel(
      * ExoPlayerの動画読み込みが成功したとき onVideoSizeChanged()イベントから設定される。
      */
     override val videoSize: StateFlow<Size?> = MutableStateFlow(null)
+
+    /**
+     * 再生範囲（部分再生用）
+     */
+    override val playRange: StateFlow<Range?> = MutableStateFlow(null)
 
     /**
      * （外部から）エラーメッセージを設定する
@@ -220,15 +226,20 @@ open class BasicPlayerModel(
                         val src = currentSource.value as? IMediaSourceWithChapter
                         val pos = player.currentPosition
                         playerSeekPosition.mutable.value = pos
+                        // 部分再生のチェック
+                        val range = playRange.value?.takeIf { it.isTerminated }
+                        val endPosition = range?.end ?: naturalDuration.value
+                        val clampedPos = range.clamp(pos)
+
                         // 無効区間、トリミングによる再生スキップの処理
                         if (src is IMediaSourceWithChapter && src.chapterList.isNotEmpty) {
                             val dr = src.chapterList.disabledRanges(src.trimming)
-                            val hit = dr.firstOrNull { it.contains(pos) }
+                            val hit = dr.firstOrNull { it.contains(clampedPos) }
                             if (hit != null) {
-                                if (hit.end == 0L || hit.end >= naturalDuration.value) {
+                                if (hit.end == 0L || hit.end >= endPosition) {
                                     ended.value = true
                                 } else {
-                                    player.seekTo(hit.end)
+                                    player.seekTo(range.clamp(hit.end))
                                 }
                             }
                         }
@@ -241,12 +252,25 @@ open class BasicPlayerModel(
         }
     }
 
+    override fun setPlayRange(range: Range?) {
+        if(range==null) {
+            playRange.mutable.value = null
+        } else {
+            if(naturalDuration.value>0) {
+                playRange.mutable.value = Range.terminate(range, naturalDuration.value)
+                seekTo(range.start)
+            } else {
+                playRange.mutable.value = range
+            }
+        }
+    }
+
     /**
      * 解放
      */
     override fun close() {
         logger.debug()
-        currentSource.value = null
+        currentSource.mutable.value = null
         resetablePlayer.reset()
         scope.cancel()
     }
@@ -446,6 +470,12 @@ open class BasicPlayerModel(
                     ended.value = false
                     state.mutable.value = PlayerState.Ready
                     naturalDuration.mutable.value = runOnPlayer(0L) { duration }
+                    playRange.value?.apply {
+                        if(!isTerminated) {
+                            setPlayRange(this)
+                        }
+                    }
+
                 }
                 Player.STATE_ENDED -> {
 //                    player.playWhenReady = false
@@ -523,7 +553,10 @@ open class BasicPlayerModel(
     override fun setSource(src:IMediaSource?, autoPlay:Boolean) {
         reset()
         if(src==null) return
-        currentSource.value = src
+        naturalDuration.mutable.value = 0L
+        currentSource.mutable.value = src
+        setPlayRange(null)
+
         val pos = max(src.trimming.start, src.startPosition.getAndSet(0L))
 
         runOnPlayer {
@@ -546,7 +579,8 @@ open class BasicPlayerModel(
     override fun reset() {
         logger.debug()
         pause()
-        currentSource.value = null
+        currentSource.mutable.value = null
+        playRange.mutable.value = null
         seekManager.reset()
         playerSeekPosition.mutable.value = 0L
         errorMessage.mutable.value = null

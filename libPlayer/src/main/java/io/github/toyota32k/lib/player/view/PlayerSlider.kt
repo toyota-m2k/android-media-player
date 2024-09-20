@@ -65,7 +65,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
 
     private var mPosition:Long = 0L
-    private var mDuration:Long = 100L
+    private var mDuration:Long = 0L
 
     var position:Long
         get() = mPosition
@@ -77,13 +77,13 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             }
         }
     fun setPositionNotNotify(value:Long) {
-        val pos = max(0, min(duration, value))
+        val pos = clampPosition(value)
         if(pos != mPosition) {
             mPosition = pos
             invalidate()
         }
     }
-    val duration:Long
+    val naturalDuration:Long
         get() = mDuration
 
     /**
@@ -93,9 +93,13 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
      * - ただし、setDuration()より前に setChapterList()しても無効（このメソッドでクリアされる）
      * - 再生位置更新イベントが必要なら notify = true で呼ぶ。
      */
-    fun setDuration(max:Long, chapterList:IChapterList?=null, notify:Boolean=false) {
+    fun setDuration(
+        max:Long,
+        chapterList:IChapterList?=null,
+        notify:Boolean=false) {
         mPosition = 0L
         mDuration = max
+        mPlayRange = null   // duration が変わったら play-range はクリア
         if(chapterList!=null) {
             this.chapterList = chapterList
             updateChapters(false)
@@ -105,6 +109,28 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             onValueChanged?.invoke(0L)
         }
     }
+    // endregion
+
+    // region Play Range
+    val startPosition:Long get() = mPlayRange?.start ?: 0L
+    val endPosition:Long get() = mPlayRange?.end ?: mDuration
+    val playLength:Long get() = endPosition - startPosition
+    private var mPlayRange:Range? = null
+//    val range:Range get() = mPlayRange ?: Range.empty
+
+    fun setPlayRange(range:Range?, redraw:Boolean=true) {
+        if(range==mPlayRange) return    // 変更なし
+        if(range==null||!range.isTerminated) {
+            mPlayRange = null
+        } else {
+            mPlayRange = range
+        }
+        mPlayRange = if(range==null) null else Range.terminate(range, mDuration)
+        if(redraw) {
+            invalidate()
+        }
+    }
+
     // endregion
 
     // region Support Chapter List
@@ -139,12 +165,14 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     // endregion
 
     // region 座標変換
-
+    private fun clampPosition(position: Long):Long {
+        return position.coerceIn(startPosition, endPosition)
+    }
     private fun positionToX(position:Long):Float {
-        return (position.toFloat() / duration.toFloat()) * sliderRange + leftMargin
+        return (position-startPosition).toFloat() / playLength.toFloat() * sliderRange + leftMargin
     }
     private fun xToPosition(x:Float):Long {
-        return ((x - leftMargin) / sliderRange * duration.toFloat()).roundToLong()
+        return ((x - leftMargin) / sliderRange * playLength).roundToLong() + startPosition
     }
 
     // endregion
@@ -322,8 +350,12 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         private val top:Int get() =  sliderTop + upperHeight + verticalOffset
         val yCenter:Float get() = top + height/2f
         fun drawRange(canvas: Canvas, start:Long, end:Long) {
-            val sx = positionToX(start)
-            val ex = positionToX(end)
+            if(end<=startPosition) return
+            if(endPosition<=start) return
+            if(end<=start) return
+
+            val ex = positionToX(clampPosition(end))
+            val sx = positionToX(clampPosition(start))
             val y = yCenter
             canvas.drawLine(sx,y,ex,y,paint)
         }
@@ -335,7 +367,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         zOrder:Int
     ) : RangePartsInfo("RailRight",color,height,verticalOffset,zOrder) {
         override fun draw(canvas: Canvas) {
-            drawRange(canvas, position, duration)
+            drawRange(canvas, position, playLength)
         }
     }
     private lateinit var railRightInfo:RailRightInfo
@@ -376,7 +408,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         override fun draw(canvas: Canvas) {
             for(r in ranges) {
-                drawRange(canvas, r.start, if(r.end==0L) duration else r.end)
+                drawRange(canvas, r.start, if(r.end==0L) naturalDuration else r.end)
             }
         }
     }
@@ -519,7 +551,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
 
     override fun onDraw(canvas: Canvas) {
-        if(duration==0L) return
+        if(naturalDuration==0L) return
         for(p in drawingParts) {
             p.draw(canvas)
         }
@@ -542,7 +574,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             MotionEvent.ACTION_MOVE -> {}
             else -> { return false }
         }
-        position = max(0, min(duration, xToPosition(x)))
+        position = xToPosition(x)
         return true
     }
 

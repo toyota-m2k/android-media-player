@@ -194,18 +194,6 @@
                 android:contentDescription="@string/desc_close_button" />
         </LinearLayout>
     </io.github.toyota32k.viewex.library.Viewbox>
-    <TextView
-        android:id="@+id/counter_label"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:fontFamily="monospace"
-        app:layout_constraintBottom_toTopOf="@id/slider_panel"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="5dp"
-        android:layout_marginBottom="-14dp"
-        tools:text="00:00.00"
-        />
-
     <io.github.toyota32k.lib.player.view.SliderPanel
         android:id="@+id/slider_panel"
         android:layout_width="match_parent"

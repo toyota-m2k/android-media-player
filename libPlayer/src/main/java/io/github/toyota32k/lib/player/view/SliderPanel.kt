@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.enableBinding
+import io.github.toyota32k.binder.observe
 import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
@@ -17,6 +18,7 @@ import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.utils.GenericDisposable
 import io.github.toyota32k.utils.StyledAttrRetriever
 import io.github.toyota32k.utils.disposableObserve
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -58,14 +60,17 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
 
         binder
             .textBinding(controls.counterLabel, model.counterText)
-            .textBinding(controls.durationLabel, model.playerModel.naturalDuration.map { formatTime(it,it) } )
+            .textBinding(controls.durationLabel, combine(model.playerModel.naturalDuration, model.playerModel.playRange) {duration, range-> formatTime(range?.end?:duration, duration) } )
             .playerSliderBinding(controls.playerSlider, model.playerModel.playerSeekPosition, duration = model.playerModel.naturalDuration)
             .enableBinding(controls.playerSlider, model.playerModel.isReady)
             .add( GenericDisposable { controls.playerSlider.setValueChangedByUserListener(null) } )
-            .add( model.playerModel.currentSource.disposableObserve(binder.requireOwner) {src->
-                val sourceWithChapter = src as? IMediaSourceWithChapter ?: return@disposableObserve
+            .observe(model.playerModel.currentSource) {src->
+                val sourceWithChapter = src as? IMediaSourceWithChapter ?: return@observe
                 controls.playerSlider.setChapterList(sourceWithChapter.chapterList)
-            })
+            }
+            .observe(model.playerModel.playRange) {
+                controls.playerSlider.setPlayRange(it)
+            }
     }
 
 }

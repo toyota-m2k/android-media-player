@@ -9,6 +9,7 @@ import io.github.toyota32k.android.media.player.databinding.ActivityMainBinding
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.clickBinding
 import io.github.toyota32k.lib.player.model.IMutableChapterList
+import io.github.toyota32k.lib.player.model.Range
 import io.github.toyota32k.lib.player.model.chapter.Chapter
 import io.github.toyota32k.lib.player.model.chapter.MutableChapterList
 
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
             )
         )
         controls.playerSlider.setChapterList(chapterList)
+        controls.playerSlider.setPlayRange(Range(4000L,8000L))
 
         binder.owner(this)
             .clickBinding(controls.addChapter) {

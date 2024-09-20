@@ -8,7 +8,7 @@ data class Range (val start:Long, val end:Long=0) {
     /**
      * pos が start-end 内に収まるようクリップする
      */
-    fun clip(pos:Long) : Long {
+    fun clamp(pos:Long) : Long {
         return if(start<end) {
             min(max(start, pos), end)
         } else {
@@ -28,6 +28,8 @@ data class Range (val start:Long, val end:Long=0) {
         get() = start == 0L && end==0L
     val span:Long
         get() = end - start
+    val isTerminated:Boolean
+        get() = end > start
 
     companion object {
         val empty = Range(0,0)
@@ -44,5 +46,13 @@ data class Range (val start:Long, val end:Long=0) {
                 yield(terminate(r, duration))
             }
         }
+
+        fun clamp(r:Range?, pos:Long):Long {
+            return r?.clamp(pos) ?: pos
+        }
     }
+}
+
+fun Range?.clamp(pos:Long):Long {
+    return Range.clamp(this, pos)
 }

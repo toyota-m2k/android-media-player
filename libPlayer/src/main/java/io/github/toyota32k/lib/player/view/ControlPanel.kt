@@ -46,11 +46,6 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 com.google.android.material.R.attr.colorSurface,
                 def = Color.WHITE, alpha = 0x50
             )
-//            val panelForeground = sar.getColor(
-//                R.styleable.ControlPanel_ampPanelForegroundColor,
-//                com.google.android.material.R.attr.colorOnSurface,
-//                Color.BLACK
-//            )
 
             val buttonEnabled = sar.getColor(
                 R.styleable.ControlPanel_ampButtonTintColor,
@@ -110,8 +105,21 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .multiVisibilityBinding(arrayOf(controls.seekBackSButton,controls.seekForwardSButton), ConstantLiveData(model.seekSmall!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevChapterButton, controls.nextChapterButton), ConstantLiveData(chapterHandler!=null), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevVideoButton, controls.nextVideoButton), ConstantLiveData(playlistHandler!=null && model.showNextPreviousButton), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
-            .multiEnableBinding(arrayOf(controls.playButton, controls.pauseButton, controls.seekBackLButton, controls.seekBackMButton, controls.seekBackSButton, controls.seekForwardLButton, controls.seekForwardMButton, controls.seekForwardSButton, controls.fullscreenButton, controls.pinpButton), model.playerModel.isReady)
-//            .sliderBinding(controls.slider, model.playerModel.playerSeekPosition.map { it.toFloat() }, min=null, max= model.playerModel.naturalDuration.map { max(100f, it.toFloat())})
+            .multiEnableBinding(arrayOf(
+                controls.playButton,
+                controls.pauseButton,
+                controls.seekBackLButton,
+                controls.seekBackMButton,
+                controls.seekBackSButton,
+                controls.seekForwardLButton,
+                controls.seekForwardMButton,
+                controls.seekForwardSButton,
+                controls.prevChapterButton,
+                controls.nextChapterButton,
+                controls.rotateLeft,
+                controls.rotateRight,
+                controls.fullscreenButton,
+                controls.pinpButton), model.playerModel.isReady)
             .enableBinding(controls.snapshotButton, model.canSnapshot)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)
@@ -165,5 +173,4 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             model.playerModel.seekManager.requestedPositionFromSlider.value = value.roundToLong()
         }
     }
-
 }

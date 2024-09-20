@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface IPlayerModel : AutoCloseable {
     fun setSource(src:IMediaSource?, autoPlay:Boolean)
+    fun setPlayRange(range:Range?)
+
     fun play()
     fun pause()
     fun togglePlay()
@@ -23,6 +25,7 @@ interface IPlayerModel : AutoCloseable {
 //    fun onRootViewSizeChanged(size: Size)
     fun onPlaybackCompleted()
 
+
     val currentSource: StateFlow<IMediaSource?>
 //    val playerSize: StateFlow<Size>
     val videoSize: StateFlow<Size?>
@@ -34,6 +37,7 @@ interface IPlayerModel : AutoCloseable {
 
     val playerSeekPosition: StateFlow<Long>
     val naturalDuration: StateFlow<Long>
+    val playRange: StateFlow<Range?>
     val isReady: StateFlow<Boolean>
     val isLoading: StateFlow<Boolean>
     val isPlaying: StateFlow<Boolean>
