@@ -229,19 +229,25 @@ open class BasicPlayerModel(
                         // 部分再生のチェック
                         val range = playRange.value?.takeIf { it.isTerminated }
                         val endPosition = range?.end ?: naturalDuration.value
-                        val clampedPos = range.clamp(pos)
+                        var adjustedPosition = range.clamp(pos)
 
-                        // 無効区間、トリミングによる再生スキップの処理
                         if (src is IMediaSourceWithChapter && src.chapterList.isNotEmpty) {
+                            // 無効区間、トリミングによる再生スキップの処理
                             val dr = src.chapterList.disabledRanges(src.trimming)
-                            val hit = dr.firstOrNull { it.contains(clampedPos) }
+                            val hit = dr.firstOrNull { it.contains(adjustedPosition) }
                             if (hit != null) {
                                 if (hit.end == 0L || hit.end >= endPosition) {
-                                    ended.value = true
+                                    adjustedPosition = endPosition
                                 } else {
-                                    player.seekTo(range.clamp(hit.end))
+                                    adjustedPosition = range.clamp(hit.end)
                                 }
                             }
+                        }
+                        if (adjustedPosition != pos) {
+                            if(adjustedPosition>=endPosition) {
+                                ended.value = true
+                            }
+                            seekTo(adjustedPosition)
                         }
                     }
                 } else {
@@ -355,7 +361,7 @@ open class BasicPlayerModel(
             s = max(0, trimming.start)
             e = if(trimming.end in (s + 1) until duration) trimming.end else duration
         }
-        return max(s, min(pos,e))
+        return playRange.value.clamp(pos.coerceIn(s,e))
     }
 
     /**

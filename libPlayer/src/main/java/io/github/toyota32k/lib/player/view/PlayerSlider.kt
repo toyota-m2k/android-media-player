@@ -45,8 +45,9 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         const val DEF_RAIL_HEIGHT = 4
         const val DEF_ENABLED_RANGE_HEIGHT = 12
         const val DEF_MARKER_TICK_HEIGHT = DEF_ENABLED_RANGE_HEIGHT
-        const val DEF_MARKER_TICK_WIDTH = 2
+        const val DEF_MARKER_TICK_WIDTH = 1
         const val DEF_MARKER_ICON_HEIGHT = 10
+        const val DEF_MARKER_ICON_WIDTH = 5
         const val DEF_THUMB_HEIGHT = DEF_ENABLED_RANGE_HEIGHT + 6
         const val DEF_THUMB_WIDTH = 2
         const val DEF_UNDER_THUMB_WIDTH = 4
@@ -309,7 +310,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         var zOrder:Int
         if(customIcon==null) {
             // アイコンが指定されていなければ、デフォルト値を使用
-            width = DEF_MARKER_ICON_HEIGHT.dp
+            width = DEF_MARKER_ICON_WIDTH.dp
             height = DEF_MARKER_ICON_HEIGHT.dp
             zOrder = 3
         } else {
@@ -321,7 +322,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         val h = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampMarkerIconHeight, height)
         val verticalOffset = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampMarkerVerticalOffset, (DEF_RAIL_HEIGHT / 2).dp)
         val horizontalCenter = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampMarkerHorizontalCenter, width/2).toFloat()
-        val tintColor = sar.getColor(R.styleable.PlayerSlider_ampMarkerTintColor, com.google.android.material.R.attr.colorOnSurface, 0xFF000000.toInt())
+        val tintColor = sar.getColor(R.styleable.PlayerSlider_ampMarkerTintColor, com.google.android.material.R.attr.colorOutline, 0xFF000000.toInt())
         zOrder = sar.sa.getInt(R.styleable.PlayerSlider_ampMarkerZOrder, zOrder)
         if(tintColor != 0) {
             drawable.setTint(tintColor)
@@ -473,13 +474,13 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
                     zOrder = sar.sa.getInt(R.styleable.PlayerSlider_ampRangeEnabledZOrder, 0)
                 )
                 setDisabledChapterAttrs(
-                    color = sar.getColor(R.styleable.PlayerSlider_ampRangeDisabledColor,com.google.android.material.R.attr.colorSurfaceContainerHighest, 0xFF808080.toInt()),
+                    color = sar.getColor(R.styleable.PlayerSlider_ampRangeDisabledColor,com.google.android.material.R.attr.colorOutline, 0xFF808080.toInt()),
                     height = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampRangeDisabledHeight,DEF_RAIL_HEIGHT.dp),
                     verticalOffset = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampRangeDisabledVerticalOffset,(-DEF_RAIL_HEIGHT / 2).dp),
                     zOrder = sar.sa.getInt(R.styleable.PlayerSlider_ampRangeDisabledZOrder, 2)
                 )
                 setMarkerTickAttrs(
-                    color = sar.getColor(R.styleable.PlayerSlider_ampRangeTickColor, com.google.android.material.R.attr.colorOnSurface, Color.BLACK),
+                    color = sar.getColor(R.styleable.PlayerSlider_ampRangeTickColor, com.google.android.material.R.attr.colorOutline, Color.BLACK),
                     width = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampRangeTickWidth, DEF_MARKER_TICK_WIDTH.dp),
                     height = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampRangeTickHeight, DEF_MARKER_TICK_HEIGHT.dp),
                     verticalOffset = sar.getDimensionPixelSize(R.styleable.PlayerSlider_ampRangeTickVerticalOffset, (-DEF_ENABLED_RANGE_HEIGHT / 2).dp),

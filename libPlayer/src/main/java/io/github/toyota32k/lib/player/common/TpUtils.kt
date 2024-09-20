@@ -137,7 +137,7 @@ class TpTimeSpan(private val ms : Long) {
         return String.format(Locale.US, "%02d.%02d", seconds, milliseconds/10)
     }
     fun formatMsH() : String {
-        return String.format(Locale.US, "%02d:%02d:02d.%02d", hours, minutes, seconds, milliseconds/10)
+        return String.format(Locale.US, "%02d:%02d:%02d.%02d", hours, minutes, seconds, milliseconds/10)
     }
     fun formatMsM() : String {
         return String.format(Locale.US, "%02d:%02d.%02d", minutes, seconds, milliseconds/10)
