@@ -10,11 +10,13 @@
         android:layout_height="match_parent"
         android:layout_gravity="top|center_horizontal"
         android:id="@+id/player"
+        app:ampAttrsByParent="true"
         />
     <io.github.toyota32k.lib.player.view.ControlPanel
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/controller"
         android:layout_gravity="bottom"
+        app:ampAttrsByParent="true"
         />
 </FrameLayout>

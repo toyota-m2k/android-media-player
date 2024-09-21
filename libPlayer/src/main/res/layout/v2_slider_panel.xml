@@ -29,11 +29,55 @@
         android:layout_marginEnd="5dp"
         tools:text="99:99:99"
         />
+    <ImageButton
+        android:id="@+id/prev_range_button"
+        android:layout_width="@dimen/media_button_width"
+        android:layout_height="@dimen/media_button_height"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/player_slider"
+        app:layout_constraintBottom_toBottomOf="@+id/player_slider"
+        app:srcCompat="@drawable/ic_prev_range"
+        android:background="?attr/selectableItemBackground"
+        android:contentDescription="@string/desc_collapse"
+        android:visibility="gone"
+        tools:visibility="visible"
+        />
+    <ImageButton
+        android:id="@+id/next_range_button"
+        android:layout_width="@dimen/media_button_width"
+        android:layout_height="@dimen/media_button_height"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/player_slider"
+        app:layout_constraintBottom_toBottomOf="@+id/player_slider"
+        app:srcCompat="@drawable/ic_next_range"
+        android:background="?attr/selectableItemBackground"
+        android:contentDescription="@string/desc_collapse"
+        android:visibility="gone"
+        tools:visibility="visible"
+        />
     <io.github.toyota32k.lib.player.view.PlayerSlider
         android:id="@+id/player_slider"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/duration_label"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/prev_range_button"
+        app:layout_constraintEnd_toStartOf="@+id/next_range_button"
+        app:ampAttrsByParent="true"
         />
+
+    <FrameLayout
+        android:id="@+id/slider_guard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="@+id/player_slider"
+        app:layout_constraintBottom_toBottomOf="@+id/player_slider"
+        app:layout_constraintStart_toStartOf="@+id/player_slider"
+        app:layout_constraintEnd_toEndOf="@+id/player_slider"
+        android:background="#3000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

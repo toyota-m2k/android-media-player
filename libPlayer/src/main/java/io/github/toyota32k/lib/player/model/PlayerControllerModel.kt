@@ -189,6 +189,34 @@ open class PlayerControllerModel(
     open val autoAssociatePlayer:Boolean = true
 
     val showControlPanel = MutableStateFlow(true)
+    val rangePlayModel:StateFlow<RangedPlayModel?> = MutableStateFlow<RangedPlayModel?>(null)
+    val hasNextRange = MutableStateFlow(false)
+    val hasPrevRange = MutableStateFlow(false)
+
+    val commandChangeRange = LiteCommand<Boolean>(::changeRange)
+
+    fun setRangePlayModel(rvm:RangedPlayModel?) {
+        rangePlayModel.mutable.value = rvm
+        playerModel.setPlayRange(rvm?.currentRange)
+        if(rvm!=null) {
+            hasNextRange.mutable.value = rvm.hasNext
+            hasPrevRange.mutable.value = rvm.hasPrevious
+        }
+    }
+
+    private fun changeRange(next:Boolean) {
+        val rvm = rangePlayModel.value ?: return
+        val range = if(next) {
+            rvm.next()
+        } else {
+            rvm.previous()
+        }
+        if(range!=null) {
+            playerModel.setPlayRange(range)
+        }
+        hasNextRange.mutable.value = rvm.hasNext
+        hasPrevRange.mutable.value = rvm.hasPrevious
+    }
 
     val canSnapshot:StateFlow<Boolean> = playerModel.currentSource.map {
         it?.uri?.startsWith("http") == false

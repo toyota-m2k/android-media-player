@@ -35,18 +35,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
     : FrameLayout(context, attrs, defStyleAttr), Slider.OnChangeListener {
     companion object {
         val logger get() = TpLib.logger
-    }
-
-    private val controls:V2ControlPanelBinding
-
-    init {
-        StyledAttrRetriever(context, attrs,R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
-            val panelBackground = sar.getDrawableWithAlphaOnFallback(
-                R.styleable.ControlPanel_ampPanelBackgroundColor,
-                com.google.android.material.R.attr.colorSurface,
-                def = Color.WHITE, alpha = 0x50
-            )
-
+        fun createButtonColorStateList(sar:StyledAttrRetriever):ColorStateList {
             val buttonEnabled = sar.getColor(
                 R.styleable.ControlPanel_ampButtonTintColor,
                 com.google.android.material.R.attr.colorPrimary,
@@ -57,24 +46,47 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 com.google.android.material.R.attr.colorOnSurface,
                 Color.BLACK, alpha = 0x50
             )
-            val buttonTint = ColorStateList(
+            return ColorStateList(
                 arrayOf(
                     intArrayOf(android.R.attr.state_enabled),
                     intArrayOf(),
                 ),
                 intArrayOf(buttonEnabled, buttonDisabled)
             )
+        }
+    }
+
+    val controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true)
+
+    fun setControlPanelAttributes(sar:StyledAttrRetriever) {
+        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
+            val panelBackground = sar.getDrawableWithAlphaOnFallback(
+                R.styleable.ControlPanel_ampPanelBackgroundColor,
+                com.google.android.material.R.attr.colorSurface,
+                def = Color.WHITE, alpha = 0x50
+            )
+
+            val buttonTint = createButtonColorStateList(sar)
             val padding = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPadding, 0)
             val paddingStart = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingStart, padding)
             val paddingTop = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingTop, padding)
             val paddingEnd = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingEnd, padding)
             val paddingBottom = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingBottom, padding)
 
-            controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
+            controls.apply {
                 controlPanelRoot.background = panelBackground
                 controlPanelRoot.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
                 controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
             }
+
+            controls.sliderPanel.setSliderPanelAttributes(sar)
+        }
+    }
+
+
+    init {
+        StyledAttrRetriever(context, attrs,R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
+            setControlPanelAttributes(sar)
         }
     }
 
@@ -127,7 +139,6 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .bindCommand(model.commandLockSlider, controls.lockSliderButton, controls.unlockSliderButton)
             .visibilityBinding(controls.lockSliderButton, model.lockSlider.map { model.enableSliderLock && !it }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.unlockSliderButton, model.lockSlider.map { model.enableSliderLock && it }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
-            .visibilityBinding(controls.sliderGuard, model.lockSlider, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .conditional(model.seekLarge!=null) {
                 bindCommand(model.commandSeekLarge, controls.seekBackLButton, false)
                 bindCommand(model.commandSeekLarge, controls.seekForwardLButton, true)

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="ExoPlayerHost">
+    <declare-styleable name="ControlPanel">
         <!--
             playerBackground: ExoPlayerの背景色（デフォルト：colorSurface）
         -->
         <attr name="ampPlayerBackground" format="color"/>
-    </declare-styleable>
-    <declare-styleable name="ControlPanel">
+
         <!--
             panelBackgroundColor: コントロールパネルの背景色（デフォルト：colorSurface）
             panelForegroundColor: コントロールパネルの文字色（デフォルト：colorOnSurface）
@@ -24,9 +23,10 @@
         <attr name="ampPanelPaddingTop" format="dimension"/>
         <attr name="ampPanelPaddingEnd" format="dimension"/>
         <attr name="ampPanelPaddingBottom" format="dimension"/>
-    </declare-styleable>
+        <!-- ControlPanelやSliderPanelの属性値をPlayerSliderの属性に中継するか-->
+        <attr name="ampAttrsByParent" format="boolean"/>
 
-    <declare-styleable name="PlayerSlider">
+        <!-- PlayerSlider-->
         <!--
         スライダーサム（ノブ）
         ampThumbIcon:   スライダーサムのアイコン(drawable: 伸縮可能な vector pathを想定）
