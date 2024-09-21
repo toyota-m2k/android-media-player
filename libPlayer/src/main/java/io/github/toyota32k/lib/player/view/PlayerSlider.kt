@@ -362,7 +362,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         zOrder:Int
     ) : RangePartsInfo("RailRight",color,height,verticalOffset,zOrder) {
         override fun draw(canvas: Canvas) {
-            drawRange(canvas, position, playLength)
+            drawRange(canvas, position, endPosition)
         }
     }
     var railRightInfo:RailRightInfo = RailRightInfo(0,0,0,0)

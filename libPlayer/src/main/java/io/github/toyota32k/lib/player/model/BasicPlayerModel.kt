@@ -264,7 +264,11 @@ open class BasicPlayerModel(
         } else {
             if(naturalDuration.value>0) {
                 playRange.mutable.value = Range.terminate(range, naturalDuration.value)
-                seekTo(range.start)
+                val cur = currentPosition
+                val pos = range.clamp(cur)
+                if(pos != cur) {
+                    seekTo(pos)
+                }
             } else {
                 playRange.mutable.value = range
             }
