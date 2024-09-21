@@ -35,6 +35,25 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
     : FrameLayout(context, attrs, defStyleAttr), Slider.OnChangeListener {
     companion object {
         val logger get() = TpLib.logger
+        fun createButtonColorStateList(sar:StyledAttrRetriever):ColorStateList {
+            val buttonEnabled = sar.getColor(
+                R.styleable.ControlPanel_ampButtonTintColor,
+                com.google.android.material.R.attr.colorPrimary,
+                Color.BLACK
+            )
+            val buttonDisabled = sar.getColorWithAlphaOnFallback(
+                R.styleable.ControlPanel_ampButtonDisabledTintColor,
+                com.google.android.material.R.attr.colorOnSurface,
+                Color.BLACK, alpha = 0x50
+            )
+            return ColorStateList(
+                arrayOf(
+                    intArrayOf(android.R.attr.state_enabled),
+                    intArrayOf(),
+                ),
+                intArrayOf(buttonEnabled, buttonDisabled)
+            )
+        }
     }
 
     val controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true)
@@ -47,23 +66,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 def = Color.WHITE, alpha = 0x50
             )
 
-            val buttonEnabled = sar.getColor(
-                R.styleable.ControlPanel_ampButtonTintColor,
-                com.google.android.material.R.attr.colorPrimary,
-                Color.BLACK
-            )
-            val buttonDisabled = sar.getColorWithAlphaOnFallback(
-                R.styleable.ControlPanel_ampButtonDisabledTintColor,
-                com.google.android.material.R.attr.colorOnSurface,
-                Color.BLACK, alpha = 0x50
-            )
-            val buttonTint = ColorStateList(
-                arrayOf(
-                    intArrayOf(android.R.attr.state_enabled),
-                    intArrayOf(),
-                ),
-                intArrayOf(buttonEnabled, buttonDisabled)
-            )
+            val buttonTint = createButtonColorStateList(sar)
             val padding = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPadding, 0)
             val paddingStart = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingStart, padding)
             val paddingTop = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingTop, padding)
@@ -136,7 +139,6 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .bindCommand(model.commandLockSlider, controls.lockSliderButton, controls.unlockSliderButton)
             .visibilityBinding(controls.lockSliderButton, model.lockSlider.map { model.enableSliderLock && !it }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.unlockSliderButton, model.lockSlider.map { model.enableSliderLock && it }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
-            .visibilityBinding(controls.sliderGuard, model.lockSlider, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .conditional(model.seekLarge!=null) {
                 bindCommand(model.commandSeekLarge, controls.seekBackLButton, false)
                 bindCommand(model.commandSeekLarge, controls.seekForwardLButton, true)

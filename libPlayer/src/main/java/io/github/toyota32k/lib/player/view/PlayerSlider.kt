@@ -469,7 +469,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
 
     // endregion
-    fun setPlayerSliderAttributes(sar: StyledAttrRetriever) {
+    fun setPlayerSliderAttributes(sar: StyledAttrRetriever, reLayout:Boolean=true) {
         if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
             setThumbAttrs(sar)
             setMarkerAttrs(sar)
@@ -480,6 +480,9 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             setMarkerTickAttrs(sar)
             showChapterBar = sar.sa.getBoolean(R.styleable.ControlPanel_ampShowChapterBar, true)
             updateDrawableParts()
+            if(reLayout) {
+                calcLayoutBasis()
+            }
         }
     }
 
@@ -487,7 +490,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     init {
         StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr, 0).use { sar ->
             try {
-                setPlayerSliderAttributes(sar)
+                setPlayerSliderAttributes(sar, false)
             } catch (e: Throwable) {
                 logger.error(e)
                 throw e
@@ -497,12 +500,23 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
 
     // 位置・サイズ
-    private val upperHeight:Int = drawingParts.maxOfOrNull { -it.verticalOffset } ?: 0
-    private val lowerHeight:Int = drawingParts.maxOfOrNull { it.verticalOffset + it.height } ?: 0
-    private val allOverHeight:Int = lowerHeight+upperHeight
-    private val leftMargin:Float = max(thumbPartsInfo.horizontalCenter, markerPartsInfo.horizontalCenter)
-    private val rightMargin:Float = max(thumbPartsInfo.width-thumbPartsInfo.horizontalCenter, markerPartsInfo.width-markerPartsInfo.horizontalCenter)
-    private val horizontalMargin:Float = leftMargin + rightMargin
+    private var upperHeight:Int = 0
+    private var lowerHeight:Int = 0
+    private var allOverHeight:Int = 0
+    private var leftMargin:Float = 0f
+    private var rightMargin:Float = 0f
+    private var horizontalMargin:Float = 0f
+
+    private fun calcLayoutBasis() {
+        upperHeight = drawingParts.maxOfOrNull { -it.verticalOffset } ?: 0
+        lowerHeight = drawingParts.maxOfOrNull { it.verticalOffset + it.height } ?: 0
+        allOverHeight = lowerHeight+upperHeight
+        leftMargin = max(thumbPartsInfo.horizontalCenter, markerPartsInfo.horizontalCenter)
+        rightMargin = max(thumbPartsInfo.width-thumbPartsInfo.horizontalCenter, markerPartsInfo.width-markerPartsInfo.horizontalCenter)
+        horizontalMargin = leftMargin + rightMargin
+        requestLayout()
+    }
+
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
