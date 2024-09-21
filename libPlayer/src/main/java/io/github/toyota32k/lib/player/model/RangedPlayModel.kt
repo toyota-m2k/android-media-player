@@ -12,8 +12,10 @@ class RangedPlayModel(val duration:Long, val spanLength:Long) {
         const val MIN_SPAN_LENGTH = 60 * 1000   // 1 minute
     }
 
-    private var currentIndex:Int = 0
-    private val overlap = spanLength / 8
+//    private var currentIndex:Int = 0
+    private val overlap = if(spanLength>MIN_SPAN_LENGTH*3) MIN_SPAN_LENGTH else 0
+    private var start:Long = 0
+    private var end:Long = spanLength
 
     init {
         require(duration>0 && spanLength<duration && spanLength>=MIN_SPAN_LENGTH)
@@ -22,24 +24,17 @@ class RangedPlayModel(val duration:Long, val spanLength:Long) {
     private val countOfParts:Int = ceil(duration.toFloat() / spanLength).toInt()
 
     val currentRange:Range
-        get() = when (currentIndex) {
-            0 -> Range(0,spanLength)
-            countOfParts-1 -> Range(duration-spanLength,duration)
-            else -> {
-                val start = (currentIndex * spanLength - overlap).coerceAtLeast(0)
-                val end = (start + spanLength + overlap).coerceAtMost(duration)
-                Range(start,end)
-            }
-        }
+        get() = Range(start, end)
 
     val hasNext:Boolean
-        get() = currentIndex < countOfParts - 1
+        get() = end < duration
     val hasPrevious:Boolean
-        get() = currentIndex > 0
+        get() = start > 0
 
     fun next():Range? {
         if(hasNext) {
-            currentIndex++
+            end = (end + spanLength - overlap).coerceAtMost(duration)
+            start = end - spanLength
             return currentRange
         }
         return null
@@ -47,7 +42,10 @@ class RangedPlayModel(val duration:Long, val spanLength:Long) {
 
     fun previous():Range? {
         if (hasPrevious) {
-            currentIndex--
+            val d = spanLength - overlap
+            start = (((start - d) + d -1)/d)*d      // startは、(spanLength-overlap)の倍数（切り上げ）にする。
+            start = start.coerceAtLeast(0)
+            end = (start + spanLength).coerceAtMost(duration)
             return currentRange
         }
         return null
