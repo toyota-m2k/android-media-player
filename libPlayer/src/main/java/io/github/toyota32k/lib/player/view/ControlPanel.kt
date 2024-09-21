@@ -37,10 +37,10 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
         val logger get() = TpLib.logger
     }
 
-    private val controls:V2ControlPanelBinding
+    val controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true)
 
-    init {
-        StyledAttrRetriever(context, attrs,R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
+    fun setControlPanelAttributes(sar:StyledAttrRetriever) {
+        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
             val panelBackground = sar.getDrawableWithAlphaOnFallback(
                 R.styleable.ControlPanel_ampPanelBackgroundColor,
                 com.google.android.material.R.attr.colorSurface,
@@ -70,11 +70,20 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             val paddingEnd = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingEnd, padding)
             val paddingBottom = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingBottom, padding)
 
-            controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
+            controls.apply {
                 controlPanelRoot.background = panelBackground
                 controlPanelRoot.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
                 controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
             }
+
+            controls.sliderPanel.setSliderPanelAttributes(sar)
+        }
+    }
+
+
+    init {
+        StyledAttrRetriever(context, attrs,R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
+            setControlPanelAttributes(sar)
         }
     }
 

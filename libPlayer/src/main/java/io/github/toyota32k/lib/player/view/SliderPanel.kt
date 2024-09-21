@@ -17,9 +17,7 @@ import io.github.toyota32k.lib.player.model.IMediaSourceWithChapter
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.utils.GenericDisposable
 import io.github.toyota32k.utils.StyledAttrRetriever
-import io.github.toyota32k.utils.disposableObserve
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 
 class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr)  {
@@ -27,27 +25,26 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val logger get() = TpLib.logger
     }
 
-    private val controls:V2SliderPanelBinding
+    private val controls = V2SliderPanelBinding.inflate(LayoutInflater.from(context), this, true)
     private lateinit var model: PlayerControllerModel
 
-    init {
-        StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
-//            val panelBackground = sar.getDrawableWithAlphaOnFallback(
-//                R.styleable.ControlPanel_ampPanelBackgroundColor,
-//                com.google.android.material.R.attr.colorSurface,
-//                def = Color.WHITE, alpha = 0x50
-//            )
-
+    fun setSliderPanelAttributes(sar:StyledAttrRetriever) {
+        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
             val panelText = sar.getColor(
                 R.styleable.ControlPanel_ampPanelForegroundColor,
                 com.google.android.material.R.attr.colorOnSurface,
                 def = Color.BLACK
             )
+            controls.counterLabel.setTextColor(panelText)
+            controls.durationLabel.setTextColor(panelText)
 
-            controls = V2SliderPanelBinding.inflate(LayoutInflater.from(context), this, true).apply {
-                    counterLabel.setTextColor(panelText)
-                    durationLabel.setTextColor(panelText)
-                }
+            controls.playerSlider.setPlayerSliderAttributes(sar)
+        }
+    }
+
+    init {
+        StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
+            setSliderPanelAttributes(sar)
         }
     }
 

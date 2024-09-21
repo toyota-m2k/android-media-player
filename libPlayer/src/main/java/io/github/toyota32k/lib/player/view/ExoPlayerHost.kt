@@ -34,7 +34,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
     // 使う人（ActivityやFragment）がセットすること
     private lateinit var model: PlayerControllerModel
-    private val controls: V2VideoExoPlayerBinding =
+    val controls: V2VideoExoPlayerBinding =
         V2VideoExoPlayerBinding.inflate(LayoutInflater.from(context), this, true)
 
     private val playerView get() = controls.expPlayerView
@@ -46,13 +46,19 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
     private val rootViewSize = MutableStateFlow<Size?>(null)
 
-    init {
-        StyledAttrRetriever(context,attrs,R.styleable.ExoPlayerHost,defStyleAttr,0).use { sar ->
+    fun setPlayerAttributes(sar: StyledAttrRetriever) {
+        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
             controls.expPlayerRoot.background = sar.getDrawable(
-                R.styleable.ExoPlayerHost_ampPlayerBackground,
+                R.styleable.ControlPanel_ampPlayerBackground,
                 com.google.android.material.R.attr.colorSurface,
                 Color.BLACK
             )
+        }
+    }
+
+    init {
+        StyledAttrRetriever(context,attrs,R.styleable.ControlPanel,defStyleAttr,0).use { sar ->
+            setPlayerAttributes(sar)
         }
     }
 
