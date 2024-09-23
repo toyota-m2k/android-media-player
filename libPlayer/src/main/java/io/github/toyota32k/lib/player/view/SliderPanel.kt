@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import io.github.toyota32k.binder.Binder
+import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.command.bindCommand
 import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.multiVisibilityBinding
@@ -71,7 +72,8 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             .multiVisibilityBinding(arrayOf(controls.prevRangeButton,controls.nextRangeButton), model.rangePlayModel.map { it!=null })
             .enableBinding(controls.prevRangeButton, model.hasPrevRange)
             .enableBinding(controls.nextRangeButton, model.hasNextRange)
-            .visibilityBinding(controls.sliderGuard, model.lockSlider)
+            .enableBinding(controls.playerSlider, model.lockSlider, BoolConvert.Inverse)
+//            .visibilityBinding(controls.sliderGuard, model.lockSlider)
             .bindCommand(model.commandChangeRange, controls.prevRangeButton, false)
             .bindCommand(model.commandChangeRange, controls.nextRangeButton, true)
             .add( GenericDisposable { controls.playerSlider.setValueChangedByUserListener(null) } )

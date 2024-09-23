@@ -352,6 +352,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             val ex = positionToX(clampPosition(end))
             val sx = positionToX(clampPosition(start))
             val y = yCenter
+            paint.alpha = if(isEnabled) 0xFF else 0x40
             canvas.drawLine(sx,y,ex,y,paint)
         }
     }
@@ -571,6 +572,12 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
     }
 
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        this.alpha = if(enabled) 1f else 0.5f
+        invalidate()
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return handleTouchEvent(event.action, event.x, event.y)
@@ -578,6 +585,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     private var dragging = false
     private fun handleTouchEvent(action:Int, x:Float, @Suppress("UNUSED_PARAMETER") y:Float):Boolean {
+        if(!isEnabled) return false
         when (action) {
             MotionEvent.ACTION_DOWN -> {
                 dragging = true

@@ -267,7 +267,11 @@ open class BasicPlayerModel(
                 val cur = currentPosition
                 val pos = range.clamp(cur)
                 if(pos != cur) {
-                    seekTo(pos)
+                    if(pos == range.end) {
+                        seekTo(range.start)
+                    } else {
+                        seekTo(pos)
+                    }
                 }
             } else {
                 playRange.mutable.value = range

@@ -4,24 +4,23 @@ import kotlin.math.ceil
 
 /**
  * 部分再生用モデル
- * 分割されたパートの長さ spanLength と、総再生時間 duration を持ち、
- * next/previous によって、再生範囲を前後することができる。
+ *
+ * @param duration 総再生時間
+ * @param spanLength 分割されたパートの長さ
+ * @param amountOfMovement next()/previous()による移動量（デフォルト60秒）
  */
-class RangedPlayModel(val duration:Long, val spanLength:Long) {
-    companion object {
-        const val MIN_SPAN_LENGTH = 60 * 1000   // 1 minute
-    }
+@Suppress("MemberVisibilityCanBePrivate")
+class RangedPlayModel(
+    val duration:Long,
+    val spanLength:Long,
+    val amountOfMovement:Long=60*1000L) {
 
-//    private var currentIndex:Int = 0
-    private val overlap = if(spanLength>MIN_SPAN_LENGTH*3) MIN_SPAN_LENGTH else 0
     private var start:Long = 0
     private var end:Long = spanLength
 
     init {
-        require(duration>0 && spanLength<duration && spanLength>=MIN_SPAN_LENGTH)
+        require(duration>0 && amountOfMovement>0 && spanLength<duration && spanLength>=amountOfMovement)
     }
-
-    private val countOfParts:Int = ceil(duration.toFloat() / spanLength).toInt()
 
     val currentRange:Range
         get() = Range(start, end)
@@ -33,8 +32,8 @@ class RangedPlayModel(val duration:Long, val spanLength:Long) {
 
     fun next():Range? {
         if(hasNext) {
-            end = (end + spanLength - overlap).coerceAtMost(duration)
-            start = end - spanLength
+            end = (end + spanLength - amountOfMovement).coerceAtMost(duration)
+            start = (end - spanLength).coerceAtLeast(0)
             return currentRange
         }
         return null
@@ -42,9 +41,7 @@ class RangedPlayModel(val duration:Long, val spanLength:Long) {
 
     fun previous():Range? {
         if (hasPrevious) {
-            val d = spanLength - overlap
-            start = (((start - d) + d -1)/d)*d      // startは、(spanLength-overlap)の倍数（切り上げ）にする。
-            start = start.coerceAtLeast(0)
+            start = (((start - 1)/amountOfMovement)*amountOfMovement).coerceAtLeast(0)      // startは、amountOfMovementの倍数（切り上げ）にする。
             end = (start + spanLength).coerceAtMost(duration)
             return currentRange
         }

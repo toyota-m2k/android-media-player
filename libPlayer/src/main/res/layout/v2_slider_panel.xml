@@ -66,18 +66,18 @@
         app:ampAttrsByParent="true"
         />
 
-    <FrameLayout
-        android:id="@+id/slider_guard"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="@+id/player_slider"
-        app:layout_constraintBottom_toBottomOf="@+id/player_slider"
-        app:layout_constraintStart_toStartOf="@+id/player_slider"
-        app:layout_constraintEnd_toEndOf="@+id/player_slider"
-        android:background="#3000"
-        android:clickable="true"
-        android:focusable="true"
-        android:visibility="gone"
-        />
+<!--    <FrameLayout-->
+<!--        android:id="@+id/slider_guard"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        app:layout_constraintTop_toTopOf="@+id/player_slider"-->
+<!--        app:layout_constraintBottom_toBottomOf="@+id/player_slider"-->
+<!--        app:layout_constraintStart_toStartOf="@+id/player_slider"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/player_slider"-->
+<!--        android:background="#3000"-->
+<!--        android:clickable="true"-->
+<!--        android:focusable="true"-->
+<!--        android:visibility="gone"-->
+<!--        />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
