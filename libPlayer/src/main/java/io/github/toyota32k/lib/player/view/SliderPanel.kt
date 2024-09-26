@@ -72,7 +72,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             .multiVisibilityBinding(arrayOf(controls.prevRangeButton,controls.nextRangeButton), model.rangePlayModel.map { it!=null })
             .enableBinding(controls.prevRangeButton, model.hasPrevRange)
             .enableBinding(controls.nextRangeButton, model.hasNextRange)
-            .enableBinding(controls.playerSlider, model.lockSlider, BoolConvert.Inverse)
+            .enableBinding(controls.playerSlider, combine(model.playerModel.isReady,model.lockSlider) {ready, lock-> ready&&!lock })
 //            .visibilityBinding(controls.sliderGuard, model.lockSlider)
             .bindCommand(model.commandChangeRange, controls.prevRangeButton, false)
             .bindCommand(model.commandChangeRange, controls.nextRangeButton, true)
