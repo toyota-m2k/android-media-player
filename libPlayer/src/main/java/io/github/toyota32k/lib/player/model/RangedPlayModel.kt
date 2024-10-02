@@ -32,7 +32,7 @@ class RangedPlayModel(
 
     fun next():Range? {
         if(hasNext) {
-            end = (end + spanLength - amountOfMovement).coerceAtMost(duration)
+            end = (end + amountOfMovement).coerceAtMost(duration)
             start = (end - spanLength).coerceAtLeast(0)
             return currentRange
         }
