@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -353,7 +355,8 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             val ex = positionToX(clampPosition(end))
             val sx = positionToX(clampPosition(start))
             val y = yCenter
-            paint.alpha = if(isEnabled) 0xFF else 0x40
+            paint.alpha = if(isEnabled) 0xFF else 0x90
+            paint.colorFilter =  if (isEnabled) null else ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
             canvas.drawLine(sx,y,ex,y,paint)
         }
     }
@@ -575,7 +578,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     override fun setEnabled(enabled: Boolean) {
         super.setEnabled(enabled)
-        this.alpha = if(enabled) 1f else 0.5f
+//        this.alpha = if(enabled) 1f else 0.5f
         invalidate()
     }
 
