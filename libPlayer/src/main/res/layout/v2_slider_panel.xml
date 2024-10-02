@@ -15,7 +15,6 @@
         android:layout_width="wrap_content"
         android:fontFamily="monospace"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="5dp"
         tools:text="00:00:00"
         />
     <TextView
@@ -26,7 +25,6 @@
         android:layout_width="wrap_content"
         android:fontFamily="monospace"
         android:layout_gravity="center_vertical"
-        android:layout_marginEnd="5dp"
         tools:text="99:99:99"
         />
     <ImageButton

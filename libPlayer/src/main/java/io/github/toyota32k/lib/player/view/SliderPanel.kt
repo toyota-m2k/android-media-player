@@ -16,11 +16,15 @@ import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.formatTime
+import io.github.toyota32k.lib.player.common.setMargin
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
 import io.github.toyota32k.lib.player.model.IMediaSourceWithChapter
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_END
+import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_START
 import io.github.toyota32k.utils.GenericDisposable
 import io.github.toyota32k.utils.StyledAttrRetriever
+import io.github.toyota32k.utils.dp
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
@@ -46,6 +50,9 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             val buttonTint = ControlPanel.createButtonColorStateList(sar)
             controls.nextRangeButton.imageTintList = buttonTint
             controls.prevRangeButton.imageTintList = buttonTint
+
+            controls.counterLabel.setMargin( sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginStart, DEF_RAIL_MARGIN_START.dp),0,0,0)
+            controls.durationLabel.setMargin(0,0,sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginEnd, DEF_RAIL_MARGIN_END.dp), 0)
 
             controls.playerSlider.setPlayerSliderAttributes(sar)
         }

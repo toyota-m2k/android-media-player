@@ -54,6 +54,8 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         const val DEF_THUMB_HEIGHT = DEF_ENABLED_RANGE_HEIGHT + 4
         const val DEF_THUMB_WIDTH = 2
         const val DEF_UNDER_THUMB_WIDTH = 4
+        const val DEF_RAIL_MARGIN_START = 5
+        const val DEF_RAIL_MARGIN_END = 5
     }
     // region Slider Values
     private var onValueChanged: ((Long)->Unit)? = null
@@ -116,11 +118,16 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     // endregion
 
     // region Play Range
+
     val startPosition:Long get() = mPlayRange?.start ?: 0L
     val endPosition:Long get() = mPlayRange?.end ?: mDuration
     private val playLength:Long get() = endPosition - startPosition
     private var mPlayRange:Range? = null
 //    val range:Range get() = mPlayRange ?: Range.empty
+
+    private fun clampPosition(position: Long):Long {
+        return position.coerceIn(startPosition, endPosition)
+    }
 
     fun setPlayRange(range:Range?, redraw:Boolean=true) {
         if(range==mPlayRange) return    // 変更なし
@@ -169,9 +176,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     // endregion
 
     // region 座標変換
-    private fun clampPosition(position: Long):Long {
-        return position.coerceIn(startPosition, endPosition)
-    }
+
     private fun positionToX(position:Long):Float {
         return (position-startPosition).toFloat() / playLength.toFloat() * sliderRange + leftMargin
     }
@@ -485,6 +490,8 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             setMarkerTickAttrs(sar)
             showChapterBar = sar.sa.getBoolean(R.styleable.ControlPanel_ampShowChapterBar, true)
             updateDrawableParts()
+            staticMarginLeft = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginStart, DEF_RAIL_MARGIN_START.dp)
+            staticMarginRight = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginEnd, DEF_RAIL_MARGIN_END.dp)
             if(reLayout) {
                 calcLayoutBasis()
             }
@@ -503,6 +510,11 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
     }
 
+    // static margin
+    //
+    private var staticMarginLeft:Int = 0
+    private var staticMarginRight:Int = 0
+
 
     // 位置・サイズ
     private var upperHeight:Int = 0
@@ -516,8 +528,8 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         upperHeight = drawingParts.maxOfOrNull { -it.verticalOffset } ?: 0
         lowerHeight = drawingParts.maxOfOrNull { it.verticalOffset + it.height } ?: 0
         allOverHeight = lowerHeight+upperHeight
-        leftMargin = max(thumbPartsInfo.horizontalCenter, markerPartsInfo.horizontalCenter).toFloat()
-        rightMargin = max(thumbPartsInfo.width-thumbPartsInfo.horizontalCenter, markerPartsInfo.width-markerPartsInfo.horizontalCenter).toFloat()
+        leftMargin = maxOf(staticMarginLeft, thumbPartsInfo.horizontalCenter, markerPartsInfo.horizontalCenter).toFloat()
+        rightMargin = maxOf(staticMarginRight, thumbPartsInfo.width-thumbPartsInfo.horizontalCenter, markerPartsInfo.width-markerPartsInfo.horizontalCenter).toFloat()
         horizontalMargin = leftMargin + rightMargin
         requestLayout()
     }
@@ -600,7 +612,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             MotionEvent.ACTION_MOVE -> {}
             else -> { return false }
         }
-        position = xToPosition(x)
+        position = xToPosition(x).coerceIn(startPosition,endPosition)
         return true
     }
 
