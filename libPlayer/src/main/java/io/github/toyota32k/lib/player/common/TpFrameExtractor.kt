@@ -12,9 +12,22 @@ import java.util.*
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-class TpFrameExtractor(context: Context, uri: Uri) : AutoCloseable {
-    // private val analizer = MediaMetadataRetriever().apply { setDataSource(context, uri) }
-    private val analyzer = TpAndroidUri(uri).use { MediaMetadataRetriever().apply { setDataSource(it.open(context)) }}
+class TpFrameExtractor(val analyzer:MediaMetadataRetriever) : AutoCloseable {
+    constructor(url:String) : this(MediaMetadataRetriever().apply {
+        setDataSource(url)
+    })
+    constructor(context:Context, uri:Uri): this(TpAndroidUri(uri).use { MediaMetadataRetriever().apply {
+        setDataSource(it.open(context)) }
+    })
+    companion object {
+        fun create(context:Context, url:String):TpFrameExtractor {
+            if(url.startsWith("http")) {
+                return TpFrameExtractor(url)
+            } else {
+                return TpFrameExtractor(context, Uri.parse(url))
+            }
+        }
+    }
 
     data class BasicProperties(
         var creationDate: Date?,

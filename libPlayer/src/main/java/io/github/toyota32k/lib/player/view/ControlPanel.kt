@@ -132,7 +132,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 controls.rotateRight,
                 controls.fullscreenButton,
                 controls.pinpButton), model.playerModel.isReady)
-            .enableBinding(controls.snapshotButton, model.canSnapshot)
+            .enableBinding(controls.snapshotButton, model.takingSnapshot, BoolConvert.Inverse)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPause, controls.pauseButton)

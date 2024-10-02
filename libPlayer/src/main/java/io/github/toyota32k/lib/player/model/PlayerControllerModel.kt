@@ -219,9 +219,9 @@ open class PlayerControllerModel(
         hasPrevRange.mutable.value = rvm.hasPrevious
     }
 
-    val canSnapshot:StateFlow<Boolean> = playerModel.currentSource.map {
-        it?.uri?.startsWith("http") == false
-    }.stateIn(playerModel.scope, SharingStarted.Eagerly, false)
+//    val canSnapshot:StateFlow<Boolean> = playerModel.currentSource.map {
+//        it?.uri?.startsWith("http") == false
+//    }.stateIn(playerModel.scope, SharingStarted.Eagerly, false)
     // region Commands
 
     private fun seekRelative(forward:Boolean, s:RelativeSeek?) {
@@ -277,24 +277,30 @@ open class PlayerControllerModel(
         windowMode.mutable.value = mode
     }
 
+    val takingSnapshot: StateFlow<Boolean> = MutableStateFlow(false)
     private fun snapshot() {
         val handler = snapshotHandler ?: return
         val src = playerModel.currentSource.value ?: return
-        if(src.uri.startsWith("http")) return
+//        if(src.uri.startsWith("http")) return
 
+        takingSnapshot.mutable.value = true
         val pos = playerModel.currentPosition
         val rotation = Rotation.normalize(playerModel.rotation.value)
 
         CoroutineScope(Dispatchers.IO).launch {
-            TpFrameExtractor(playerModel.context, Uri.parse(src.uri)).use { extractor->
-                val bitmap = extractor.extractFrame(pos)?.run {
-                    if(rotation!=0) {
-                        Bitmap.createBitmap(this, 0, 0, width, height, Matrix().apply { postRotate(rotation.toFloat()) }, true)
-                    } else this
-                } ?: return@use
-                withContext(Dispatchers.Main) {
-                    handler(pos, bitmap)
+            try {
+                TpFrameExtractor.create(playerModel.context, src.uri).use { extractor ->
+                    val bitmap = extractor.extractFrame(pos)?.run {
+                        if (rotation != 0) {
+                            Bitmap.createBitmap(this, 0, 0, width, height, Matrix().apply { postRotate(rotation.toFloat()) }, true)
+                        } else this
+                    } ?: return@use
+                    withContext(Dispatchers.Main) {
+                        handler(pos, bitmap)
+                    }
                 }
+            } finally {
+                takingSnapshot.mutable.value = false
             }
         }
     }
