@@ -1,7 +1,5 @@
 package io.github.toyota32k.lib.player.model
 
-import kotlin.math.ceil
-
 /**
  * 部分再生用モデル
  *
@@ -29,6 +27,15 @@ class RangedPlayModel(
         get() = end < duration
     val hasPrevious:Boolean
         get() = start > 0
+
+    fun initializeRangeContainsPosition(cur:Long) {
+        start = (((cur-1)/amountOfMovement)*amountOfMovement).coerceAtLeast(0)
+        end = start + spanLength
+        if(end>duration) {
+            end = duration
+            start = (duration-spanLength).coerceAtLeast(0)
+        }
+    }
 
     fun next():Range? {
         if(hasNext) {

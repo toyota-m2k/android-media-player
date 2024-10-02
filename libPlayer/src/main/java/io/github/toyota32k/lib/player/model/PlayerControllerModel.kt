@@ -196,6 +196,7 @@ open class PlayerControllerModel(
     val commandChangeRange = LiteCommand<Boolean>(::changeRange)
 
     fun setRangePlayModel(rvm:RangedPlayModel?) {
+        rvm?.initializeRangeContainsPosition(playerModel.currentPosition)
         rangePlayModel.mutable.value = rvm
         playerModel.setPlayRange(rvm?.currentRange)
         if(rvm!=null) {
