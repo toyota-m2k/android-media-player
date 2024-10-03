@@ -28,6 +28,7 @@ import io.github.toyota32k.lib.player.model.Rotation
 import io.github.toyota32k.shared.gesture.UtClickRepeater
 import io.github.toyota32k.utils.ConstantLiveData
 import io.github.toyota32k.utils.StyledAttrRetriever
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlin.math.roundToLong
 
@@ -132,7 +133,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 controls.rotateRight,
                 controls.fullscreenButton,
                 controls.pinpButton), model.playerModel.isReady)
-            .enableBinding(controls.snapshotButton, model.takingSnapshot, BoolConvert.Inverse)
+            .enableBinding(controls.snapshotButton, combine(model.playerModel.isReady,model.takingSnapshot) { r, s -> r && !s })
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPause, controls.pauseButton)
