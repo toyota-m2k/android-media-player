@@ -483,7 +483,9 @@ open class BasicPlayerModel(
                 Player.STATE_READY ->  {
                     ended.value = false
                     state.mutable.value = PlayerState.Ready
-                    naturalDuration.mutable.value = runOnPlayer(0L) { duration }
+                    naturalDuration.mutable.value = runOnPlayer(0L) {
+                        duration.coerceAtLeast(0L)
+                    }
                     playRange.value?.apply {
                         if(!isTerminated) {
                             setPlayRange(this)

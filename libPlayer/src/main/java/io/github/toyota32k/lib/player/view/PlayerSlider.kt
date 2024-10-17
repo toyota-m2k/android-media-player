@@ -126,7 +126,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 //    val range:Range get() = mPlayRange ?: Range.empty
 
     private fun clampPosition(position: Long):Long {
-        return position.coerceIn(startPosition, endPosition)
+        return position.coerceIn(startPosition, endPosition.coerceAtLeast(startPosition))
     }
 
     fun setPlayRange(range:Range?, redraw:Boolean=true) {
