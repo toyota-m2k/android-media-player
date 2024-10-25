@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/control_panel_root"
+    android:clickable="true"
     >
     <io.github.toyota32k.viewex.library.Viewbox
         android:id="@+id/control_buttons_viewbox"
