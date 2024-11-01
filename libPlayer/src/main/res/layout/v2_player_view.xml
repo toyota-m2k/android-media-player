@@ -8,7 +8,7 @@
     <io.github.toyota32k.lib.player.view.ExoPlayerHost
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="top|center_horizontal"
+        android:layout_gravity="center"
         android:id="@+id/player"
         app:ampAttrsByParent="true"
         />
