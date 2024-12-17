@@ -69,12 +69,19 @@ open class BasicPlayerModel(
     // ExoPlayerのリスナー
     private val listener =  PlayerListener()
 
+    // PlayerNotificationManager
+    private var playerNotificationManager: PlayerNotificationManager? = null
+
 //    private val resetables = ManualResetables()
     val resetablePlayer = UtManualIncarnateResetableValue(
         onIncarnate = {
-            ExoPlayer.Builder(context).build().apply {addListener(listener)}
+            ExoPlayer.Builder(context).build().apply {
+                addListener(listener)
+                playerNotificationManager?.setPlayer(this)
+            }
         },
         onReset = { player->
+            playerNotificationManager?.setPlayer(null)
             player.removeListener(listener)
             player.release()
         }
@@ -223,7 +230,7 @@ open class BasicPlayerModel(
                 watchPositionEvent.waitOne()
                 if (isPlaying.value) {
                     withPlayer { player ->
-                        val src = currentSource.value as? IMediaSourceWithChapter
+                        val src = currentSource.value
                         val pos = player.currentPosition
                         playerSeekPosition.mutable.value = pos
                         // 部分再生のチェック
@@ -535,8 +542,8 @@ open class BasicPlayerModel(
     /**
      * バックグラウンド再生（PlayerNotificationManager）対応用
      */
-    @Suppress("unused")
-    fun associateNotificationManager(manager: PlayerNotificationManager) {
+    override fun associateNotificationManager(manager: PlayerNotificationManager) {
+        playerNotificationManager = manager
         withPlayer { player ->
             manager.setPlayer(player)
         }
