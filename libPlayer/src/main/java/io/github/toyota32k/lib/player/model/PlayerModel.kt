@@ -8,12 +8,18 @@ import kotlinx.coroutines.CoroutineScope
 open class PlaylistPlayerModel (private val playerModel: IPlayerModel, private val playlistHandler: IPlaylistHandler)
     : IPlayerModel by playerModel, IPlaylistHandler by playlistHandler {
 
-    override fun onPlaybackCompleted() {
-        if(playlistHandler.continuousPlay) {
+    private fun playbackCompleted():Boolean {
+        return if(playlistHandler.continuousPlay) {
             pause()
             playlistHandler.commandNext.invoke()
+            true
         } else {
-            playerModel.onPlaybackCompleted()
+            false
+        }
+    }
+    init {
+        if(playerModel is BasicPlayerModel) {
+            playerModel.onPlaybackCompletedHandler = ::playbackCompleted
         }
     }
 }
@@ -35,6 +41,7 @@ fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChap
 
 class PlaylistChapterPlayerModel (playerModel: IPlayerModel, playlistHandler: IPlaylistHandler, private val chapterHandler: ChapterHandlerImpl)
     : PlaylistPlayerModel(playerModel, playlistHandler), IChapterHandler by chapterHandler
+
 fun PlaylistChapterPlayerModel(context: Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, autoPlay: Boolean, continuousPlay: Boolean, hideChapterViewIfEmpty:Boolean):PlaylistChapterPlayerModel {
     val playerModel = BasicPlayerModel(context, coroutineScope)
     val playlistHandler = PlaylistHandlerImpl(playerModel, playlist, autoPlay, continuousPlay)

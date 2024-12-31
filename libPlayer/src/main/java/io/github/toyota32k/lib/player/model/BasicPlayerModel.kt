@@ -427,10 +427,19 @@ open class BasicPlayerModel(
     override val playerSeekPosition: StateFlow<Long> =  MutableStateFlow(0L)
 
     /**
+     * PlaylistPlayerModel は、BasicPlayerModelインスタンスに委譲することによって IPlayerModel を実装しているため、
+     * init で、 ended を subscribeした、onPlaybackCompleted では、 PlaylistPlayerModel#onPlaybackCompleted が呼ばれない。
+     * 苦肉の策で、デリゲートを設定できるようにした。
+     */
+    var onPlaybackCompletedHandler: (() -> Boolean)? = null
+    /**
      * 再生中に EOS に達したときの処理
      * デフォルト： 再生を止めて先頭にシークする
      */
     override fun onPlaybackCompleted() {
+        if(onPlaybackCompletedHandler?.invoke()==true) {
+            return
+        }
         pause()
         clippingSeekTo(0, true)
     }
