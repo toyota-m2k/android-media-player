@@ -2,6 +2,9 @@ package io.github.toyota32k.lib.player.model
 
 import android.app.Application
 import android.util.Size
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.binder.command.IUnitCommand
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +25,9 @@ interface IPlayerModel : AutoCloseable {
 
     fun associatePlayerView(playerView: PlayerView)
     fun dissociatePlayerView(playerView: PlayerView)
+
+    @OptIn(UnstableApi::class)
+    fun associateNotificationManager(manager: PlayerNotificationManager)
 //    fun onRootViewSizeChanged(size: Size)
     fun onPlaybackCompleted()
 

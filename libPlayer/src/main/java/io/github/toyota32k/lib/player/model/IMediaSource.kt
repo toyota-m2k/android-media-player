@@ -1,5 +1,8 @@
 package io.github.toyota32k.lib.player.model
 
+import io.github.toyota32k.utils.IDisposable
+import io.github.toyota32k.utils.Listeners
+import kotlinx.coroutines.flow.Flow
 import java.util.concurrent.atomic.AtomicLong
 
 @Suppress("unused")
@@ -9,7 +12,7 @@ interface IMediaSource {
     val uri:String
     val trimming: Range
     val type: String    // 拡張子(.なし）
-    var startPosition: AtomicLong
+    val startPosition: AtomicLong
 //    val disabledRanges: List<Range>    // null: 未定義（初期値） / empty: 無効領域なし
 //
 //    suspend fun getChapterList():IChapterList?
@@ -22,4 +25,8 @@ interface IMediaSource {
 
 interface IMediaSourceWithChapter : IMediaSource {
     val chapterList:IChapterList
+}
+
+interface IMediaSourceWith : IMediaSourceWithChapter {
+    fun observeChapterList(fn:(IChapterList)->Unit):IDisposable
 }

@@ -15,8 +15,8 @@ class ChapterHandlerImpl(
 
 //    override val chapterList = MutableStateFlow<IChapterList?>(null)
 //    override val hasChapters = MutableStateFlow(false)
-@Suppress("unused")
-val chapterList:IChapterList? get() = (playerModel.currentSource.value as? IMediaSourceWithChapter)?.chapterList
+    @Suppress("unused")
+    val chapterList:IChapterList? get() = (playerModel.currentSource.value as? IMediaSourceWithChapter)?.chapterList
 
 //    override var disabledRanges:List<Range>? = null
 //        private set

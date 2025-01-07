@@ -91,6 +91,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             .observe(model.playerModel.playRange) {
                 controls.playerSlider.setPlayRange(it)
             }
+
     }
 
 }

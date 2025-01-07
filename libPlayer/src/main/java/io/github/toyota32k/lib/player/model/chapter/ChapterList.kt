@@ -15,8 +15,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.math.abs
 
-open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IChapterList {
-    protected val sortedList = UtSortedList(mutableList, actionOnDuplicate = UtSorter.ActionOnDuplicate.REJECT, comparator = ::chapterComparator)
+open class ChapterList(list: List<IChapter>) : IChapterList {
+    protected val sortedList = UtSortedList(if(list is MutableList<IChapter>) list else list.toMutableList(), actionOnDuplicate = UtSorter.ActionOnDuplicate.REJECT, comparator = ::chapterComparator)
     private val workPosition = UtSorter.Position()
     protected val workChapter = DmyChapter()  // 検索用のダミー
     protected class DmyChapter:IChapter {
@@ -331,13 +331,15 @@ open class ChapterList(mutableList:MutableList<IChapter> = mutableListOf()) : IC
     }
 }
 
-class MutableChapterList : ChapterList(), IMutableChapterList {
+class MutableChapterList(initialList:List<IChapter> = emptyList()) : ChapterList(initialList), IMutableChapterList {
     override val modifiedListener = Listeners<Unit>()
 
     override fun initChapters(chapters: List<IChapter>) {
+        sortedList.clear()
         chapters.forEach {
             addChapter(it.position, it.label, it.skip)
         }
+        invalidate()
     }
 
     /**
