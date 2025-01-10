@@ -8,6 +8,7 @@ import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.binder.command.IUnitCommand
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface IPlayerModel : AutoCloseable {
@@ -49,6 +50,8 @@ interface IPlayerModel : AutoCloseable {
     val isPlaying: StateFlow<Boolean>
     val isError: StateFlow<Boolean>
     val errorMessage: StateFlow<String?>
+    val volume: MutableStateFlow<Float>  // 0-100
+    val mute: MutableStateFlow<Boolean>
 
     val seekManager:ISeekManager
     val currentPosition:Long

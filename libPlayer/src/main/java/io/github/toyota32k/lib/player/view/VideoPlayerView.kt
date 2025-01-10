@@ -7,6 +7,9 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.VisibilityBinding
+import io.github.toyota32k.binder.clickBinding
+import io.github.toyota32k.binder.command.bindCommand
+import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
@@ -14,6 +17,7 @@ import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
 import io.github.toyota32k.utils.StyledAttrRetriever
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Suppress("unused")
 class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -48,8 +52,17 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
         this.model = model
         controls.player.bindViewModel(model, binder)
         controls.controller.bindViewModel(model, binder)
+        controls.volumePanel.bindViewModel(model, binder)
+        val showVolumePanel = MutableStateFlow(false)
         binder
             .visibilityBinding(controls.controller, model.showControlPanel, hiddenMode = VisibilityBinding.HiddenMode.HideByGone)
+            .multiVisibilityBinding(arrayOf(controls.volumePanel,controls.volumeGuardView), showVolumePanel, hiddenMode = VisibilityBinding.HiddenMode.HideByGone)
+            .clickBinding(controls.volumeGuardView) {
+                showVolumePanel.value = false
+            }
+            .bindCommand(model.commandVolume) {
+                showVolumePanel.value = true
+            }
     }
 
     fun associatePlayer() {

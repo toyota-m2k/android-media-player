@@ -119,6 +119,20 @@
                 app:srcCompat="@drawable/ic_next"
                 android:background="?attr/selectableItemBackground"
                 android:contentDescription="@string/desc_next_video" />
+            <ImageButton
+                android:id="@+id/volume_button"
+                android:layout_width="@dimen/media_button_width"
+                android:layout_height="@dimen/media_button_height"
+                app:srcCompat="@drawable/ic_volume"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/desc_volume_button" />
+            <ImageButton
+                android:id="@+id/volume_muted_button"
+                android:layout_width="@dimen/media_button_width"
+                android:layout_height="@dimen/media_button_height"
+                app:srcCompat="@drawable/ic_volume_muted"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/desc_volume_button" />
 
             <ImageButton
                 android:id="@+id/snapshot_button"

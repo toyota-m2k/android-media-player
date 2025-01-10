@@ -35,6 +35,7 @@ open class PlayerControllerModel(
     val showNextPreviousButton:Boolean,
     val enableSliderLock: Boolean,
     val initialEnableSliderLock: Boolean,
+    var enableVolumeController:Boolean,
 //    var seekRelativeForward:Long,
 //    var seekRelativeBackword:Long,
     val seekSmall:RelativeSeek?,
@@ -67,6 +68,7 @@ open class PlayerControllerModel(
         private var mSeekMedium:RelativeSeek? = null
         private var mSeekLarge:RelativeSeek? = null
         private var mCounterInMs:Boolean = false
+        private var mEnableVolumeController:Boolean = false
 
         private var mHideChapterViewIfEmpty = false
 //        private var mScope:CoroutineScope? = null
@@ -133,7 +135,10 @@ open class PlayerControllerModel(
             mInitialEnableSliderLock = initial
             return this
         }
-
+        fun enableVolumeController(enable:Boolean):Builder {
+            mEnableVolumeController = enable
+            return this
+        }
         fun counterInMs(sw:Boolean=true):Builder {
             mCounterInMs = sw
             return this
@@ -159,6 +164,7 @@ open class PlayerControllerModel(
                 showNextPreviousButton = mShowNextPreviousButton,
                 enableSliderLock = mEnableSliderLock,
                 initialEnableSliderLock = mInitialEnableSliderLock,
+                enableVolumeController = mEnableVolumeController,
                 seekSmall = mSeekSmall,
                 seekMedium = mSeekMedium,
                 seekLarge = mSeekLarge,
@@ -192,6 +198,10 @@ open class PlayerControllerModel(
     val rangePlayModel:StateFlow<RangedPlayModel?> = MutableStateFlow<RangedPlayModel?>(null)
     val hasNextRange = MutableStateFlow(false)
     val hasPrevRange = MutableStateFlow(false)
+    val volume: MutableStateFlow<Float> get() = playerModel.volume  // 0-100
+    val mute: MutableStateFlow<Boolean> get() = playerModel.mute
+    val commandVolume = LiteUnitCommand()
+
 
     val commandChangeRange = LiteCommand<Boolean>(::changeRange)
 

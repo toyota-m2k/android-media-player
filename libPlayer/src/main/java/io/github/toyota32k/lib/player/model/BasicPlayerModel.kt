@@ -18,7 +18,6 @@ import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
-import io.github.toyota32k.lib.player.model.Range.Companion.clamp
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.SuspendableEvent
 import io.github.toyota32k.utils.UtLog
@@ -30,6 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.max
-import kotlin.math.min
 
 @OptIn(UnstableApi::class)
 open class BasicPlayerModel(
@@ -72,12 +71,18 @@ open class BasicPlayerModel(
     // PlayerNotificationManager
     private var playerNotificationManager: PlayerNotificationManager? = null
 
+    // Volume Control
+    override val volume = MutableStateFlow<Float>(1f)
+    override val mute = MutableStateFlow<Boolean>(false)
+
 //    private val resetables = ManualResetables()
     val resetablePlayer = UtManualIncarnateResetableValue(
         onIncarnate = {
             ExoPlayer.Builder(context).build().apply {
                 addListener(listener)
                 playerNotificationManager?.setPlayer(this)
+                this@BasicPlayerModel.volume.value = this.volume
+                this@BasicPlayerModel.mute.value = false
             }
         },
         onReset = { player->
@@ -223,6 +228,12 @@ open class BasicPlayerModel(
             if (it) {
                 onPlaybackCompleted()
             }
+        }.launchIn(scope)
+
+        combine(volume,mute) { volume, mute ->
+            if(!mute) volume else 0f
+        }.onEach { v ->
+            player?.volume = v
         }.launchIn(scope)
 
         scope.launch {
