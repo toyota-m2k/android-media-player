@@ -35,7 +35,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    buildToolsVersion = "34.0.0"
     publishing {
         singleVariant("release") {
             withSourcesJar()
