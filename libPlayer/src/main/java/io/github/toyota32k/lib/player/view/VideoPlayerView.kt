@@ -1,9 +1,9 @@
 package io.github.toyota32k.lib.player.view
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.FrameLayout
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.VisibilityBinding
@@ -13,9 +13,10 @@ import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
-import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
-import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
+import io.github.toyota32k.lib.player.gesture.AbstractManipulationTarget
+import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.shared.gesture.IUtManipulationTarget
 import io.github.toyota32k.utils.StyledAttrRetriever
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -71,4 +72,12 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
     fun dissociatePlayer() {
         controls.player.dissociatePlayer()
     }
+
+    /**
+     * VideoPlayerView にズーム機能を付加するための最小限のIUtManipulationTarget実装
+     */
+    open class SimpleManipulationTarget(override val parentView: View, override val contentView: View) : AbstractManipulationTarget()
+
+    val manipulationTarget: IUtManipulationTarget
+        get() = SimpleManipulationTarget(controls.root, controls.player)
 }
