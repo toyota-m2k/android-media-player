@@ -16,7 +16,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    buildToolsVersion = "35.0.0"
 
     buildTypes {
         release {
@@ -35,7 +34,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    buildToolsVersion = "34.0.0"
 }
 
 dependencies {

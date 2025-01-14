@@ -14,10 +14,10 @@ import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
-import io.github.toyota32k.lib.player.gesture.AbstractManipulationTarget
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
-import io.github.toyota32k.shared.gesture.IUtManipulationTarget
 import io.github.toyota32k.utils.StyledAttrRetriever
+import io.github.toyota32k.utils.gesture.IUtManipulationTarget
+import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Suppress("unused")
@@ -76,7 +76,7 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
     /**
      * VideoPlayerView にズーム機能を付加するための最小限のIUtManipulationTarget実装
      */
-    open class SimpleManipulationTarget(override val parentView: View, override val contentView: View) : AbstractManipulationTarget()
+    open class SimpleManipulationTarget(override val parentView: View, override val contentView: View) : UtAbstractManipulationTarget()
 
     val manipulationTarget: IUtManipulationTarget
         get() = SimpleManipulationTarget(controls.root, controls.player)
