@@ -33,12 +33,12 @@ class VolumePanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             model.mute.value = !model.mute.value
         }
         binder
-            .visibilityBinding(controls.volumeMutedButton, model.mute, boolConvert = BoolConvert.Straight, hiddenMode = VisibilityBinding.HiddenMode.HideByGone)
-            .visibilityBinding(controls.volumeButton, model.mute, boolConvert = BoolConvert.Inverse, hiddenMode = VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.panelVolumeMutedButton, model.mute, boolConvert = BoolConvert.Straight, hiddenMode = VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.panelVolumeButton, model.mute, boolConvert = BoolConvert.Inverse, hiddenMode = VisibilityBinding.HiddenMode.HideByGone)
             .sliderBinding(controls.volumeSlider, sliderValue, mode=BindingMode.TwoWay)
             .add(sliderValue.disposableObserve(binder.requireOwner) { volume->
                 model.volume.value = volume/100
             })
-            .bindCommand(muteCommand, controls.volumeMutedButton, controls.volumeButton)
+            .bindCommand(muteCommand, controls.panelVolumeButton, controls.panelVolumeMutedButton)
     }
 }

@@ -6,14 +6,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/volume_muted_button"
+        android:id="@+id/panel_volume_muted_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
         style="@style/Widget.Material3.Button.IconButton.Filled"
         app:icon="@drawable/ic_volume_muted"
         />
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/volume_button"
+        android:id="@+id/panel_volume_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
         style="@style/Widget.Material3.Button.IconButton.Filled"
