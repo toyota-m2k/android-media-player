@@ -76,7 +76,7 @@ class ChapterTest {
         }
 
         val json = chapterList.serialize()
-        val cl2 = ChapterList()
+        val cl2 = ChapterList(emptyList())
         cl2.deserialize(json)
 
         assertArrayEquals(chapterList.chapters.map{it.position}.toLongArray(), cl2.chapters.map{it.position}.toLongArray())
