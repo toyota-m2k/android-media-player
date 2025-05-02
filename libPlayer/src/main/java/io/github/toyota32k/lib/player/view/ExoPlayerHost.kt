@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Size
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.lifecycle.lifecycleScope
@@ -53,6 +54,11 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
                 com.google.android.material.R.attr.colorSurface,
                 Color.BLACK
             )
+        }
+        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampPlayerCenteringVertically, false)) {
+            val params = controls.expPlayerView.layoutParams as FrameLayout.LayoutParams
+            params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
+            controls.expPlayerView.layoutParams = params
         }
     }
 

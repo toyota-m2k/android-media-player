@@ -14,6 +14,11 @@
         <attr name="ampPlayerBackground" format="color"/>
 
         <!--
+        ExoPlayerを縦方向にセンタリングするか（デフォルト：false -> 上端に配置）
+        -->
+        <attr name="ampPlayerCenteringVertically" format="boolean"/>
+
+        <!--
         panelBackgroundColor: コントロールパネルの背景色（デフォルト：colorSurface）
         panelForegroundColor: コントロールパネルの文字色（デフォルト：colorOnSurface）
         buttonTintColor: コントロールパネルのボタンのアイコン色（デフォルト：colorPrimary）
