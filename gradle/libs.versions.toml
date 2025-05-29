@@ -1,11 +1,11 @@
 [versions]
 #plugins
 kotlin = "2.1.21"
-agp = "8.10.0"
+agp = "8.10.1"
 
 #libraries
-androidBinding = "1.5.5"
-androidUtilitiesVersion = "2.8.2"
+androidBinding = "1.6.0"
+androidUtilitiesVersion = "2.8.3"
 androidViewex = "1.1.12"
 coreKtx = "1.16.0"
 junit = "4.13.2"
