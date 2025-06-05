@@ -2,7 +2,8 @@
 
 package io.github.toyota32k.lib.player.model
 
-import io.github.toyota32k.utils.Listeners
+import io.github.toyota32k.utils.lifecycle.Listeners
+
 
 interface IChapter {
     val position:Long

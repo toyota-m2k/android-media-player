@@ -15,7 +15,7 @@ import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2VolumePanelBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
-import io.github.toyota32k.utils.disposableObserve
+import io.github.toyota32k.utils.lifecycle.disposableObserve
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class VolumePanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)

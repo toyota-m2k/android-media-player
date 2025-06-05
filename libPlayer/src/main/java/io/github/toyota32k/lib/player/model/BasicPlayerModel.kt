@@ -18,8 +18,8 @@ import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.IUtPropOwner
-import io.github.toyota32k.utils.SuspendableEvent
 import io.github.toyota32k.utils.UtLog
 import io.github.toyota32k.utils.UtManualIncarnateResetableValue
 import kotlinx.coroutines.CoroutineScope
@@ -63,7 +63,7 @@ open class BasicPlayerModel(
     }
     protected val state: StateFlow<PlayerState> = MutableStateFlow(PlayerState.None)
     protected val ended = MutableStateFlow(false)                   // 次回再生開始時に先頭に戻すため、最後まで再生したことを覚えておくフラグ
-    private val watchPositionEvent = SuspendableEvent(signal = false, autoReset = false)    // スライダー位置監視を止めたり、再開したりするためのイベント
+    private val watchPositionEvent = FlowableEvent(initial = false, autoReset = false)    // スライダー位置監視を止めたり、再開したりするためのイベント
 
     // ExoPlayerのリスナー
     private val listener =  PlayerListener()

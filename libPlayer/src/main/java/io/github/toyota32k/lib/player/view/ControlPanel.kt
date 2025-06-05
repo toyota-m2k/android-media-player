@@ -25,9 +25,9 @@ import io.github.toyota32k.lib.player.model.IChapterHandler
 import io.github.toyota32k.lib.player.model.IPlaylistHandler
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.model.Rotation
-import io.github.toyota32k.utils.ConstantLiveData
-import io.github.toyota32k.utils.StyledAttrRetriever
+import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.gesture.UtClickRepeater
+import io.github.toyota32k.utils.lifecycle.ConstantLiveData
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlin.math.roundToLong

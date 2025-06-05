@@ -7,7 +7,7 @@ import io.github.toyota32k.lib.player.model.addChapter
 import io.github.toyota32k.lib.player.model.chapterAt
 import io.github.toyota32k.lib.player.model.chapterOn
 import io.github.toyota32k.lib.player.model.removeChapter
-import io.github.toyota32k.utils.Listeners
+import io.github.toyota32k.utils.lifecycle.Listeners
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map

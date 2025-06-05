@@ -15,7 +15,7 @@ import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
-import io.github.toyota32k.utils.StyledAttrRetriever
+import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
 import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
 import kotlinx.coroutines.flow.MutableStateFlow

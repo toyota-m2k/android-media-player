@@ -6,6 +6,8 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Size
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.utils.android.FitMode
+import io.github.toyota32k.utils.android.UtFitter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*

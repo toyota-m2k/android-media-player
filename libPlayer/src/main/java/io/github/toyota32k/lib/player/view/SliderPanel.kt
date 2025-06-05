@@ -6,13 +6,11 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import io.github.toyota32k.binder.Binder
-import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.command.bindCommand
 import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.observe
 import io.github.toyota32k.binder.textBinding
-import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.formatTime
@@ -23,8 +21,8 @@ import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_END
 import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_START
 import io.github.toyota32k.utils.GenericDisposable
-import io.github.toyota32k.utils.StyledAttrRetriever
-import io.github.toyota32k.utils.dp
+import io.github.toyota32k.utils.android.StyledAttrRetriever
+import io.github.toyota32k.utils.android.dp
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
