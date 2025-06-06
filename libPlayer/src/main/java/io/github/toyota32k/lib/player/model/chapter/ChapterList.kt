@@ -6,7 +6,7 @@ import io.github.toyota32k.lib.player.model.IMutableChapterList
 import io.github.toyota32k.lib.player.model.NeighborChapter
 import io.github.toyota32k.lib.player.model.Range
 import io.github.toyota32k.lib.player.model.chapterOn
-import io.github.toyota32k.utils.UtLog
+import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.UtSortedList
 import io.github.toyota32k.utils.UtSorter
 import io.github.toyota32k.utils.lifecycle.Listeners

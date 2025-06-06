@@ -43,7 +43,6 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
-    implementation(libs.android.utilities)
     implementation(libs.android.binding)
     implementation(libs.android.viewex)
 

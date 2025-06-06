@@ -4,8 +4,7 @@ kotlin = "2.1.21"
 agp = "8.10.1"
 
 #libraries
-androidBinding = "1.7.0"
-androidUtilitiesVersion = "3.0.0"
+androidBinding = "1.8.0"
 androidViewex = "1.1.14"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -32,7 +31,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3ExoplayerVersion" }
 android-viewex = { module = "com.github.toyota-m2k:android-viewex", version.ref = "androidViewex" }
 android-binding = { module = "com.github.toyota-m2k:android-binding", version.ref = "androidBinding" }
-android-utilities = { module = "com.github.toyota-m2k:android-utilities", version.ref = "androidUtilitiesVersion" }
+#android-utilities = { module = "com.github.toyota-m2k:android-utilities", version.ref = "androidUtilitiesVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

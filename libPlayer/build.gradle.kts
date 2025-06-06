@@ -53,7 +53,6 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(libs.android.utilities)
     implementation(libs.android.binding)
     implementation(libs.android.viewex)
 

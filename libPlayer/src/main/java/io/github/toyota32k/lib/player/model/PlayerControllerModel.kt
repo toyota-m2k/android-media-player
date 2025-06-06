@@ -3,7 +3,6 @@ package io.github.toyota32k.lib.player.model
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import io.github.toyota32k.binder.command.LiteCommand
@@ -12,10 +11,17 @@ import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.TpFrameExtractor
 import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.common.formatTimeMs
+import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.IUtPropOwner
-import io.github.toyota32k.utils.UtLog
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.Closeable
 
 /**
