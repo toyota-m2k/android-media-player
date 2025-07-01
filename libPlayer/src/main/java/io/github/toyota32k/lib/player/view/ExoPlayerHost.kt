@@ -70,7 +70,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         if (sar.sa.getBoolean(R.styleable.ControlPanel_ampPlayerCenteringVertically, false)) {
             val params = controls.expPlayerView.layoutParams as FrameLayout.LayoutParams
             params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
-            controls.expPlayerView.layoutParams = params
+            controls.expPlayerContainer.layoutParams = params
         }
     }
 
