@@ -23,11 +23,12 @@ interface IPhotoSlideShowModel {
 }
 
 interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
-    fun setSource(src:IMediaSource?, autoPlay:Boolean)
+    fun setSource(src:IMediaSource?)
     fun setPlayRange(range:Range?)
 
     fun play()
     fun pause()
+    fun stop()
     fun togglePlay()
 
     fun reset()
@@ -66,6 +67,7 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
 
     val seekManager:ISeekManager
     val currentPosition:Long
+    val continuousPlay:Boolean
 
     val scope: CoroutineScope
     val context: Application
@@ -78,8 +80,6 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
 }
 
 interface IPlaylistHandler {
-    val autoPlayOnSetSource:Boolean
-    val continuousPlay:Boolean
     val commandNext: IUnitCommand
     val commandPrev: IUnitCommand
 //    fun next()

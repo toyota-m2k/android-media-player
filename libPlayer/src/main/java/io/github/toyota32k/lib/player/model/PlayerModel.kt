@@ -9,7 +9,7 @@ open class PlaylistPlayerModel (private val playerModel: IPlayerModel, private v
     : IPlayerModel by playerModel, IPlaylistHandler by playlistHandler {
 
     private fun playbackCompleted():Boolean {
-        return if(playlistHandler.continuousPlay) {
+        return if(continuousPlay) {
             pause()
             playlistHandler.commandNext.invoke()
             true
@@ -24,17 +24,17 @@ open class PlaylistPlayerModel (private val playerModel: IPlayerModel, private v
     }
 }
 
-fun PlaylistPlayerModel(context:Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, autoPlay:Boolean, continuousPlay:Boolean):PlaylistPlayerModel {
-    val playerModel = BasicPlayerModel(context, coroutineScope)
-    val playlistHandler = PlaylistHandlerImpl(playerModel, playlist, autoPlay, continuousPlay)
+fun PlaylistPlayerModel(context:Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, initialAutoPlay:Boolean, continuousPlay:Boolean):PlaylistPlayerModel {
+    val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay)
+    val playlistHandler = PlaylistHandlerImpl(playerModel, playlist)
     return PlaylistPlayerModel(playerModel, playlistHandler)
 }
 
 class ChapterPlayerModel (private val playerModel: IPlayerModel, private val chapterHandler: ChapterHandlerImpl)
     : IPlayerModel by playerModel, IChapterHandler by chapterHandler
 
-fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChapterViewIfEmpty: Boolean):ChapterPlayerModel {
-    val playerModel = BasicPlayerModel(context, coroutineScope)
+fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChapterViewIfEmpty: Boolean, initialAutoPlay: Boolean):ChapterPlayerModel {
+    val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay=false)
     val chapterHandler = ChapterHandlerImpl(playerModel,hideChapterViewIfEmpty)
     return ChapterPlayerModel(playerModel, chapterHandler)
 }
@@ -42,9 +42,9 @@ fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChap
 class PlaylistChapterPlayerModel (playerModel: IPlayerModel, playlistHandler: IPlaylistHandler, private val chapterHandler: ChapterHandlerImpl)
     : PlaylistPlayerModel(playerModel, playlistHandler), IChapterHandler by chapterHandler
 
-fun PlaylistChapterPlayerModel(context: Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, autoPlay: Boolean, continuousPlay: Boolean, hideChapterViewIfEmpty:Boolean):PlaylistChapterPlayerModel {
-    val playerModel = BasicPlayerModel(context, coroutineScope)
-    val playlistHandler = PlaylistHandlerImpl(playerModel, playlist, autoPlay, continuousPlay)
+fun PlaylistChapterPlayerModel(context: Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, initialAutoPlay: Boolean, continuousPlay: Boolean, hideChapterViewIfEmpty:Boolean):PlaylistChapterPlayerModel {
+    val playerModel = BasicPlayerModel(context, coroutineScope,initialAutoPlay, continuousPlay)
+    val playlistHandler = PlaylistHandlerImpl(playerModel, playlist)
     val chapterHandler = ChapterHandlerImpl(playerModel,hideChapterViewIfEmpty)
     return PlaylistChapterPlayerModel(playerModel, playlistHandler, chapterHandler)
 }

@@ -47,6 +47,8 @@ import kotlin.time.Duration.Companion.seconds
 open class BasicPlayerModel(
     context: Context,
     coroutineScope: CoroutineScope,
+    initialAutoPlay:Boolean,
+    override val continuousPlay:Boolean,
     val photoSlideShowModel: PhotoSlideShowModelImpl = PhotoSlideShowModelImpl(context)
 ) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by photoSlideShowModel {
     companion object {
@@ -54,6 +56,7 @@ open class BasicPlayerModel(
     }
 
     // region Properties / Status
+    private var autoPlay:Boolean = initialAutoPlay
 
     final override val context: Application = context.applicationContext as Application           // ApplicationContextならViewModelが持っていても大丈夫だと思う。
 
@@ -570,7 +573,7 @@ open class BasicPlayerModel(
 
     }
 
-    override fun setSource(src:IMediaSource?, autoPlay:Boolean) {
+    override fun setSource(src:IMediaSource?) {
         reset()
         if (src == null) return
         naturalDuration.mutable.value = 0L
@@ -625,7 +628,7 @@ open class BasicPlayerModel(
     override fun togglePlay() {
         if(isDisposed) return
         if(runOnPlayer(false) { playWhenReady} ) {
-            pause()
+            stop()
         } else {
             play()
         }
@@ -637,6 +640,7 @@ open class BasicPlayerModel(
     override fun play() {
         logger.debug()
         if(isDisposed) return
+        autoPlay = true
         errorMessage.mutable.value = null
         val item = currentSource.value ?: return
         if (!item.isPhoto) {
@@ -660,6 +664,11 @@ open class BasicPlayerModel(
         if(isDisposed) return
         isPhotoPlaying.value = false
         runOnPlayer { playWhenReady = false }
+    }
+
+    override fun stop() {
+        autoPlay = false
+        pause()
     }
 
     // endregion

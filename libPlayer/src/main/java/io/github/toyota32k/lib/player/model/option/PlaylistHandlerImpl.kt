@@ -12,14 +12,13 @@ import kotlinx.coroutines.flow.onEach
 class PlaylistHandlerImpl(
     val playerModel: IPlayerModel,
     val playlist: IMediaFeed,
-    override val autoPlayOnSetSource:Boolean,
-    override val continuousPlay: Boolean) : IPlaylistHandler {
+    ) : IPlaylistHandler {
     init {
         playlist.currentSource.onEach(::onCurrentSourceChanged).launchIn(playerModel.scope)
     }
 
     private suspend fun onCurrentSourceChanged(src: IMediaSource?) {
-        playerModel.setSource(src, autoPlayOnSetSource)
+        playerModel.setSource(src)
     }
 
 //    val currentVideo: IAmvSource?

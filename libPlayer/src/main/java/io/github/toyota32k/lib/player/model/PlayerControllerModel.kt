@@ -148,17 +148,26 @@ open class PlayerControllerModel(
             mPhotoResolver = resolver
             return this
         }
-        fun disablePhotoViewer() {
+        fun disablePhotoViewer():Builder {
             mEnablePhotoViewer = false
+            return this
+        }
+        fun autoPlay(autoPlay:Boolean):Builder {
+            mAutoPlay = autoPlay
+            return this
+        }
+        fun continuousPlay(continuousPlay:Boolean):Builder {
+            mContinuousPlay = continuousPlay
+            return this
         }
 
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
             val playerModel = when {
                 mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mHideChapterViewIfEmpty)
-                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty)
+                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay)
                 mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay)
-                else -> BasicPlayerModel(context, coroutineScope)
+                else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false)
             }
             if (mEnablePhotoViewer) {
                 playerModel.enablePhotoViewer(mPhotoSlideShowDuration, mPhotoResolver)
@@ -249,7 +258,7 @@ open class PlayerControllerModel(
     private val _lockSliderFlow = MutableStateFlow(initialEnableSliderLock)
     val lockSlider = _lockSliderFlow.map {enableSliderLock && it}
     val commandPlay = LiteUnitCommand(playerModel::play)
-    val commandPause = LiteUnitCommand(playerModel::pause)
+    val commandPause = LiteUnitCommand(playerModel::stop)
     val commandSeekLarge = LiteCommand<Boolean> { seekRelative(it, seekLarge) }
     val commandSeekMedium = LiteCommand<Boolean> { seekRelative(it, seekMedium) }
     val commandSeekSmall = LiteCommand<Boolean> { seekRelative(it, seekSmall) }
