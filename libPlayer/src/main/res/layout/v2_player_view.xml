@@ -13,16 +13,6 @@
         android:layout_gravity="center"
         app:ampAttrsByParent="true"
         />
-    <ImageView
-        android:id="@+id/photoView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:contentDescription="@string/photo"
-        android:scaleType="fitCenter"
-        android:visibility="invisible"
-        />
-
     <io.github.toyota32k.lib.player.view.ControlPanel
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

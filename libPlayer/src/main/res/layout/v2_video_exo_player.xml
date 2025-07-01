@@ -8,15 +8,31 @@
     android:id="@+id/exp_player_root"
     >
 
-    <androidx.media3.ui.PlayerView
+    <FrameLayout
+        android:id="@+id/exp_playerContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/exp_playerView"
         android:layout_gravity="center_horizontal|top"
-        app:use_controller="false"
-        app:surface_type="texture_view"
-        app:resize_mode="fit"
-        />
+        >
+        <androidx.media3.ui.PlayerView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/exp_playerView"
+            app:use_controller="false"
+            app:surface_type="texture_view"
+            app:resize_mode="fit"
+            />
+        <ImageView
+            android:id="@+id/exp_photoView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:contentDescription="@string/photo"
+            android:scaleType="fitCenter"
+            android:visibility="invisible"
+            />
+    </FrameLayout>
+
     <FrameLayout
         tools:visibility="visible"
         android:id="@+id/service_area"

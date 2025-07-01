@@ -11,6 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
+import io.github.toyota32k.binder.combinatorialVisibilityBinding
+import io.github.toyota32k.binder.observe
 import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
@@ -23,10 +25,14 @@ import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.UtFitter
 import io.github.toyota32k.utils.android.lifecycleOwner
 import io.github.toyota32k.utils.android.px2dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @Suppress("unused")
@@ -41,12 +47,15 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
     val controls: V2VideoExoPlayerBinding =
         V2VideoExoPlayerBinding.inflate(LayoutInflater.from(context), this, true)
 
-    private val playerView get() = controls.expPlayerView
+    private val playerContainer get() = controls.expPlayerContainer
+    private val exoPlayer get() = controls.expPlayerView
+    private val photoView get() = controls.expPhotoView
+
     val rootView get() = controls.expPlayerRoot
 
     var useExoController:Boolean
-        get() = playerView.useController
-        set(v) { playerView.useController = v }
+        get() = exoPlayer.useController
+        set(v) { exoPlayer.useController = v }
 
     private val rootViewSize = MutableStateFlow<Size?>(null)
 
@@ -72,10 +81,10 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
     }
 
     fun associatePlayer() {
-        model.playerModel.associatePlayerView(playerView)
+        model.playerModel.associatePlayerView(exoPlayer)
     }
     fun dissociatePlayer() {
-        model.playerModel.dissociatePlayerView(playerView)
+        model.playerModel.dissociatePlayerView(exoPlayer)
     }
 
     fun bindViewModel(playerControllerModel: PlayerControllerModel, binder: Binder) {
@@ -85,7 +94,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         this.model = playerControllerModel
         val playerModel = playerControllerModel.playerModel
         if(playerControllerModel.autoAssociatePlayer) {
-            playerModel.associatePlayerView(playerView)
+            playerModel.associatePlayerView(exoPlayer)
         }
 
         binder
@@ -93,6 +102,24 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             .visibilityBinding(controls.expErrorMessage, playerModel.isError, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
             .visibilityBinding(controls.serviceArea, combine(playerModel.isLoading,playerModel.isError) { l, e-> l||e}, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
             .textBinding(controls.expErrorMessage, playerModel.errorMessage.filterNotNull())
+            .combinatorialVisibilityBinding(model.playerModel.currentSource.map { model.playerModel.isPhotoViewerEnabled && it?.isPhoto == true }) {
+                straightInvisible(photoView)
+                inverseInvisible(exoPlayer)
+            }
+            .conditional( model.playerModel.isPhotoViewerEnabled ) {
+                observe(model.playerModel.currentSource) {
+                    if(it?.isPhoto == true) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            val bitmap = model.playerModel.resolvePhoto(it)
+                            photoView.setImageBitmap(bitmap)
+                        }
+                    } else {
+                        photoView.setImageBitmap(null)
+                        model.playerModel.resetPhoto()
+                    }
+                }
+            }
+
 //            .bindCommand(playerControllerModel.commandPlayerTapped, this)
 
 //        val matchParent = Size(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -126,27 +153,24 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
                     .setLayoutSize(rootViewSize)
                     .fit(videoSize)
 //                playerView.setLayoutSize(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                playerView.setLayoutSize(mFitter.resultWidth.toInt(), mFitter.resultHeight.toInt())
-                playerView.translationY = 0f
+                playerContainer.setLayoutSize(mFitter.resultWidth.toInt(), mFitter.resultHeight.toInt())
+                playerContainer.translationY = 0f
             } else {
                 mFitter
                     .setLayoutSize(rootViewSize)
                     .fit(videoSize.height, videoSize.width)
-                playerView.setLayoutSize(mFitter.resultHeight.toInt(), mFitter.resultWidth.toInt())
-                playerView.translationY = -(mFitter.resultWidth-mFitter.resultHeight)/2f
+                playerContainer.setLayoutSize(mFitter.resultHeight.toInt(), mFitter.resultWidth.toInt())
+                playerContainer.translationY = -(mFitter.resultWidth-mFitter.resultHeight)/2f
             }
-            playerView.rotation = rotation.toFloat()
+            playerContainer.rotation = rotation.toFloat()
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-//        if(!this::model.isInitialized) return
         if(w>0 && h>0) {
             logger.debug("width=$w (${context.px2dp(w)}dp), height=$h (${context.px2dp(h)}dp)")
-//            model.playerModel.onRootViewSizeChanged(Size(w, h))
             rootViewSize.value = Size(w,h)
         }
     }
-
 }
