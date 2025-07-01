@@ -14,11 +14,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 
 interface IPhotoSlideShowModel {
+    val isPhotoViewerEnabled: Boolean
     var photoSlideShowDuration: Duration
     val photoResolver:(suspend (item:IMediaSource)->Bitmap?)?
-    val isPhotoViewerEnabled: Boolean get() = photoResolver!=null
     val resolvedBitmap: Bitmap?
-    fun enablePhotoViewer(duration: Duration, resolver:suspend (item:IMediaSource)->Bitmap?)
     suspend fun resolvePhoto(item:IMediaSource):Bitmap?
     fun resetPhoto()
 }
@@ -73,6 +72,9 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
 
     fun killPlayer()
     fun revivePlayer():Boolean
+
+    // PhotoViewer /Slide Show を有効化する
+    fun enablePhotoViewer(duration: Duration, resolver:(suspend (item:IMediaSource)->Bitmap?)?)
 }
 
 interface IPlaylistHandler {

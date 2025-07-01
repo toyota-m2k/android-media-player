@@ -47,37 +47,14 @@ import kotlin.time.Duration.Companion.seconds
 open class BasicPlayerModel(
     context: Context,
     coroutineScope: CoroutineScope,
-) : IPlayerModel, IUtPropOwner {
+    val photoSlideShowModel: PhotoSlideShowModelImpl = PhotoSlideShowModelImpl(context)
+) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by photoSlideShowModel {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
     }
-    override var photoSlideShowDuration: Duration = 5.seconds
-    override var photoResolver: (suspend (item: IMediaSource) -> Bitmap?)? = null
-    override var resolvedBitmap:Bitmap? = null
-    override fun enablePhotoViewer(duration: Duration, resolver: suspend (item: IMediaSource) -> Bitmap?) {
-        photoSlideShowDuration = duration
-        photoResolver = resolver
-    }
-    override suspend fun resolvePhoto(item: IMediaSource): Bitmap? {
-        resolvedBitmap = null
-        if(!item.isPhoto) return null
-        state.mutable.value = PlayerState.Loading
-        return photoResolver?.let { resolver->
-            val bitmap = resolver(item)
-            if(bitmap!=null) {
-                resolvedBitmap = bitmap
-                state.mutable.value = PlayerState.Ready
-                videoSize.mutable.value = Size(bitmap.width, bitmap.height)
-            }
-            bitmap
-        }
-    }
-    override fun resetPhoto() {
-        resolvedBitmap?.recycle()
-        resolvedBitmap = null
-    }
 
     // region Properties / Status
+
     final override val context: Application = context.applicationContext as Application           // ApplicationContextならViewModelが持っていても大丈夫だと思う。
 
     /**
@@ -198,27 +175,10 @@ open class BasicPlayerModel(
     }
 
     // endregion
-//    /**
-//     * VideoSizeはExoPlayerの持ち物なので、ライブラリ利用者が明示的にexoplayerをリンクしていないとアクセスできない。
-//     * そのような不憫な人のために中身を開示してあげる。
-//     */
-//    val videoWidth:Int? get() = videoSize.value?.width
-//    val videoHeight:Int? get() = videoSize.value?.height
 
     /**
-     * 動画プレーヤーを配置するルートビューのサイズ
-     * AmvExoVideoPlayerビュークラスのonSizeChanged()からonRootViewSizeChanged()経由で設定される。
-     * このルートビューの中に収まるよう、動画プレーヤーのサイズが調整される。
+     * 回転
      */
-//    private val rootViewSize: StateFlow<Size?> = MutableStateFlow<Size?>(null)
-
-    /**
-     * ルートビューに動画プレーヤーを配置する方法を指定
-     *  true: ルートビューにぴったりフィット（Aspectは無視）
-     *  false: ルートビューの中に収まるサイズ（Aspect維持）
-     */
-    // var stretchVideoToView = false
-//    override val stretchVideoToView = MutableStateFlow(false)
     final override val rotation = MutableStateFlow(0)
     override fun rotate(value: Rotation) {
         if(value == Rotation.NONE) {
@@ -227,26 +187,6 @@ open class BasicPlayerModel(
             rotation.value = Rotation.normalize(rotation.value + value.degree)
         }
     }
-
-//    private val mFitter = UtFitter(FitMode.Inside)
-//    override val playerSize: StateFlow<Size> = combine(rotation, videoSize.filterNotNull(),rootViewSize.filterNotNull()) { rotation, videoSize, rootViewSize->
-//        logger.debug("rotation=$rotation, videoSize=(${videoSize.width} x ${videoSize.height}), rootViewSize=(${rootViewSize.width} x ${rootViewSize.height})")
-//        val size = Rotation.transposeSize(rotation, Size(videoSize.width, videoSize.height))
-//        Rotation.transposeSize(rotation,mFitter
-//            .setLayoutWidth(rootViewSize.width)
-//            .setLayoutHeight(rootViewSize.height)
-//            .fit(size.width, size.height)
-//            .resultSize)
-//            .apply { logger.debug("result playerSize = (${width} x ${height})") }
-//    }.stateIn(scope, SharingStarted.Eagerly, Size(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-
-    /**
-     * １つのアプリで、同時に、ExoPlayer を１つ以上インスタンス化できないようなので、
-     * 複数のActivityでExoPlayerを使う場合に、ビューモデルを閉じて(close)、開き直す(openIfNeed) ことを可能にする。
-     */
-    // region About Current Movie
-
-    // endregion
 
     // region Initialize / Termination
 
@@ -720,6 +660,18 @@ open class BasicPlayerModel(
         if(isDisposed) return
         isPhotoPlaying.value = false
         runOnPlayer { playWhenReady = false }
+    }
+
+    // endregion
+
+    // region PhotoViewer + SlideShow
+
+    override fun enablePhotoViewer(duration: Duration, resolver: (suspend (IMediaSource) -> Bitmap?)?) {
+        photoSlideShowModel.enablePhotoViewer(duration, resolver)
+    }
+
+    override suspend fun resolvePhoto(item: IMediaSource): Bitmap? {
+        return photoSlideShowModel.resolvePhoto(item, state.mutable, videoSize.mutable)
     }
 
     // endregion

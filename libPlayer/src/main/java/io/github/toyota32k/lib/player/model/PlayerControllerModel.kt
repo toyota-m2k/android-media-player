@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.Closeable
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * コントローラーの共通実装
@@ -71,7 +72,8 @@ open class PlayerControllerModel(
         private var mSeekLarge:RelativeSeek? = null
         private var mCounterInMs:Boolean = false
         private var mEnableVolumeController:Boolean = false
-        private var mPhotoSlideShowDuration: Duration? = null
+        private var mEnablePhotoViewer:Boolean = false
+        private var mPhotoSlideShowDuration: Duration = 5.seconds
         private var mPhotoResolver: (suspend (item:IMediaSource)->Bitmap?)? = null
 
         private var mHideChapterViewIfEmpty = false
@@ -140,10 +142,14 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-        fun enablePhotoViewer(slideDuration:Duration, resolve:suspend (item:IMediaSource)->Bitmap?):Builder {
+        fun enablePhotoViewer(slideDuration:Duration, resolver:(suspend (item:IMediaSource)->Bitmap?)?=null):Builder {
+            mEnablePhotoViewer = true
             mPhotoSlideShowDuration = slideDuration
-            mPhotoResolver = resolve
+            mPhotoResolver = resolver
             return this
+        }
+        fun disablePhotoViewer() {
+            mEnablePhotoViewer = false
         }
 
         @OptIn(UnstableApi::class)
@@ -154,8 +160,8 @@ open class PlayerControllerModel(
                 mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay)
                 else -> BasicPlayerModel(context, coroutineScope)
             }
-            if (mPhotoResolver!=null) {
-                playerModel.enablePhotoViewer(mPhotoSlideShowDuration!!, mPhotoResolver!!)
+            if (mEnablePhotoViewer) {
+                playerModel.enablePhotoViewer(mPhotoSlideShowDuration, mPhotoResolver)
             }
             return PlayerControllerModel(
                 playerModel,
@@ -273,9 +279,11 @@ open class PlayerControllerModel(
     private fun snapshot() {
         val handler = snapshotHandler ?: return
         val src = playerModel.currentSource.value ?: return
+        playerModel.pause()
 
         if (src.isPhoto) {
             val bitmap = playerModel.resolvedBitmap ?: return
+            if (bitmap.isRecycled) return
             handler(0, bitmap)
             return
         }
