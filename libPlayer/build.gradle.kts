@@ -10,7 +10,7 @@ version="1.0"
 
 android {
     namespace = "io.github.toyota32k.lib.player"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26

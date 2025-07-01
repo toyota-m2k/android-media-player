@@ -7,12 +7,22 @@
     android:layout_height="match_parent"
     android:layout_gravity="center">
     <io.github.toyota32k.lib.player.view.ExoPlayerHost
+        android:id="@+id/player"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:id="@+id/player"
         app:ampAttrsByParent="true"
         />
+    <ImageView
+        android:id="@+id/photoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:contentDescription="@string/photo"
+        android:scaleType="fitCenter"
+        android:visibility="invisible"
+        />
+
     <io.github.toyota32k.lib.player.view.ControlPanel
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

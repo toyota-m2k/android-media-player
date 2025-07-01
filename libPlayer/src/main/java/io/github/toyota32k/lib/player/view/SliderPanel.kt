@@ -11,6 +11,7 @@ import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.observe
 import io.github.toyota32k.binder.textBinding
+import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.formatTime

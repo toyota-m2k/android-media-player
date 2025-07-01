@@ -114,6 +114,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .visibilityBinding(controls.rotateRight, ConstantLiveData(model.enableRotateRight), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.volumeButton, model.mute.map { !it && model.enableVolumeController }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.volumeMutedButton, model.mute.map { it && model.enableVolumeController }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.sliderPanel, model.isCurrentSourcePhoto, BoolConvert.Inverse, VisibilityBinding.HiddenMode.HideByInvisible)
             .multiVisibilityBinding(arrayOf(controls.seekBackLButton,controls.seekForwardLButton), ConstantLiveData(model.seekLarge!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.seekBackMButton,controls.seekForwardMButton), ConstantLiveData(model.seekMedium!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.seekBackSButton,controls.seekForwardSButton), ConstantLiveData(model.seekSmall!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
@@ -122,6 +123,12 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .multiEnableBinding(arrayOf(
                 controls.playButton,
                 controls.pauseButton,
+                controls.rotateLeft,
+                controls.rotateRight,
+                controls.fullscreenButton,
+                controls.pinpButton
+                ), model.playerModel.isReady)
+            .multiEnableBinding(arrayOf(
                 controls.seekBackLButton,
                 controls.seekBackMButton,
                 controls.seekBackSButton,
@@ -130,10 +137,11 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 controls.seekForwardSButton,
                 controls.prevChapterButton,
                 controls.nextChapterButton,
-                controls.rotateLeft,
-                controls.rotateRight,
-                controls.fullscreenButton,
-                controls.pinpButton), model.playerModel.isReady)
+                controls.lockSliderButton,
+                controls.unlockSliderButton,
+                controls.volumeButton,
+                controls.volumeMutedButton,
+                ), combine(model.playerModel.isReady, model.isCurrentSourcePhoto) { r, p -> r && !p })
             .enableBinding(controls.snapshotButton, combine(model.playerModel.isReady,model.takingSnapshot) { r, s -> r && !s })
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)

@@ -2,6 +2,7 @@ package io.github.toyota32k.lib.player.model
 
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Size
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
@@ -18,11 +19,13 @@ import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.lib.player.model.BasicPlayerModel.PlayerState
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.UtManualIncarnateResetableValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -37,19 +40,46 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.max
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
 open class BasicPlayerModel(
     context: Context,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
 ) : IPlayerModel, IUtPropOwner {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
     }
+    override var photoSlideShowDuration: Duration = 5.seconds
+    override var photoResolver: (suspend (item: IMediaSource) -> Bitmap?)? = null
+    override var resolvedBitmap:Bitmap? = null
+    override fun enablePhotoViewer(duration: Duration, resolver: suspend (item: IMediaSource) -> Bitmap?) {
+        photoSlideShowDuration = duration
+        photoResolver = resolver
+    }
+    override suspend fun resolvePhoto(item: IMediaSource): Bitmap? {
+        resolvedBitmap = null
+        if(!item.isPhoto) return null
+        state.mutable.value = PlayerState.Loading
+        return photoResolver?.let { resolver->
+            val bitmap = resolver(item)
+            if(bitmap!=null) {
+                resolvedBitmap = bitmap
+                state.mutable.value = PlayerState.Ready
+                videoSize.mutable.value = Size(bitmap.width, bitmap.height)
+            }
+            bitmap
+        }
+    }
+    override fun resetPhoto() {
+        resolvedBitmap?.recycle()
+        resolvedBitmap = null
+    }
 
     // region Properties / Status
     final override val context: Application = context.applicationContext as Application           // ApplicationContextならViewModelが持っていても大丈夫だと思う。
-    final override val isPlaying = MutableStateFlow(false)
+
     /**
      * エラーメッセージ
      */
@@ -94,6 +124,9 @@ open class BasicPlayerModel(
 
 
     final override val scope = CoroutineScope( coroutineScope.coroutineContext + SupervisorJob() )
+    private val isVideoPlaying = MutableStateFlow(false)
+    private val isPhotoPlaying = MutableStateFlow(false)
+    final override val isPlaying: StateFlow<Boolean> = combine(isVideoPlaying, isPhotoPlaying) { v, p -> v || p }.stateIn(scope, SharingStarted.Eagerly, false)
     final override val isLoading = state.map { it == PlayerState.Loading }.stateIn(scope, SharingStarted.Eagerly, false)
     final override val isReady = state.map { it== PlayerState.Ready }.stateIn(scope, SharingStarted.Eagerly, false)
     final override val isError = errorMessage.map { !it.isNullOrBlank() }.stateIn(scope, SharingStarted.Lazily, false)
@@ -218,7 +251,7 @@ open class BasicPlayerModel(
     // region Initialize / Termination
 
     init {
-        isPlaying.onEach {
+        isVideoPlaying.onEach {
             if (it) {
                 watchPositionEvent.set()
             }
@@ -239,7 +272,7 @@ open class BasicPlayerModel(
         scope.launch {
             while (!isDisposed) {
                 watchPositionEvent.waitOne()
-                if (isPlaying.value) {
+                if (isVideoPlaying.value) {
                     withPlayer { player ->
                         val src = currentSource.value
                         val pos = player.currentPosition
@@ -478,7 +511,7 @@ open class BasicPlayerModel(
         }
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            isPlaying.value = playWhenReady
+            isVideoPlaying.value = playWhenReady
         }
 
         override fun onPlaybackStateChanged(playbackState:Int) {
@@ -593,21 +626,37 @@ open class BasicPlayerModel(
         return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context)).createMediaSource(MediaItem.Builder().setUri(item.uri).setTag(item).build())
     }
 
+    private fun setPhotoSource(src:IMediaSource) {
+
+    }
+
     override fun setSource(src:IMediaSource?, autoPlay:Boolean) {
         reset()
-        if(src==null) return
+        if (src == null) return
         naturalDuration.mutable.value = 0L
         currentSource.mutable.value = src
         setPlayRange(null)
 
-        val pos = max(src.trimming.start, src.startPosition.getAndSet(0L))
+        val isPhoto = src.isPhoto
+        val pos = if (isPhoto) {
+            setPhotoSource(src)
+            ended.value = false
+            0
+        } else {
+            max(src.trimming.start, src.startPosition.getAndSet(0L))
+        }
 
         runOnPlayer {
             _frameDuration = 0L // 次回必要になれば再取得される
-            setMediaSource(makeMediaSource(src), pos)
-            prepare()
+            if (!isPhoto) {
+                setMediaSource(makeMediaSource(src), pos)
+                prepare()
+            } else {
+                stop()
+                clearMediaItems()
+            }
         }
-        if(autoPlay) {
+        if (autoPlay) {
             play()
         }
     }
@@ -627,6 +676,7 @@ open class BasicPlayerModel(
         seekManager.reset()
         playerSeekPosition.mutable.value = 0L
         errorMessage.mutable.value = null
+        resetPhoto()
     }
 
     /**
@@ -648,7 +698,18 @@ open class BasicPlayerModel(
         logger.debug()
         if(isDisposed) return
         errorMessage.mutable.value = null
-        runOnPlayer {playWhenReady = true }
+        val item = currentSource.value ?: return
+        if (!item.isPhoto) {
+            runOnPlayer { playWhenReady = true }
+        } else {
+            isPhotoPlaying.value = true
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(photoSlideShowDuration)
+                if (item == currentSource.value && isPhotoPlaying.value) {
+                    ended.value = true
+                }
+            }
+        }
     }
 
     /**
@@ -657,7 +718,8 @@ open class BasicPlayerModel(
     override fun pause() {
         logger.debug()
         if(isDisposed) return
-        runOnPlayer {playWhenReady = false }
+        isPhotoPlaying.value = false
+        runOnPlayer { playWhenReady = false }
     }
 
     // endregion

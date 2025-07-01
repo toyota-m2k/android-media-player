@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.Closeable
+import kotlin.time.Duration
 
 /**
  * コントローラーの共通実装
@@ -42,13 +43,10 @@ open class PlayerControllerModel(
     val enableSliderLock: Boolean,
     val initialEnableSliderLock: Boolean,
     var enableVolumeController:Boolean,
-//    var seekRelativeForward:Long,
-//    var seekRelativeBackword:Long,
     val seekSmall:RelativeSeek?,
     val seekMedium:RelativeSeek?,
     val seekLarge:RelativeSeek?,
     val counterInMs:Boolean,
-
 ) : Closeable, IUtPropOwner {
     companion object {
         val logger by lazy { UtLog("CPM", TpLib.logger) }
@@ -68,16 +66,15 @@ open class PlayerControllerModel(
         private var mShowNextPreviousButton:Boolean = false
         private var mEnableSliderLock:Boolean = false
         private var mInitialEnableSliderLock:Boolean = false
-//        private var mSeekForward:Long = 1000L
-//        private var mSeekBackword:Long = 500L
         private var mSeekSmall:RelativeSeek? = null
         private var mSeekMedium:RelativeSeek? = null
         private var mSeekLarge:RelativeSeek? = null
         private var mCounterInMs:Boolean = false
         private var mEnableVolumeController:Boolean = false
+        private var mPhotoSlideShowDuration: Duration? = null
+        private var mPhotoResolver: (suspend (item:IMediaSource)->Bitmap?)? = null
 
         private var mHideChapterViewIfEmpty = false
-//        private var mScope:CoroutineScope? = null
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
             mSupportChapter = true
@@ -117,12 +114,6 @@ open class PlayerControllerModel(
             mEnableRotateLeft = true
             return this
         }
-//        fun relativeSeekDuration(forward:Long, backward:Long):Builder {
-//            mSeekForward = forward
-//            mSeekBackword = backward
-//            return this
-//        }
-
         fun enableSeekSmall(backward:Long, forward:Long):Builder {
             mSeekSmall = RelativeSeek(backward, forward)
             return this
@@ -149,8 +140,11 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-
-//        private val scope:CoroutineScope by lazy { CoroutineScope(Dispatchers.Main+ SupervisorJob()) }
+        fun enablePhotoViewer(slideDuration:Duration, resolve:suspend (item:IMediaSource)->Bitmap?):Builder {
+            mPhotoSlideShowDuration = slideDuration
+            mPhotoResolver = resolve
+            return this
+        }
 
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
@@ -159,6 +153,9 @@ open class PlayerControllerModel(
                 mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty)
                 mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay)
                 else -> BasicPlayerModel(context, coroutineScope)
+            }
+            if (mPhotoResolver!=null) {
+                playerModel.enablePhotoViewer(mPhotoSlideShowDuration!!, mPhotoResolver!!)
             }
             return PlayerControllerModel(
                 playerModel,
@@ -175,18 +172,10 @@ open class PlayerControllerModel(
                 seekMedium = mSeekMedium,
                 seekLarge = mSeekLarge,
                 counterInMs = mCounterInMs,
-//                seekRelativeForward = mSeekForward,
-//                seekRelativeBackword = mSeekBackword
             )
         }
     }
 
-    /**
-     * コントローラーのCoroutineScope
-     * playerModel.scope を継承するが、ライフサイクルが異なるので、新しいインスタンスにしておく。
-     */
-//    val scope:CoroutineScope = CoroutineScope(playerModel.scope.coroutineContext)
-//    private val resetableScope = UtManualIncarnateResetableValue { CoroutineScope(playerModel.scope.coroutineContext) }
 
     /**
      * ApplicationContext参照用
@@ -207,9 +196,8 @@ open class PlayerControllerModel(
     val volume: MutableStateFlow<Float> get() = playerModel.volume  // 0-100
     val mute: MutableStateFlow<Boolean> get() = playerModel.mute
     val commandVolume = LiteUnitCommand()
-
-
     val commandChangeRange = LiteCommand<Boolean>(::changeRange)
+    val isCurrentSourcePhoto: Flow<Boolean> = playerModel.currentSource.map { playerModel.isPhotoViewerEnabled && it?.isPhoto==true }
 
     fun setRangePlayModel(rvm:RangedPlayModel?) {
         rvm?.initializeRangeContainsPosition(playerModel.currentPosition)
@@ -235,11 +223,6 @@ open class PlayerControllerModel(
         hasPrevRange.mutable.value = rvm.hasPrevious
     }
 
-//    val canSnapshot:StateFlow<Boolean> = playerModel.currentSource.map {
-//        it?.uri?.startsWith("http") == false
-//    }.stateIn(playerModel.scope, SharingStarted.Eagerly, false)
-    // region Commands
-
     private fun seekRelative(forward:Boolean, s:RelativeSeek?) {
         if(s==null) return
         if(forward) {
@@ -261,12 +244,6 @@ open class PlayerControllerModel(
     val lockSlider = _lockSliderFlow.map {enableSliderLock && it}
     val commandPlay = LiteUnitCommand(playerModel::play)
     val commandPause = LiteUnitCommand(playerModel::pause)
-//    val commandTogglePlay = LiteUnitCommand { playerModel.togglePlay() }
-//    val commandNext = LiteUnitCommand { playerModel.next() }
-//    val commandPrev = LiteUnitCommand { playerModel.previous() }
-//    val commandNextChapter = LiteUnitCommand { playerModel.nextChapter() }
-//    val commandPrevChapter = LiteUnitCommand { playerModel.prevChapter() }
-//    val commandSeek = LiteCommand<Long?> { if(it!=null) playerModel.seekRelative(it) }
     val commandSeekLarge = LiteCommand<Boolean> { seekRelative(it, seekLarge) }
     val commandSeekMedium = LiteCommand<Boolean> { seekRelative(it, seekMedium) }
     val commandSeekSmall = LiteCommand<Boolean> { seekRelative(it, seekSmall) }
@@ -274,7 +251,6 @@ open class PlayerControllerModel(
     val commandPinP = LiteUnitCommand { setWindowMode(WindowMode.PINP) }
     val commandCollapse = LiteUnitCommand { setWindowMode(WindowMode.NORMAL) }
     val commandSnapshot = LiteUnitCommand(::snapshot)
-//    val commandPlayerTapped = if(playerTapToPlay) LiteUnitCommand { playerModel.togglePlay() } else LiteUnitCommand()
     val commandRotate = LiteCommand<Rotation> { playerModel.rotate(it) }
     val commandLockSlider = LiteUnitCommand { _lockSliderFlow.value = !_lockSliderFlow.value }
 
@@ -297,7 +273,12 @@ open class PlayerControllerModel(
     private fun snapshot() {
         val handler = snapshotHandler ?: return
         val src = playerModel.currentSource.value ?: return
-//        if(src.uri.startsWith("http")) return
+
+        if (src.isPhoto) {
+            val bitmap = playerModel.resolvedBitmap ?: return
+            handler(0, bitmap)
+            return
+        }
 
         takingSnapshot.mutable.value = true
         val pos = playerModel.currentPosition

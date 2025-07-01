@@ -19,6 +19,10 @@ interface IMediaSource {
 //    val chapterList: IChapterList?
 //    val disabledRanges:List<Range> get() = chapterList?.disabledRanges(trimming)?.toList() ?: emptyList()
 //    val hasChapter:Boolean get() = (chapterList?.chapters?.size ?: 0)>0
+    val isPhoto:Boolean get() = when(type.lowercase()) {
+        "jpg","jpeg","png"->true
+        else->false
+    }
 }
 
 interface IMediaSourceWithChapter : IMediaSource {

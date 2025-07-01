@@ -1,6 +1,7 @@
 package io.github.toyota32k.lib.player.model
 
 import android.app.Application
+import android.graphics.Bitmap
 import android.util.Size
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
@@ -10,8 +11,19 @@ import io.github.toyota32k.binder.command.IUnitCommand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.time.Duration
 
-interface IPlayerModel : AutoCloseable {
+interface IPhotoSlideShowModel {
+    var photoSlideShowDuration: Duration
+    val photoResolver:(suspend (item:IMediaSource)->Bitmap?)?
+    val isPhotoViewerEnabled: Boolean get() = photoResolver!=null
+    val resolvedBitmap: Bitmap?
+    fun enablePhotoViewer(duration: Duration, resolver:suspend (item:IMediaSource)->Bitmap?)
+    suspend fun resolvePhoto(item:IMediaSource):Bitmap?
+    fun resetPhoto()
+}
+
+interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
     fun setSource(src:IMediaSource?, autoPlay:Boolean)
     fun setPlayRange(range:Range?)
 
@@ -61,7 +73,6 @@ interface IPlayerModel : AutoCloseable {
 
     fun killPlayer()
     fun revivePlayer():Boolean
-
 }
 
 interface IPlaylistHandler {

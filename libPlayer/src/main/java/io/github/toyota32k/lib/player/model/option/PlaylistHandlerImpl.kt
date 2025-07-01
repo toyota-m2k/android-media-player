@@ -14,13 +14,11 @@ class PlaylistHandlerImpl(
     val playlist: IMediaFeed,
     override val autoPlayOnSetSource:Boolean,
     override val continuousPlay: Boolean) : IPlaylistHandler {
-    private val currentSource: StateFlow<IMediaSource?>
-        get() = playlist.currentSource
     init {
-        currentSource.onEach(::onCurrentSourceChanged).launchIn(playerModel.scope)
+        playlist.currentSource.onEach(::onCurrentSourceChanged).launchIn(playerModel.scope)
     }
 
-    private fun onCurrentSourceChanged(src: IMediaSource?) {
+    private suspend fun onCurrentSourceChanged(src: IMediaSource?) {
         playerModel.setSource(src, autoPlayOnSetSource)
     }
 
