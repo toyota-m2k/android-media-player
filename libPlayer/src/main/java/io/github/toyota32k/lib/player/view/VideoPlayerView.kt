@@ -3,7 +3,6 @@ package io.github.toyota32k.lib.player.view
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.FrameLayout
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.VisibilityBinding
@@ -17,7 +16,6 @@ import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
-import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Suppress("unused")

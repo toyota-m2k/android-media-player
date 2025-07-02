@@ -38,6 +38,8 @@
         <io.github.toyota32k.lib.player.view.VideoPlayerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            app:ampAttrsByParent="true"
+            app:ampPlayerCenteringVertically="true"
             />
     </FrameLayout>
 

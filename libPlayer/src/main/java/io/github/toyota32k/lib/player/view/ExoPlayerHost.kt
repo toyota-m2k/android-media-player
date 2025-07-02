@@ -75,6 +75,13 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
             controls.expPlayerContainer.layoutParams = params
         }
+
+        val progressRingGravity = sar.sa.getInt(R.styleable.ControlPanel_ampPlayerProgressRingGravity, 0)
+        if (progressRingGravity!=0) {
+            val params = controls.expProgressRing.layoutParams as FrameLayout.LayoutParams
+            params.gravity = progressRingGravity
+            controls.expProgressRing.layoutParams = params
+        }
     }
 
     init {

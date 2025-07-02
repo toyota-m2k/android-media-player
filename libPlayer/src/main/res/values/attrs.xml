@@ -17,6 +17,23 @@
         ExoPlayerを縦方向にセンタリングするか（デフォルト：false -> 上端に配置）
         -->
         <attr name="ampPlayerCenteringVertically" format="boolean"/>
+        <!--
+        ExoPlayer上に表示するプログレスリングの表示位置（デフォルト：center_vertical|center_horizontal）
+        -->
+        <attr name="ampPlayerProgressRingGravity" format="flags">
+            <flag name="top" value="0x30" />
+            <flag name="bottom" value="0x50" />
+            <flag name="left" value="0x03" />
+            <flag name="start" value="0x03" />
+            <flag name="right" value="0x05" />
+            <flag name="end" value="0x05" />
+            <flag name="center_vertical" value="0x10" />
+            <flag name="center_horizontal" value="0x01" />
+            <flag name="center" value="0x11" />
+<!--            <flag name="fill_vertical" value="0x70" />-->
+<!--            <flag name="fill_horizontal" value="0x07" />-->
+<!--            <flag name="fill" value="0x77" />-->
+        </attr>
 
         <!--
         panelBackgroundColor: コントロールパネルの背景色（デフォルト：colorSurface）
