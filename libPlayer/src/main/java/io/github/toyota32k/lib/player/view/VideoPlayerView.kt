@@ -74,10 +74,6 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
         controls.player.dissociatePlayer()
     }
 
-    /**
-     * VideoPlayerView にズーム機能を付加するための最小限のIUtManipulationTarget実装
-     */
-    class SimpleManipulationTarget(override val parentView: View, override val contentView: View) : UtAbstractManipulationTarget()
 //    inner class ExtendedManipulationTarget : UtAbstractManipulationTarget() {
 //        override val parentView: View
 //            get() = controls.root
@@ -90,5 +86,5 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
 //    }
 
     val manipulationTarget: IUtManipulationTarget
-        get() = SimpleManipulationTarget(controls.root, controls.player) // if(model.playerModel.isPhotoViewerEnabled) ExtendedManipulationTarget() else SimpleManipulationTarget(controls.root, controls.photoView)
+        get() = controls.player.manipulationTarget // SimpleManipulationTarget(controls.root, controls.player) // if(model.playerModel.isPhotoViewerEnabled) ExtendedManipulationTarget() else SimpleManipulationTarget(controls.root, controls.photoView)
 }

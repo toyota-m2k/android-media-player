@@ -74,7 +74,8 @@ open class PlayerControllerModel(
         private var mEnableVolumeController:Boolean = false
         private var mEnablePhotoViewer:Boolean = false
         private var mPhotoSlideShowDuration: Duration = 5.seconds
-        private var mPhotoResolver: (suspend (item:IMediaSource)->Bitmap?)? = null
+//        private var mPhotoResolver: (suspend (item:IMediaSource)->Bitmap?)? = null
+        private var mPhotoResolver: IPhotoResolver? = null
 
         private var mHideChapterViewIfEmpty = false
 
@@ -142,7 +143,19 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-        fun enablePhotoViewer(slideDuration:Duration, resolver:(suspend (item:IMediaSource)->Bitmap?)?=null):Builder {
+//        fun enablePhotoViewer(slideDuration:Duration, resolver:(suspend (item:IMediaSource)->Bitmap?)?=null):Builder {
+////            mEnablePhotoViewer = true
+////            mPhotoSlideShowDuration = slideDuration
+////            mPhotoResolver = resolver
+////            return this
+//            return enablePhotoViewer(slideDuration, object:IPhotoResolver {
+//                override suspend fun getPhoto(item: IMediaSource): Bitmap? {
+//                    return resolver?.invoke(item)
+//                }
+//            })
+//        }
+
+        fun enablePhotoViewer(slideDuration:Duration, resolver:IPhotoResolver):Builder {
             mEnablePhotoViewer = true
             mPhotoSlideShowDuration = slideDuration
             mPhotoResolver = resolver
@@ -284,6 +297,10 @@ open class PlayerControllerModel(
         windowMode.mutable.value = mode
     }
 
+    fun permitSnapshot(permit:Boolean) {
+        permitSnapshot.mutable.value = permit
+    }
+    val permitSnapshot: StateFlow<Boolean> = MutableStateFlow(true)
     val takingSnapshot: StateFlow<Boolean> = MutableStateFlow(false)
     private fun snapshot() {
         val handler = snapshotHandler ?: return

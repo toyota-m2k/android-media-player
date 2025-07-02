@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.util.Size
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.FrameLayout
 import androidx.lifecycle.lifecycleScope
 import io.github.toyota32k.binder.Binder
@@ -25,6 +26,8 @@ import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.UtFitter
 import io.github.toyota32k.utils.android.lifecycleOwner
 import io.github.toyota32k.utils.android.px2dp
+import io.github.toyota32k.utils.gesture.IUtManipulationTarget
+import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -173,4 +176,12 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             rootViewSize.value = Size(w,h)
         }
     }
+
+    /**
+     * VideoPlayerView にズーム機能を付加するための最小限のIUtManipulationTarget実装
+     */
+    class SimpleManipulationTarget(override val parentView: View, override val contentView: View) : UtAbstractManipulationTarget()
+
+    val manipulationTarget: IUtManipulationTarget
+        get() = SimpleManipulationTarget(controls.root, controls.expPlayerContainer) // if(model.playerModel.isPhotoViewerEnabled) ExtendedManipulationTarget() else SimpleManipulationTarget(controls.root, controls.photoView)
 }

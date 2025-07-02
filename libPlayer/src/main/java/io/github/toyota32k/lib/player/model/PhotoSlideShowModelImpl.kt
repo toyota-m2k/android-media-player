@@ -18,23 +18,26 @@ import kotlin.time.Duration.Companion.seconds
  * Support PhotoViewer / SlideShow
  */
 class PhotoSlideShowModelImpl(context: Context) : IPhotoSlideShowModel {
-    private suspend fun defaultResolver(item: IMediaSource): Bitmap? {
-        return try {
-            withContext(Dispatchers.IO) {
-                if (item.uri.startsWith("http")) {
-                    (URL(item.uri).openConnection() as HttpURLConnection).run {
-                        connect()
-                        BitmapFactory.decodeStream(inputStream)
-                    }
-                } else {
-                    context.contentResolver.openInputStream(item.uri.toUri())?.use { inputStream ->
-                        BitmapFactory.decodeStream(inputStream)
+    class DefaultPhotoResolver(context:Context): IPhotoResolver {
+        val applicationContext:Context = context.applicationContext
+        override suspend fun getPhoto(item: IMediaSource): Bitmap? {
+            return try {
+                withContext(Dispatchers.IO) {
+                    if (item.uri.startsWith("http")) {
+                        (URL(item.uri).openConnection() as HttpURLConnection).run {
+                            connect()
+                            BitmapFactory.decodeStream(inputStream)
+                        }
+                    } else {
+                        applicationContext.contentResolver.openInputStream(item.uri.toUri())?.use { inputStream ->
+                            BitmapFactory.decodeStream(inputStream)
+                        }
                     }
                 }
+            } catch (e: Throwable) {
+                BasicPlayerModel.logger.error(e)
+                null
             }
-        } catch(e:Throwable) {
-            BasicPlayerModel.logger.error(e)
-            null
         }
     }
     private val context = context.applicationContext
@@ -43,15 +46,15 @@ class PhotoSlideShowModelImpl(context: Context) : IPhotoSlideShowModel {
             if(v<=0.seconds || v==Duration.INFINITE) throw IllegalArgumentException("duration must be positive and finite.")
             field = v
         }
-    override var photoResolver: (suspend (item: IMediaSource) -> Bitmap?)? = null
+    override var photoResolver: IPhotoResolver? = null
     override var resolvedBitmap:Bitmap? = null
     override var isPhotoViewerEnabled: Boolean = false
 
-    fun enablePhotoViewer(duration: Duration, resolver: (suspend (item: IMediaSource) -> Bitmap?)?) {
+    fun enablePhotoViewer(duration: Duration, resolver: IPhotoResolver?) {
         if (duration <= 0.seconds || duration==Duration.INFINITE) throw IllegalArgumentException("duration must be positive and finite.")
         isPhotoViewerEnabled = true
         photoSlideShowDuration = duration
-        photoResolver = resolver ?: ::defaultResolver
+        photoResolver = resolver ?: DefaultPhotoResolver(context)
     }
 
     suspend fun resolvePhoto(item: IMediaSource, state:MutableStateFlow<PlayerState>, videoSize:MutableStateFlow<Size?>): Bitmap? {
@@ -59,7 +62,7 @@ class PhotoSlideShowModelImpl(context: Context) : IPhotoSlideShowModel {
         if(!item.isPhoto) return null
         state.value = PlayerState.Loading
         return photoResolver?.let { resolver->
-            val bitmap = resolver(item)
+            val bitmap = resolver.getPhoto(item)
             if(bitmap!=null) {
                 resolvedBitmap = bitmap
                 state.value = PlayerState.Ready

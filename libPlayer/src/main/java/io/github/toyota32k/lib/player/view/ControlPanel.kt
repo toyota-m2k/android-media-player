@@ -122,7 +122,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .multiVisibilityBinding(arrayOf(controls.prevVideoButton, controls.nextVideoButton), ConstantLiveData(playlistHandler!=null && model.showNextPreviousButton), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiEnableBinding(arrayOf(
                 controls.playButton,
-                controls.pauseButton,
+//                controls.pauseButton,
                 controls.rotateLeft,
                 controls.rotateRight,
                 controls.fullscreenButton,
@@ -142,7 +142,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 controls.volumeButton,
                 controls.volumeMutedButton,
                 ), combine(model.playerModel.isReady, model.isCurrentSourcePhoto) { r, p -> r && !p })
-            .enableBinding(controls.snapshotButton, combine(model.playerModel.isReady,model.takingSnapshot) { r, s -> r && !s })
+            .enableBinding(controls.snapshotButton, combine(model.playerModel.isReady,model.takingSnapshot, model.permitSnapshot) { r, s, p -> r && !s && p})
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPause, controls.pauseButton)

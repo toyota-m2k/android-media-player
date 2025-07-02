@@ -675,7 +675,7 @@ open class BasicPlayerModel(
 
     // region PhotoViewer + SlideShow
 
-    override fun enablePhotoViewer(duration: Duration, resolver: (suspend (IMediaSource) -> Bitmap?)?) {
+    override fun enablePhotoViewer(duration: Duration, resolver: IPhotoResolver?) {
         photoSlideShowModel.enablePhotoViewer(duration, resolver)
     }
 
