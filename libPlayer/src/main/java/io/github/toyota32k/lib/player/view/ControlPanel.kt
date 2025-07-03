@@ -60,7 +60,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
     val controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true)
 
     fun setControlPanelAttributes(sar:StyledAttrRetriever) {
-        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
+        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
             val panelBackground = sar.getDrawableWithAlphaOnFallback(
                 R.styleable.ControlPanel_ampPanelBackgroundColor,
                 com.google.android.material.R.attr.colorSurface,

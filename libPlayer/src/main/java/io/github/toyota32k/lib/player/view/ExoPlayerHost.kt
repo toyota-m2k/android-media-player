@@ -4,10 +4,12 @@ import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Size
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ProgressBar
 import androidx.lifecycle.lifecycleScope
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
@@ -56,6 +58,26 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
     val rootView get() = controls.expPlayerRoot
 
+    enum class ProgressRingSize(val value:Int) {
+        Small(1),
+        Medium(2),
+        Large(3),
+        None(4),
+        ;
+        companion object {
+            fun fromValue(value:Int): ProgressRingSize = entries.firstOrNull { it.value==value } ?: Medium
+        }
+    }
+    private var progressRingGravity: Int = 0
+    private var progressRingSize:ProgressRingSize = ProgressRingSize.Medium
+    private val progressRing:ProgressBar?
+        get() = when (progressRingSize) {
+            ProgressRingSize.Small -> controls.expProgressRingSmall
+            ProgressRingSize.Medium -> controls.expProgressRingMedium
+            ProgressRingSize.Large -> controls.expProgressRingLarge
+            ProgressRingSize.None -> null
+        }
+
     var useExoController:Boolean
         get() = exoPlayer.useController
         set(v) { exoPlayer.useController = v }
@@ -63,7 +85,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
     private val rootViewSize = MutableStateFlow<Size?>(null)
 
     fun setPlayerAttributes(sar: StyledAttrRetriever) {
-        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
+        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
             controls.expPlayerRoot.background = sar.getDrawable(
                 R.styleable.ControlPanel_ampPlayerBackground,
                 com.google.android.material.R.attr.colorSurface,
@@ -76,11 +98,16 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             controls.expPlayerContainer.layoutParams = params
         }
 
-        val progressRingGravity = sar.sa.getInt(R.styleable.ControlPanel_ampPlayerProgressRingGravity, 0)
-        if (progressRingGravity!=0) {
-            val params = controls.expProgressRing.layoutParams as FrameLayout.LayoutParams
-            params.gravity = progressRingGravity
-            controls.expProgressRing.layoutParams = params
+        val ringGravity = sar.sa.getInt(R.styleable.ControlPanel_ampPlayerProgressRingGravity, 0)
+        if (ringGravity!=0) {
+            progressRingGravity = ringGravity
+//            val params = controls.expProgressRing.layoutParams as FrameLayout.LayoutParams
+//            params.gravity = progressRingGravity
+//            controls.expProgressRing.layoutParams = params
+        }
+        val ringSize = sar.sa.getInt(R.styleable.ControlPanel_ampPlayerProgressRingSize, 0)
+        if (ringSize!=0) {
+            progressRingSize = ProgressRingSize.fromValue(ringSize)
         }
     }
 
@@ -107,8 +134,18 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             playerModel.associatePlayerView(exoPlayer)
         }
 
+        val activeProgressRing = progressRing
+        if (progressRingGravity!=0 && activeProgressRing!=null) {
+            val params = activeProgressRing.layoutParams as FrameLayout.LayoutParams
+            params.gravity = progressRingGravity
+            activeProgressRing.layoutParams = params
+
+        }
+
         binder
-            .visibilityBinding(controls.expProgressRing, playerModel.isLoading, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
+            .conditional(activeProgressRing!=null) {
+                visibilityBinding(activeProgressRing!!, playerModel.isLoading, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
+            }
             .visibilityBinding(controls.expErrorMessage, playerModel.isError, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
             .visibilityBinding(controls.serviceArea, combine(playerModel.isLoading,playerModel.isError) { l, e-> l||e}, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
             .textBinding(controls.expErrorMessage, playerModel.errorMessage.filterNotNull())

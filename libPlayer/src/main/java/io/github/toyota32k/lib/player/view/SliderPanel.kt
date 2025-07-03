@@ -37,7 +37,7 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private lateinit var model: PlayerControllerModel
 
     fun setSliderPanelAttributes(sar:StyledAttrRetriever) {
-        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
+        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
             val panelText = sar.getColor(
                 R.styleable.ControlPanel_ampPanelForegroundColor,
                 com.google.android.material.R.attr.colorOnSurface,

@@ -34,7 +34,12 @@
 <!--            <flag name="fill_horizontal" value="0x07" />-->
 <!--            <flag name="fill" value="0x77" />-->
         </attr>
-
+        <attr name="ampPlayerProgressRingSize" format="flags">
+            <flag name="small" value="0x01" />
+            <flag name="medium" value="0x02" />
+            <flag name="large" value="0x03" />
+            <flag name="none" value="0x04" />
+        </attr>
         <!--
         panelBackgroundColor: コントロールパネルの背景色（デフォルト：colorSurface）
         panelForegroundColor: コントロールパネルの文字色（デフォルト：colorOnSurface）

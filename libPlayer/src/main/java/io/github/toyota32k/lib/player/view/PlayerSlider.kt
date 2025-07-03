@@ -479,7 +479,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     // endregion
     fun setPlayerSliderAttributes(sar: StyledAttrRetriever, reLayout:Boolean=true) {
-        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
+        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
             setThumbAttrs(sar)
             setMarkerAttrs(sar)
             setRailLeftAttrs(sar)

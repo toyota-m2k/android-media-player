@@ -30,7 +30,7 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
         V2PlayerViewBinding.inflate(LayoutInflater.from(context), this, true)
 
     fun setVideoPlayerViewAttributes(sar: StyledAttrRetriever) {
-        if (!sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)) {
+        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
             controls.player.setPlayerAttributes(sar)
             controls.controller.setControlPanelAttributes(sar)
         }
