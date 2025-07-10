@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "io.github.toyota32k.android.media.player"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.toyota32k.android.media.player"
