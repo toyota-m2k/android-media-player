@@ -4,7 +4,7 @@ kotlin = "2.1.21"
 agp = "8.10.1"
 
 #libraries
-androidBinding = "1.9.5"
+androidBinding = "1.9.6"
 androidViewex = "1.1.16"
 coreKtx = "1.16.0"
 junit = "4.13.2"
