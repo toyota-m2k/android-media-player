@@ -225,15 +225,18 @@ open class BasicPlayerModel(
                         val endPosition = range?.end ?: naturalDuration.value
                         var adjustedPosition = range.clamp(pos)
 
-                        if (src is IMediaSourceWithChapter && src.chapterList.isNotEmpty) {
-                            // 無効区間、トリミングによる再生スキップの処理
-                            val dr = src.chapterList.disabledRanges(src.trimming)
-                            val hit = dr.firstOrNull { it.contains(adjustedPosition) }
-                            if (hit != null) {
-                                if (hit.end == 0L || hit.end >= endPosition) {
-                                    adjustedPosition = endPosition
-                                } else {
-                                    adjustedPosition = range.clamp(hit.end)
+                        if (src is IMediaSourceWithChapter) {
+                            val chapterList = src.getChapterList()
+                            if (chapterList.isNotEmpty) {
+                                // 無効区間、トリミングによる再生スキップの処理
+                                val dr = chapterList.disabledRanges(src.trimming)
+                                val hit = dr.firstOrNull { it.contains(adjustedPosition) }
+                                if (hit != null) {
+                                    if (hit.end == 0L || hit.end >= endPosition) {
+                                        adjustedPosition = endPosition
+                                    } else {
+                                        adjustedPosition = range.clamp(hit.end)
+                                    }
                                 }
                             }
                         }

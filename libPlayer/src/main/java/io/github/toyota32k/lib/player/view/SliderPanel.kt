@@ -24,8 +24,10 @@ import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGI
 import io.github.toyota32k.utils.GenericDisposable
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.dp
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr)  {
@@ -85,7 +87,9 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             .add( GenericDisposable { controls.playerSlider.setValueChangedByUserListener(null) } )
             .observe(model.playerModel.currentSource) {src->
                 val sourceWithChapter = src as? IMediaSourceWithChapter ?: return@observe
-                controls.playerSlider.setChapterList(sourceWithChapter.chapterList)
+                MainScope().launch {
+                    controls.playerSlider.setChapterList(sourceWithChapter.getChapterList())
+                }
             }
             .observe(model.playerModel.playRange) {
                 controls.playerSlider.setPlayRange(it)

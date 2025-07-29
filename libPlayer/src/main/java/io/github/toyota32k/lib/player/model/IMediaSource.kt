@@ -26,7 +26,8 @@ interface IMediaSource {
 }
 
 interface IMediaSourceWithChapter : IMediaSource {
-    val chapterList:IChapterList
+//    val chapterList:IChapterList
+    suspend fun getChapterList(): IChapterList
 }
 
 interface IMediaSourceWith : IMediaSourceWithChapter {
