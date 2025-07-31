@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.glide)
 
     implementation(libs.android.binding)
     implementation(libs.android.viewex)

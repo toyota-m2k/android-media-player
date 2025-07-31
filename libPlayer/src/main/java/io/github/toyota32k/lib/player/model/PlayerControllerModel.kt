@@ -3,8 +3,11 @@ package io.github.toyota32k.lib.player.model
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.graphics.drawable.Drawable
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
 import io.github.toyota32k.binder.command.LiteCommand
 import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.lib.player.TpLib
@@ -74,9 +77,6 @@ open class PlayerControllerModel(
         private var mEnableVolumeController:Boolean = false
         private var mEnablePhotoViewer:Boolean = false
         private var mPhotoSlideShowDuration: Duration = 5.seconds
-//        private var mPhotoResolver: (suspend (item:IMediaSource)->Bitmap?)? = null
-        private var mPhotoResolver: IPhotoResolver? = null
-
         private var mHideChapterViewIfEmpty = false
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
@@ -143,22 +143,9 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-//        fun enablePhotoViewer(slideDuration:Duration, resolver:(suspend (item:IMediaSource)->Bitmap?)?=null):Builder {
-////            mEnablePhotoViewer = true
-////            mPhotoSlideShowDuration = slideDuration
-////            mPhotoResolver = resolver
-////            return this
-//            return enablePhotoViewer(slideDuration, object:IPhotoResolver {
-//                override suspend fun getPhoto(item: IMediaSource): Bitmap? {
-//                    return resolver?.invoke(item)
-//                }
-//            })
-//        }
-
-        fun enablePhotoViewer(slideDuration:Duration, resolver:IPhotoResolver):Builder {
+        fun enablePhotoViewer(slideDuration:Duration):Builder {
             mEnablePhotoViewer = true
             mPhotoSlideShowDuration = slideDuration
-            mPhotoResolver = resolver
             return this
         }
         fun disablePhotoViewer():Builder {
@@ -183,7 +170,7 @@ open class PlayerControllerModel(
                 else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false)
             }
             if (mEnablePhotoViewer) {
-                playerModel.enablePhotoViewer(mPhotoSlideShowDuration, mPhotoResolver)
+                playerModel.enablePhotoViewer(mPhotoSlideShowDuration)
             }
             return PlayerControllerModel(
                 playerModel,
@@ -308,9 +295,19 @@ open class PlayerControllerModel(
         playerModel.pause()
 
         if (src.isPhoto) {
-            val bitmap = playerModel.resolvedBitmap ?: return
-            if (bitmap.isRecycled) return
-            handler(0, bitmap)
+            Glide.with(context)
+                .asBitmap() // Bitmapとしてロードすることを明示
+                .load(src.uri)
+                .into(object : CustomTarget<Bitmap>() {
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: com.bumptech.glide.request.transition.Transition<in Bitmap>?
+                    ) {
+                        handler(0, resource )
+                    }
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                    }
+                })
             return
         }
 
@@ -340,23 +337,6 @@ open class PlayerControllerModel(
     // region Slider
 
     /**
-     * スライダーのトラッカー位置
-     */
-//    val sliderPosition = MutableStateFlow(0L)
-
-    /**
-     * プレーヤーの再生位置
-     * 通常は、sliderPosition == presentingPosition だが、トリミングスライダーの場合は、左右トリミング用トラッカーも候補となる。
-     * （最後に操作したトラッカーの位置が、presentingPosition となる。）
-     */
-//    open val presentingPosition:Flow<Long> = sliderPosition
-
-//    fun seekAndSetSlider(pos:Long) {
-//        val clipped = playerModel.clipPosition(pos)
-////        sliderPosition.value = clipped
-//        playerModel.seekTo(clipped)
-//    }
-    /**
      * スライダーのカウンター表示文字列
      */
     val fullCounterText:Flow<String> = combine(playerModel.playerSeekPosition, playerModel.naturalDuration) { pos, duration->
@@ -367,17 +347,6 @@ open class PlayerControllerModel(
     }
 
     // endregion
-
-//    init {
-//        playerModel.playerSeekPosition.onEach(this::onPlayerSeekPositionChanged).launchIn(scope)
-//    }
-
-    /**
-     * タイマーによって監視されるプレーヤーの再生位置（playerModel.playerSeekPosition）に応じて、スライダーのシーク位置を合わせる。
-     */
-//    open fun onPlayerSeekPositionChanged(pos:Long) {
-//        sliderPosition.value = pos
-//    }
 
     override fun close() {
         playerModel.close()

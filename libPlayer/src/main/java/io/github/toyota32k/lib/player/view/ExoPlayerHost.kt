@@ -4,13 +4,13 @@ import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Size
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
@@ -101,9 +101,6 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         val ringGravity = sar.sa.getInt(R.styleable.ControlPanel_ampPlayerProgressRingGravity, 0)
         if (ringGravity!=0) {
             progressRingGravity = ringGravity
-//            val params = controls.expProgressRing.layoutParams as FrameLayout.LayoutParams
-//            params.gravity = progressRingGravity
-//            controls.expProgressRing.layoutParams = params
         }
         val ringSize = sar.sa.getInt(R.styleable.ControlPanel_ampPlayerProgressRingSize, 0)
         if (ringSize!=0) {
@@ -157,34 +154,20 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
                 observe(model.playerModel.currentSource) {
                     if(it?.isPhoto == true) {
                         CoroutineScope(Dispatchers.Main).launch {
-                            val bitmap = model.playerModel.resolvePhoto(it)
-                            photoView.setImageBitmap(bitmap)
+                            Glide.with(photoView)
+                                .apply {
+                                    if (it.type == "gif") {
+                                        asGif()
+                                    }
+                                }
+                                .load(it.uri)
+                                .into(photoView)
                         }
                     } else {
                         photoView.setImageBitmap(null)
-                        model.playerModel.resetPhoto()
                     }
                 }
             }
-
-//            .bindCommand(playerControllerModel.commandPlayerTapped, this)
-
-//        val matchParent = Size(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-//        combine(playerModel.playerSize, playerModel.stretchVideoToView) { playerSize, stretch ->
-//            logger.debug("AmvExoVideoPlayer:Size=(${playerSize.width}w, ${playerSize.height}h (stretch=$stretch))")
-//            if(stretch) {
-//                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
-//                matchParent
-//            } else {
-//                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-//                playerSize
-//            }
-//        }.onEach(this::updateLayout).launchIn(scope)
-
-//        playerModel.rotation.onEach {
-//            playerView.rotation = it.toFloat()
-//        }.launchIn(scope)
-
         combine(playerModel.videoSize, playerModel.rotation, rootViewSize, this::updateLayout).launchIn(scope)
     }
 
@@ -194,12 +177,10 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         logger.debug("layoutSize = ${videoSize.width} x ${videoSize.height}")
 
         handler?.post {
-//            playerView.rotation = rotation.toFloat()
             if(abs(rotation%180) == 0) {
                 mFitter
                     .setLayoutSize(rootViewSize)
                     .fit(videoSize)
-//                playerView.setLayoutSize(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                 playerContainer.setLayoutSize(mFitter.resultWidth.toInt(), mFitter.resultHeight.toInt())
                 playerContainer.translationY = 0f
             } else {

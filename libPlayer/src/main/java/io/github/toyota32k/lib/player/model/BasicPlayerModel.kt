@@ -2,7 +2,6 @@ package io.github.toyota32k.lib.player.model
 
 import android.app.Application
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Size
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
@@ -19,7 +18,6 @@ import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
-import io.github.toyota32k.lib.player.model.BasicPlayerModel.PlayerState
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.IUtPropOwner
@@ -41,7 +39,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
 open class BasicPlayerModel(
@@ -49,7 +46,7 @@ open class BasicPlayerModel(
     coroutineScope: CoroutineScope,
     initialAutoPlay:Boolean,
     override val continuousPlay:Boolean,
-    val photoSlideShowModel: PhotoSlideShowModelImpl = PhotoSlideShowModelImpl(context)
+    val photoSlideShowModel: PhotoSlideShowModelImpl = PhotoSlideShowModelImpl()
 ) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by photoSlideShowModel {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
@@ -114,16 +111,6 @@ open class BasicPlayerModel(
     // ExoPlayer
     private val isDisposed:Boolean get() = !resetablePlayer.hasValue      // close済みフラグ
     protected val player: ExoPlayer? get() = if(resetablePlayer.hasValue) resetablePlayer.value else null
-
-//    fun requirePlayer():ExoPlayer {
-//        return player ?: throw IllegalStateException("ExoPlayer has been killed.")
-//    }
-//
-//    protected inline fun <T> withPlayer(def:T, fn:(ExoPlayer)->T):T {
-//        return player?.run {
-//            fn(this)
-//        } ?: def
-//    }
 
     protected inline fun withPlayer(fn:(ExoPlayer)->Unit) {
         player?.apply{ fn(this) } ?: logger.error("no exoPlayer now")
@@ -391,16 +378,7 @@ open class BasicPlayerModel(
         if(!isReady.value) return
         val seek = frameCount * frameDuration
         withPlayer { player->
-            // PREVIOUS_SYNC/NEXT_SYNC は、動画のキーフレームにシークする。
-            // ここでは、Frame単位でのシークなので、EXACT でないと、シーク量が１秒くらいになって使いづらい。
-//            val orgParams = player.seekParameters
-//            if(frameCount<0) {
-//                player.setSeekParameters(SeekParameters.PREVIOUS_SYNC)
-//            } else {
-//                player.setSeekParameters(SeekParameters.NEXT_SYNC)
-//            }
             clippingSeekTo(player.currentPosition + seek, true)
-//            player.setSeekParameters(orgParams)
         }
     }
 
@@ -469,22 +447,7 @@ open class BasicPlayerModel(
                 Player.STATE_BUFFERING -> {
                     if(state.value == PlayerState.None) {
                         state.mutable.value = PlayerState.Loading
-                    } else {
-//                        scope.launch {
-//                            for (i in 0..20) {
-//                                delay(100)
-//                                if (runOnPlayer(PlayerState.None) { playbackState } != Player.STATE_BUFFERING) {
-//                                    break
-//                                }
-//                            }
-//                            if (runOnPlayer(PlayerState.None) { playbackState } == Player.STATE_BUFFERING) {
-//                                // ２秒以上bufferingならロード中に戻す
-//                                logger.debug("buffering more than 2 sec")
-//                                state.mutable.value = PlayerState.Loading
-//                            }
-//                        }
                     }
-
                 }
                 Player.STATE_READY ->  {
                     ended.value = false
@@ -500,25 +463,11 @@ open class BasicPlayerModel(
 
                 }
                 Player.STATE_ENDED -> {
-//                    player.playWhenReady = false
                     ended.value = true
                 }
                 else -> {}
             }
         }
-
-//        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-//            if(useExoPlayList) {
-//                state.mutable.value = PlayerState.None
-//                videoSize.mutable.value = null
-//                errorMessage.mutable.value = null
-//                naturalDuration.mutable.value = 0L
-//
-//                currentSource.mutable.value = mediaItem?.getAmvSource()
-//                hasNext.value = player.hasNextMediaItem()
-//                hasPrevious.value = player.hasPreviousMediaItem()
-//            }
-//        }
     }
 
     override val currentPosition: Long
@@ -547,17 +496,6 @@ open class BasicPlayerModel(
             manager.setPlayer(player)
         }
     }
-
-    // endregion
-
-    // region Sizing of Player View
-
-    /**
-     * ルートビューサイズ変更のお知らせ
-     */
-//    override fun onRootViewSizeChanged(size: Size) {
-//        rootViewSize.mutable.value = size
-//    }
 
     // endregion
 
@@ -622,7 +560,6 @@ open class BasicPlayerModel(
         seekManager.reset()
         playerSeekPosition.mutable.value = 0L
         errorMessage.mutable.value = null
-        resetPhoto()
     }
 
     /**
@@ -678,12 +615,8 @@ open class BasicPlayerModel(
 
     // region PhotoViewer + SlideShow
 
-    override fun enablePhotoViewer(duration: Duration, resolver: IPhotoResolver?) {
-        photoSlideShowModel.enablePhotoViewer(duration, resolver)
-    }
-
-    override suspend fun resolvePhoto(item: IMediaSource): Bitmap? {
-        return photoSlideShowModel.resolvePhoto(item, state.mutable, videoSize.mutable)
+    override fun enablePhotoViewer(duration: Duration) {
+        photoSlideShowModel.enablePhotoViewer(duration)
     }
 
     // endregion

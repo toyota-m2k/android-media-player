@@ -21,6 +21,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AndroidMediaPlayer"
+rootProject.name = "android-media-player"
 include(":app")
 include(":libPlayer")

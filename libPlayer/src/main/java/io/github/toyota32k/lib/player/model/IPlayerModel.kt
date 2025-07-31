@@ -1,7 +1,6 @@
 package io.github.toyota32k.lib.player.model
 
 import android.app.Application
-import android.graphics.Bitmap
 import android.util.Size
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
@@ -13,17 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 
-fun interface IPhotoResolver {
-    suspend fun getPhoto(item: IMediaSource):Bitmap?
-}
-
 interface IPhotoSlideShowModel {
     val isPhotoViewerEnabled: Boolean
     var photoSlideShowDuration: Duration
-    val photoResolver: IPhotoResolver?
-    val resolvedBitmap: Bitmap?
-    suspend fun resolvePhoto(item:IMediaSource):Bitmap?
-    fun resetPhoto()
 }
 
 interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
@@ -45,14 +36,11 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
 
     @OptIn(UnstableApi::class)
     fun associateNotificationManager(manager: PlayerNotificationManager)
-//    fun onRootViewSizeChanged(size: Size)
     fun onPlaybackCompleted()
 
 
     val currentSource: StateFlow<IMediaSource?>
-//    val playerSize: StateFlow<Size>
     val videoSize: StateFlow<Size?>
-//    val stretchVideoToView: StateFlow<Boolean>
 
     val rotation: StateFlow<Int>
     fun rotate(value:Rotation)
@@ -80,14 +68,12 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
     fun revivePlayer():Boolean
 
     // PhotoViewer /Slide Show を有効化する
-    fun enablePhotoViewer(duration: Duration, resolver:IPhotoResolver?)
+    fun enablePhotoViewer(duration: Duration)
 }
 
 interface IPlaylistHandler {
     val commandNext: IUnitCommand
     val commandPrev: IUnitCommand
-//    fun next()
-//    fun previous()
 
     val hasPrevious:StateFlow<Boolean>
     val hasNext:StateFlow<Boolean>
@@ -97,7 +83,4 @@ interface  IChapterHandler {
     val hideChapterViewIfEmpty:Boolean
     val commandNextChapter: IUnitCommand
     val commandPrevChapter: IUnitCommand
-
-//    val chapterList:StateFlow<IChapterList?>
-//    val hasChapters:StateFlow<Boolean>
 }
