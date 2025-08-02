@@ -1,22 +1,22 @@
 [versions]
 #plugins
-kotlin = "2.1.21"
-agp = "8.10.1"
+kotlin = "2.2.0"
+agp = "8.12.0"
 
 #libraries
-androidBinding = "1.9.8"
-androidViewex = "1.1.16"
+androidBinding = "1.9.9"
+androidViewex = "1.1.17"
 coreKtx = "1.16.0"
 glide = "4.16.0"
 junit = "4.13.2"
-junitVersion = "1.2.1"
-espressoCore = "3.6.1"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
 appcompat = "1.7.1"
 kotlinxSerializationJson = "1.9.0"
 material = "1.12.0"
 activity = "1.10.1"
 constraintlayout = "2.2.1"
-media3ExoplayerVersion = "1.7.1"
+media3ExoplayerVersion = "1.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
