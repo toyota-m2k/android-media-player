@@ -2,7 +2,6 @@ package io.github.toyota32k.lib.player.view
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Size
 import android.view.Gravity
@@ -10,16 +9,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ProgressBar
-import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
 import io.github.toyota32k.binder.combinatorialVisibilityBinding
-import io.github.toyota32k.binder.observe
 import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
@@ -34,15 +28,11 @@ import io.github.toyota32k.utils.android.lifecycleOwner
 import io.github.toyota32k.utils.android.px2dp
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
 import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import javax.sql.DataSource
 import kotlin.math.abs
 
 @Suppress("unused")

@@ -631,6 +631,7 @@ open class BasicPlayerModel(
         return currentSource.disposableObserve {
             if(it?.isPhoto == true) {
                 CoroutineScope(Dispatchers.Main).launch {
+                    state.mutable.value = PlayerState.Loading
                     Glide.with(photoView)
                         .apply {
                             if (it.type == "gif") {
@@ -647,6 +648,7 @@ open class BasicPlayerModel(
                                 isFirstResource: Boolean
                             ): Boolean {
                                 logger.error("Failed to load image: ${e?.message}")
+                                state.mutable.value = PlayerState.Error
                                 return false
                             }
 
@@ -661,6 +663,7 @@ open class BasicPlayerModel(
                                 val width = resource.intrinsicWidth
                                 val height = resource.intrinsicHeight
                                 videoSize.mutable.value = Size(width, height)
+                                state.mutable.value = PlayerState.Ready
                                 return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                             }
                         })
