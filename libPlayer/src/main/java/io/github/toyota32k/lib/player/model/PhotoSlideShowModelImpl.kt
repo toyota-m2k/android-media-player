@@ -1,5 +1,17 @@
 package io.github.toyota32k.lib.player.model
 
+import android.graphics.drawable.Drawable
+import android.util.Size
+import android.widget.ImageView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import io.github.toyota32k.binder.observe
+import io.github.toyota32k.lib.player.view.ExoPlayerHost.Companion.logger
+import io.github.toyota32k.utils.IDisposable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -19,5 +31,6 @@ class PhotoSlideShowModelImpl : IPhotoSlideShowModel {
         isPhotoViewerEnabled = true
         photoSlideShowDuration = duration
     }
+
 }
 

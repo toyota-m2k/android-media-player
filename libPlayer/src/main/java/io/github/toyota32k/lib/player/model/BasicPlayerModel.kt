@@ -1,8 +1,11 @@
 package io.github.toyota32k.lib.player.model
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.Size
+import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -16,12 +19,17 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.FlowableEvent
+import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.UtManualIncarnateResetableValue
+import io.github.toyota32k.utils.lifecycle.disposableObserve
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -617,6 +625,52 @@ open class BasicPlayerModel(
 
     override fun enablePhotoViewer(duration: Duration) {
         photoSlideShowModel.enablePhotoViewer(duration)
+    }
+
+    override fun attachPhotoView(photoView: ImageView): IDisposable {
+        return currentSource.disposableObserve {
+            if(it?.isPhoto == true) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    Glide.with(photoView)
+                        .apply {
+                            if (it.type == "gif") {
+                                @SuppressLint("CheckResult")
+                                asGif()
+                            }
+                        }
+                        .load(it.uri)
+                        .listener(object : RequestListener<Drawable> {
+                            override fun onLoadFailed(
+                                e: GlideException?,
+                                model: Any?,
+                                target: com.bumptech.glide.request.target.Target<Drawable?>,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                logger.error("Failed to load image: ${e?.message}")
+                                return false
+                            }
+
+                            override fun onResourceReady(
+                                resource: Drawable,
+                                model: Any,
+                                target: com.bumptech.glide.request.target.Target<Drawable?>?,
+                                dataSource: com.bumptech.glide.load.DataSource,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                // ロードが成功した場合の処理
+                                val width = resource.intrinsicWidth
+                                val height = resource.intrinsicHeight
+                                videoSize.mutable.value = Size(width, height)
+                                return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
+                            }
+                        })
+                        .into(photoView)
+                }
+            } else {
+                photoView.setImageBitmap(null)
+            }
+
+        }
     }
 
     // endregion

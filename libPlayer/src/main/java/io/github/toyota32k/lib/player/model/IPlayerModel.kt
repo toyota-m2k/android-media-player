@@ -2,11 +2,13 @@ package io.github.toyota32k.lib.player.model
 
 import android.app.Application
 import android.util.Size
+import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import io.github.toyota32k.binder.command.IUnitCommand
+import io.github.toyota32k.utils.IDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -69,6 +71,9 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
 
     // PhotoViewer /Slide Show を有効化する
     fun enablePhotoViewer(duration: Duration)
+
+    // ExoPlayerHost から呼ぶ
+    fun attachPhotoView(photoView: ImageView) : IDisposable
 }
 
 interface IPlaylistHandler {

@@ -2,6 +2,7 @@ package io.github.toyota32k.lib.player.view
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Size
 import android.view.Gravity
@@ -9,8 +10,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
@@ -38,6 +42,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import javax.sql.DataSource
 import kotlin.math.abs
 
 @Suppress("unused")
@@ -151,22 +156,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
                 inverseInvisible(exoPlayer)
             }
             .conditional( model.playerModel.isPhotoViewerEnabled ) {
-                observe(model.playerModel.currentSource) {
-                    if(it?.isPhoto == true) {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            Glide.with(photoView)
-                                .apply {
-                                    if (it.type == "gif") {
-                                        asGif()
-                                    }
-                                }
-                                .load(it.uri)
-                                .into(photoView)
-                        }
-                    } else {
-                        photoView.setImageBitmap(null)
-                    }
-                }
+                model.playerModel.attachPhotoView(photoView)
             }
         combine(playerModel.videoSize, playerModel.rotation, rootViewSize, this::updateLayout).launchIn(scope)
     }
