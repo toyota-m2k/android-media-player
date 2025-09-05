@@ -39,7 +39,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
         fun createButtonColorStateList(sar:StyledAttrRetriever):ColorStateList {
             val buttonEnabled = sar.getColor(
                 R.styleable.ControlPanel_ampButtonTintColor,
-                com.google.android.material.R.attr.colorPrimary,
+                androidx.appcompat.R.attr.colorPrimary,
                 Color.BLACK
             )
             val buttonDisabled = sar.getColorWithAlphaOnFallback(

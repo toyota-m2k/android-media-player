@@ -272,7 +272,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         val h = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbIconHeight, height)
         val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbVerticalOffset, -height/2)
         val horizontalCenter = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbHorizontalCenter, width/2)
-        val tintColor = sar.getColor(R.styleable.ControlPanel_ampThumbTintColor, com.google.android.material.R.attr.colorTertiaryFixed, com.google.android.material.R.attr.colorAccent, 0xFF00FFFF.toInt())
+        val tintColor = sar.getColor(R.styleable.ControlPanel_ampThumbTintColor, com.google.android.material.R.attr.colorTertiaryFixed, androidx.appcompat.R.attr.colorAccent, 0xFF00FFFF.toInt())
 
         if(tintColor != 0) {
             drawable.setTint(tintColor)
@@ -397,7 +397,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     var railLeftInfo:RailLeftInfo = RailLeftInfo(0,0,0,0)
 
     private fun setRailLeftAttrs(sar:StyledAttrRetriever) :RailLeftInfo {
-        val color = sar.getColor(R.styleable.ControlPanel_ampRailLeftColor, com.google.android.material.R.attr.colorPrimaryFixed, com.google.android.material.R.attr.colorPrimary, Color.BLUE)
+        val color = sar.getColor(R.styleable.ControlPanel_ampRailLeftColor, com.google.android.material.R.attr.colorPrimaryFixed, androidx.appcompat.R.attr.colorPrimary, Color.BLUE)
         val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailLeftHeight, DEF_RAIL_HEIGHT.dp)
         val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailLeftVerticalOffset, (-DEF_RAIL_HEIGHT/2).dp)
         val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRailLeftZOrder, 1)
