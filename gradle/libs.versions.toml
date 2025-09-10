@@ -33,10 +33,8 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3ExoplayerVersion" }
 android-viewex = { module = "com.github.toyota-m2k:android-viewex", version.ref = "androidViewex" }
 android-binding = { module = "com.github.toyota-m2k:android-binding", version.ref = "androidBinding" }
-#android-utilities = { module = "com.github.toyota-m2k:android-utilities", version.ref = "androidUtilitiesVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
