@@ -61,7 +61,12 @@ open class PlayerControllerModel(
     data class RelativeSeek(val backward:Long, val forward:Long)
 
     enum class SnapshotSource(@param:StringRes val resId:Int) {
+        // ExoPlayerのSurfaceView/TextureViewからキャプチャする。
+        // FRAME_EXTRACTOR より正確な位置の画像が得られるし高速。
         CAPTURE_PLAYER(R.string.snapshot_capture_player_screen),
+        // MediaMetadataRetrieverを使って、指定位置のフレームを抽出する。
+        // 従来は、この方法しかなかったが、（HDRモードの動画で？）再生位置のズレが無視できないレベルになったので
+        // 今後は、CAPTURE_PLAYERをデフォルトにする。
         FRAME_EXTRACTOR(R.string.snapshot_extract_frame),
     }
 
@@ -86,7 +91,7 @@ open class PlayerControllerModel(
         private var mEnablePhotoViewer:Boolean = false
         private var mPhotoSlideShowDuration: Duration = 5.seconds
         private var mHideChapterViewIfEmpty = false
-        private var mSnapshotSource: SnapshotSource = SnapshotSource.FRAME_EXTRACTOR
+        private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
         private var mSnapshotSourceSelectable: Boolean = true
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
