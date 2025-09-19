@@ -50,6 +50,8 @@ dependencies {
 
     implementation(libs.android.binding)
     implementation(libs.android.viewex)
+    implementation(libs.android.dialog)
+
 
     implementation(project(path=":libPlayer"))
 

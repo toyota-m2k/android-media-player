@@ -27,7 +27,7 @@ fun View.setLayoutWidth(width:Int) {
 }
 
 fun View.getLayoutWidth() : Int {
-    return if(layoutParams?.width ?: -1 >=0) {
+    return if((layoutParams?.width ?: -1) >= 0) {
         layoutParams.width
     } else {
         width
@@ -44,7 +44,7 @@ fun View.setLayoutHeight(height:Int) {
 
 @Suppress("unused")
 fun View.getLayoutHeight() : Int {
-    return if(layoutParams?.height ?: -1 >=0) {
+    return if((layoutParams?.height ?: -1) >= 0) {
         layoutParams.height
     } else {
         height

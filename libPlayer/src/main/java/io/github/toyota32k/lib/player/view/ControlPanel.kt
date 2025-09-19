@@ -6,15 +6,20 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.PopupMenu
 import androidx.core.view.children
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.slider.Slider
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
 import io.github.toyota32k.binder.command.bindCommand
 import io.github.toyota32k.binder.enableBinding
+import io.github.toyota32k.binder.longClickBinding
 import io.github.toyota32k.binder.multiEnableBinding
 import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.visibilityBinding
@@ -26,10 +31,14 @@ import io.github.toyota32k.lib.player.model.IPlaylistHandler
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.model.Rotation
 import io.github.toyota32k.utils.android.StyledAttrRetriever
+import io.github.toyota32k.utils.android.activity
 import io.github.toyota32k.utils.gesture.UtClickRepeater
 import io.github.toyota32k.utils.lifecycle.ConstantLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlin.math.roundToLong
 
 class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -170,6 +179,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             }
             .bindCommand(model.commandFullscreen, controls.fullscreenButton)
             .bindCommand(model.commandSnapshot, controls.snapshotButton)
+            .longClickBinding(controls.snapshotButton, ::selectSnapshotSource)
             .bindCommand(model.commandPinP, controls.pinpButton)
             .bindCommand(model.commandCollapse, controls.collapseButton)
             .bindCommand(model.commandRotate, controls.rotateLeft, Rotation.LEFT)
@@ -194,5 +204,31 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
 //            logger.debug("XX2: ${value.roundToLong()} / ${slider.valueTo.roundToLong()}")
             model.playerModel.seekManager.requestedPositionFromSlider.value = value.roundToLong()
         }
+    }
+
+    private fun selectSnapshotSource(anchor: View):Boolean {
+        if (!model.snapshotSourceSelectable) return false
+        val owner = activity() as? LifecycleOwner ?: return false
+        val selection = MutableStateFlow<Int?>(null)
+        PopupMenu(context, anchor).apply {
+            setOnMenuItemClickListener {
+                selection.value = it.itemId
+                true
+            }
+            setOnDismissListener {
+                selection.value = -1
+            }
+            inflate(R.menu.menu_snapshot_source)
+        }.show()
+        owner.lifecycleScope.launch {
+            val sel = selection.first { it != null }
+            when(sel) {
+                R.id.capture -> model.snapshotSource = PlayerControllerModel.SnapshotSource.CAPTURE_PLAYER
+                R.id.extract -> model.snapshotSource = PlayerControllerModel.SnapshotSource.FRAME_EXTRACTOR
+                else -> return@launch
+            }
+            model.commandSnapshot.invoke()
+        }
+        return true
     }
 }

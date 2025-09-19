@@ -3,13 +3,13 @@ package io.github.toyota32k.lib.player.model
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.graphics.drawable.Drawable
 import androidx.annotation.OptIn
+import androidx.annotation.StringRes
 import androidx.media3.common.util.UnstableApi
 import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
 import io.github.toyota32k.binder.command.LiteCommand
 import io.github.toyota32k.binder.command.LiteUnitCommand
+import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.TpFrameExtractor
 import io.github.toyota32k.lib.player.common.formatTime
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.Closeable
+import java.lang.ref.WeakReference
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -51,11 +52,18 @@ open class PlayerControllerModel(
     val seekMedium:RelativeSeek?,
     val seekLarge:RelativeSeek?,
     val counterInMs:Boolean,
+    val snapshotSourceSelectable: Boolean,
+    var snapshotSource: SnapshotSource,
 ) : Closeable, IUtPropOwner {
     companion object {
         val logger by lazy { UtLog("CPM", TpLib.logger) }
     }
     data class RelativeSeek(val backward:Long, val forward:Long)
+
+    enum class SnapshotSource(@param:StringRes val resId:Int) {
+        CAPTURE_PLAYER(R.string.snapshot_capture_player_screen),
+        FRAME_EXTRACTOR(R.string.snapshot_extract_frame),
+    }
 
     class Builder(val context:Context, val coroutineScope: CoroutineScope) {
         private var mSupportChapter:Boolean = false
@@ -78,6 +86,8 @@ open class PlayerControllerModel(
         private var mEnablePhotoViewer:Boolean = false
         private var mPhotoSlideShowDuration: Duration = 5.seconds
         private var mHideChapterViewIfEmpty = false
+        private var mSnapshotSource: SnapshotSource = SnapshotSource.FRAME_EXTRACTOR
+        private var mSnapshotSourceSelectable: Boolean = true
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
             mSupportChapter = true
@@ -160,6 +170,11 @@ open class PlayerControllerModel(
             mContinuousPlay = continuousPlay
             return this
         }
+        fun snapshotSource(source:SnapshotSource, selectable:Boolean=true):Builder {
+            mSnapshotSource = source
+            mSnapshotSourceSelectable = selectable
+            return this
+        }
 
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
@@ -187,6 +202,8 @@ open class PlayerControllerModel(
                 seekMedium = mSeekMedium,
                 seekLarge = mSeekLarge,
                 counterInMs = mCounterInMs,
+                snapshotSource = mSnapshotSource,
+                snapshotSourceSelectable = mSnapshotSourceSelectable
             )
         }
     }
@@ -213,6 +230,17 @@ open class PlayerControllerModel(
     val commandVolume = LiteUnitCommand()
     val commandChangeRange = LiteCommand<Boolean>(::changeRange)
     val isCurrentSourcePhoto: Flow<Boolean> = playerModel.currentSource.map { playerModel.isPhotoViewerEnabled && it?.isPhoto==true }
+
+    interface IScreenshotSource {
+        suspend fun takeScreenshot():Bitmap?
+    }
+
+    private var exoPlayerSnapshotSourceRef: WeakReference<PlayerControllerModel.IScreenshotSource>? = null
+    var exoPlayerSnapshotSource: PlayerControllerModel.IScreenshotSource?
+        get() = exoPlayerSnapshotSourceRef?.get()
+        set(v) {
+            exoPlayerSnapshotSourceRef = if(v!=null) WeakReference(v) else null
+        }
 
     fun setRangePlayModel(rvm:RangedPlayModel?) {
         rvm?.initializeRangeContainsPosition(playerModel.currentPosition)
@@ -284,54 +312,71 @@ open class PlayerControllerModel(
         windowMode.mutable.value = mode
     }
 
+    // endregion
+
+    // region Snapshot
+
     fun permitSnapshot(permit:Boolean) {
         permitSnapshot.mutable.value = permit
     }
     val permitSnapshot: StateFlow<Boolean> = MutableStateFlow(true)
     val takingSnapshot: StateFlow<Boolean> = MutableStateFlow(false)
+
+    private suspend fun bitmapFromPhoto(src:IMediaSource):Bitmap? {
+        if(!src.isPhoto) return null
+        return withContext(Dispatchers.IO) {
+            Glide.with(context)
+                .asBitmap() // Bitmapとしてロードすることを明示
+                .load(src.uri)
+                .submit()
+                .get()
+        }
+    }
+    private suspend fun bitmapFromExoPlayer():Bitmap? {
+        return exoPlayerSnapshotSource?.takeScreenshot()
+    }
+    private suspend fun bitmapFromFrameExtractor(src:IMediaSource, position:Long):Bitmap? {
+        if (src.isPhoto) return null
+        return TpFrameExtractor.create(playerModel.context, src.uri).use { extractor ->
+            extractor.extractFrame(position)
+        }
+    }
+    private suspend fun bitmapFromSrc(src:IMediaSource, position:Long):Bitmap? {
+        if(src.isPhoto) {
+            return bitmapFromPhoto(src)
+        } else {
+            return when(snapshotSource) {
+                SnapshotSource.CAPTURE_PLAYER -> bitmapFromExoPlayer()
+                SnapshotSource.FRAME_EXTRACTOR -> bitmapFromFrameExtractor(src, position)
+            }
+        }
+    }
+
+    private fun Bitmap.rotate(angle:Int):Bitmap {
+        if(angle==0) return this
+        val matrix = Matrix().apply { postRotate(angle.toFloat()) }
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+    }
+
     private fun snapshot() {
         val handler = snapshotHandler ?: return
         val src = playerModel.currentSource.value ?: return
         playerModel.pause()
-
-        if (src.isPhoto) {
-            Glide.with(context)
-                .asBitmap() // Bitmapとしてロードすることを明示
-                .load(src.uri)
-                .into(object : CustomTarget<Bitmap>() {
-                    override fun onResourceReady(
-                        resource: Bitmap,
-                        transition: com.bumptech.glide.request.transition.Transition<in Bitmap>?
-                    ) {
-                        handler(0, resource )
-                    }
-                    override fun onLoadCleared(placeholder: Drawable?) {
-                    }
-                })
-            return
-        }
-
         takingSnapshot.mutable.value = true
-        val pos = playerModel.currentPosition
-        val rotation = Rotation.normalize(playerModel.rotation.value)
-
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.Main).launch {
             try {
-                TpFrameExtractor.create(playerModel.context, src.uri).use { extractor ->
-                    val bitmap = extractor.extractFrame(pos)?.run {
-                        if (rotation != 0) {
-                            Bitmap.createBitmap(this, 0, 0, width, height, Matrix().apply { postRotate(rotation.toFloat()) }, true)
-                        } else this
-                    } ?: return@use
-                    withContext(Dispatchers.Main) {
-                        handler(pos, bitmap)
-                    }
+                val pos: Long = if (src.isPhoto) 0L else playerModel.currentPosition
+                val angle = Rotation.normalize(playerModel.rotation.value)
+                val bitmap = bitmapFromSrc(src, pos)?.rotate(angle)
+                if (bitmap != null) {
+                    handler(pos, bitmap)
                 }
             } finally {
                 takingSnapshot.mutable.value = false
             }
         }
     }
+
     // endregion
 
     // region Slider

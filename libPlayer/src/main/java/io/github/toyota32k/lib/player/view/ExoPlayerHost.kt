@@ -1,15 +1,23 @@
 package io.github.toyota32k.lib.player.view
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.AttributeSet
 import android.util.Size
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.PixelCopy
+import android.view.SurfaceView
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import androidx.annotation.OptIn
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.util.UnstableApi
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
@@ -18,9 +26,12 @@ import io.github.toyota32k.binder.textBinding
 import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.lib.player.common.getLayoutHeight
+import io.github.toyota32k.lib.player.common.getLayoutWidth
 import io.github.toyota32k.lib.player.common.setLayoutSize
 import io.github.toyota32k.lib.player.databinding.V2VideoExoPlayerBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.android.FitMode
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.UtFitter
@@ -28,16 +39,19 @@ import io.github.toyota32k.utils.android.lifecycleOwner
 import io.github.toyota32k.utils.android.px2dp
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
 import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.abs
 
 @Suppress("unused")
 class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
+    : FrameLayout(context, attrs, defStyleAttr), PlayerControllerModel.IScreenshotSource {
     companion object {
         val logger get() = TpLib.logger
     }
@@ -125,6 +139,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         if(playerControllerModel.autoAssociatePlayer) {
             playerModel.associatePlayerView(exoPlayer)
         }
+        playerControllerModel.exoPlayerSnapshotSource = this
 
         val activeProgressRing = progressRing
         if (progressRingGravity!=0 && activeProgressRing!=null) {
@@ -189,4 +204,61 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
     val manipulationTarget: IUtManipulationTarget
         get() = SimpleManipulationTarget(controls.root, controls.expPlayerContainer) // if(model.playerModel.isPhotoViewerEnabled) ExtendedManipulationTarget() else SimpleManipulationTarget(controls.root, controls.photoView)
+
+
+    fun takeScreenshotWithPixelCopy(surfaceView: SurfaceView, callback: (Bitmap?) -> Unit) {
+        val bitmap: Bitmap = createBitmap(surfaceView.width, surfaceView.height)
+        try {
+            val handlerThread = HandlerThread("PixelCopier")
+            handlerThread.start()
+            PixelCopy.request(
+                surfaceView, bitmap,
+                { copyResult:Int ->
+                    if (copyResult == PixelCopy.SUCCESS) {
+                        callback(bitmap)
+                    }
+                    handlerThread.quitSafely()
+                },
+                Handler(handlerThread.looper)
+            )
+        } catch (e: IllegalArgumentException) {
+            callback(null)
+            e.printStackTrace()
+        }
+    }
+
+
+    override suspend fun takeScreenshot(): Bitmap? {
+        val event = FlowableEvent()
+        var listener: OnLayoutChangeListener? = null
+        val videoSize = model.playerModel.videoSize.value
+        if (videoSize!=null) {
+            listener = OnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
+                if (right - left == videoSize.width && bottom - top == videoSize.height) {
+                    event.set()
+                }
+            }
+            exoPlayer.addOnLayoutChangeListener(listener)
+            val scaleX = exoPlayer.getLayoutWidth() / videoSize.width.toFloat()
+            val scaleY = exoPlayer.getLayoutHeight() / videoSize.height.toFloat()
+            exoPlayer.setLayoutSize(videoSize.width, videoSize.height)
+            exoPlayer.scaleX = scaleX
+            exoPlayer.scaleY = scaleY
+        }
+        event.waitOne(1000L)
+        @OptIn(UnstableApi::class)
+        val surfaceView = exoPlayer.videoSurfaceView as? SurfaceView ?: return null
+        return suspendCoroutine { cont->
+            takeScreenshotWithPixelCopy(surfaceView) { bmp->
+                cont.resume(bmp)
+            }
+            if (listener!=null) {
+                exoPlayer.removeOnLayoutChangeListener(listener)
+                exoPlayer.setLayoutSize(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+                exoPlayer.scaleX = 1f
+                exoPlayer.scaleY = 1f
+            }
+        }
+    }
+
 }

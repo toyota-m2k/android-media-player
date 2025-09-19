@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.math.min
 import kotlin.math.roundToInt
+import androidx.core.net.toUri
 
 class TpFrameExtractor(val analyzer:MediaMetadataRetriever) : AutoCloseable {
     constructor(url:String) : this(MediaMetadataRetriever().apply {
@@ -26,7 +27,7 @@ class TpFrameExtractor(val analyzer:MediaMetadataRetriever) : AutoCloseable {
             if(url.startsWith("http")) {
                 return TpFrameExtractor(url)
             } else {
-                return TpFrameExtractor(context, Uri.parse(url))
+                return TpFrameExtractor(context, url.toUri())
             }
         }
     }

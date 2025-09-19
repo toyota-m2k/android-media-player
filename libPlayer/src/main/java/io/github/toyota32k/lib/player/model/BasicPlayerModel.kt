@@ -3,8 +3,13 @@ package io.github.toyota32k.lib.player.model
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.Size
+import android.view.PixelCopy
+import android.view.SurfaceView
 import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
@@ -47,6 +52,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.time.Duration
+import androidx.core.graphics.createBitmap
 
 @OptIn(UnstableApi::class)
 open class BasicPlayerModel(
@@ -174,6 +180,8 @@ open class BasicPlayerModel(
 
     // endregion
 
+    // region Operation
+
     /**
      * 回転
      */
@@ -185,6 +193,8 @@ open class BasicPlayerModel(
             rotation.value = Rotation.normalize(rotation.value + value.degree)
         }
     }
+
+    // endregion
 
     // region Initialize / Termination
 

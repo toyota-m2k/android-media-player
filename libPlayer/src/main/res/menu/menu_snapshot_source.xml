@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/capture"
+        android:title="@string/snapshot_capture_player_screen"
+        />
+    <item
+        android:id="@+id/extract"
+        android:title="@string/snapshot_extract_frame"
+        />
+
+</menu>

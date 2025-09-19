@@ -59,7 +59,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.glide)
 
-    implementation(libs.android.binding)
+    api(libs.android.binding)
     implementation(libs.android.viewex)
 
     testImplementation(libs.junit)
