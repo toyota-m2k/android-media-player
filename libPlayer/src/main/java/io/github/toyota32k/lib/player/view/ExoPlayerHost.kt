@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.PixelCopy
 import android.view.SurfaceView
+import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ProgressBar
@@ -39,12 +40,14 @@ import io.github.toyota32k.utils.android.lifecycleOwner
 import io.github.toyota32k.utils.android.px2dp
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
 import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.abs
@@ -146,7 +149,6 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             val params = activeProgressRing.layoutParams as FrameLayout.LayoutParams
             params.gravity = progressRingGravity
             activeProgressRing.layoutParams = params
-
         }
 
         binder
@@ -227,6 +229,21 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         }
     }
 
+    private suspend fun takeScreenshotWithSurfaceView(surfaceView: SurfaceView): Bitmap? {
+        logger.debug("capture from SurfaceView")
+        return suspendCoroutine { cont ->
+            takeScreenshotWithPixelCopy(surfaceView) { bmp->
+                cont.resume(bmp)
+            }
+        }
+    }
+
+    private suspend fun takeScreenshotWithTextureView(textureView: TextureView): Bitmap? {
+        logger.debug("capture from TextureView")
+        return withContext(Dispatchers.IO) {
+            textureView.bitmap
+        }
+    }
 
     override suspend fun takeScreenshot(): Bitmap? {
         val event = FlowableEvent()
@@ -247,12 +264,19 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         }
         event.waitOne(1000L)
         @OptIn(UnstableApi::class)
-        val surfaceView = exoPlayer.videoSurfaceView as? SurfaceView ?: return null
-        return suspendCoroutine { cont->
-            takeScreenshotWithPixelCopy(surfaceView) { bmp->
-                cont.resume(bmp)
+        val surfaceView = exoPlayer.videoSurfaceView
+        if (surfaceView !is SurfaceView && surfaceView !is android.view.TextureView) {
+            logger.error("Unknown surface view type: ${surfaceView?.javaClass?.name}")
+            return null
+        }
+        return try {
+            if (surfaceView is SurfaceView) {
+                takeScreenshotWithSurfaceView(surfaceView)
+            } else {
+                takeScreenshotWithTextureView(surfaceView as TextureView)
             }
-            if (listener!=null) {
+        } finally {
+            if (listener != null) {
                 exoPlayer.removeOnLayoutChangeListener(listener)
                 exoPlayer.setLayoutSize(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
                 exoPlayer.scaleX = 1f
