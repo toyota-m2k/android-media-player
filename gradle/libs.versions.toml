@@ -4,9 +4,9 @@ kotlin = "2.2.20"
 agp = "8.13.0"
 
 #libraries
-androidBinding = "1.9.11"
+androidBinding = "1.9.12"
 androidViewex = "1.1.19"
-androidDialog = "6.1.0"
+androidDialog = "6.1.1"
 coreKtx = "1.17.0"
 glide = "5.0.5"
 junit = "4.13.2"

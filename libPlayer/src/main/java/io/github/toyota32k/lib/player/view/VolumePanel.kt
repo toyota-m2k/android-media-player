@@ -23,12 +23,13 @@ class VolumePanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
     companion object {
         val logger get() = TpLib.logger
     }
+    @Suppress("MemberVisibilityCanBePrivate")
     val controls = V2VolumePanelBinding.inflate(LayoutInflater.from(context), this, true)
     private lateinit var model: PlayerControllerModel
 
     fun bindViewModel(model: PlayerControllerModel, binder: Binder) {
         this.model = model
-        val sliderValue = MutableStateFlow<Float>(100f) // slider value は 0 -- 100 とする
+        val sliderValue = MutableStateFlow(100f) // slider value は 0 -- 100 とする
         val muteCommand = LiteUnitCommand {
             model.mute.value = !model.mute.value
         }

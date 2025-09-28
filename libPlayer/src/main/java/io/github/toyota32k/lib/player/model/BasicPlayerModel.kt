@@ -3,13 +3,8 @@ package io.github.toyota32k.lib.player.model
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.os.Handler
-import android.os.HandlerThread
 import android.util.Size
-import android.view.PixelCopy
-import android.view.SurfaceView
 import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
@@ -52,7 +47,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.time.Duration
-import androidx.core.graphics.createBitmap
 
 @OptIn(UnstableApi::class)
 open class BasicPlayerModel(
@@ -60,7 +54,7 @@ open class BasicPlayerModel(
     coroutineScope: CoroutineScope,
     initialAutoPlay:Boolean,
     override val continuousPlay:Boolean,
-    val photoSlideShowModel: PhotoSlideShowModelImpl = PhotoSlideShowModelImpl()
+    private val photoSlideShowModel: PhotoSlideShowModelImpl = PhotoSlideShowModelImpl()
 ) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by photoSlideShowModel {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
@@ -93,11 +87,11 @@ open class BasicPlayerModel(
     private var playerNotificationManager: PlayerNotificationManager? = null
 
     // Volume Control
-    override val volume = MutableStateFlow<Float>(1f)
-    override val mute = MutableStateFlow<Boolean>(false)
+    final override val volume = MutableStateFlow(1f)
+    final override val mute = MutableStateFlow(false)
 
 //    private val resetables = ManualResetables()
-    val resetablePlayer = UtManualIncarnateResetableValue(
+    private val resetablePlayer = UtManualIncarnateResetableValue(
         onIncarnate = {
             ExoPlayer.Builder(context).build().apply {
                 addListener(listener)
@@ -237,10 +231,10 @@ open class BasicPlayerModel(
                                 val dr = chapterList.disabledRanges(src.trimming)
                                 val hit = dr.firstOrNull { it.contains(adjustedPosition) }
                                 if (hit != null) {
-                                    if (hit.end == 0L || hit.end >= endPosition) {
-                                        adjustedPosition = endPosition
+                                    adjustedPosition = if (hit.end == 0L || hit.end >= endPosition) {
+                                        endPosition
                                     } else {
-                                        adjustedPosition = range.clamp(hit.end)
+                                        range.clamp(hit.end)
                                     }
                                 }
                             }
@@ -306,9 +300,9 @@ open class BasicPlayerModel(
 
     inner class SeekManagerEx : ISeekManager {
         override val requestedPositionFromSlider = MutableStateFlow(-1L)
-        var lastOperationTick:Long = 0L
-        var fastSync = false
-        var running = false
+        private var lastOperationTick:Long = 0L
+        private var fastSync = false
+        private var running = false
         init {
             run()
         }
@@ -528,10 +522,6 @@ open class BasicPlayerModel(
         return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context)).createMediaSource(MediaItem.Builder().setUri(item.uri).setTag(item).build())
     }
 
-    private fun setPhotoSource(src:IMediaSource) {
-
-    }
-
     override fun setSource(src:IMediaSource?) {
         reset()
         if (src == null) return
@@ -541,7 +531,6 @@ open class BasicPlayerModel(
 
         val isPhoto = src.isPhoto
         val pos = if (isPhoto) {
-            setPhotoSource(src)
             ended.value = false
             0
         } else {
@@ -637,6 +626,7 @@ open class BasicPlayerModel(
         photoSlideShowModel.enablePhotoViewer(duration)
     }
 
+    @SuppressLint("CheckResult")
     override fun attachPhotoView(photoView: ImageView): IDisposable {
         return currentSource.disposableObserve {
             if(it?.isPhoto == true) {
@@ -645,7 +635,6 @@ open class BasicPlayerModel(
                     Glide.with(photoView)
                         .apply {
                             if (it.type == "gif") {
-                                @SuppressLint("CheckResult")
                                 asGif()
                             }
                         }

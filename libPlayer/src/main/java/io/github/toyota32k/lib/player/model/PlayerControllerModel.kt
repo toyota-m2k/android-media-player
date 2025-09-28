@@ -36,7 +36,7 @@ import kotlin.time.Duration.Companion.seconds
  *   + FullControlPanelModel      フル機能プレイヤー（AmvPlayerUnitView）用
  *   + TrimmingControlPanelModel  トリミング画面(AMvTrimmingPlayerView)用
  */
-@Suppress("unused")
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 open class PlayerControllerModel(
     val playerModel: IPlayerModel,
     val supportFullscreen:Boolean,
@@ -70,7 +70,7 @@ open class PlayerControllerModel(
         FRAME_EXTRACTOR(R.string.snapshot_extract_frame),
     }
 
-    class Builder(val context:Context, val coroutineScope: CoroutineScope) {
+    class Builder(val context:Context, private val coroutineScope: CoroutineScope) {
         private var mSupportChapter:Boolean = false
         private var mPlaylist:IMediaFeed? = null
         private var mAutoPlay:Boolean = false
@@ -233,15 +233,15 @@ open class PlayerControllerModel(
     val volume: MutableStateFlow<Float> get() = playerModel.volume  // 0-100
     val mute: MutableStateFlow<Boolean> get() = playerModel.mute
     val commandVolume = LiteUnitCommand()
-    val commandChangeRange = LiteCommand<Boolean>(::changeRange)
+    val commandChangeRange = LiteCommand(::changeRange)
     val isCurrentSourcePhoto: Flow<Boolean> = playerModel.currentSource.map { playerModel.isPhotoViewerEnabled && it?.isPhoto==true }
 
     interface IScreenshotSource {
         suspend fun takeScreenshot():Bitmap?
     }
 
-    private var exoPlayerSnapshotSourceRef: WeakReference<PlayerControllerModel.IScreenshotSource>? = null
-    var exoPlayerSnapshotSource: PlayerControllerModel.IScreenshotSource?
+    private var exoPlayerSnapshotSourceRef: WeakReference<IScreenshotSource>? = null
+    var exoPlayerSnapshotSource
         get() = exoPlayerSnapshotSourceRef?.get()
         set(v) {
             exoPlayerSnapshotSourceRef = if(v!=null) WeakReference(v) else null
@@ -347,10 +347,10 @@ open class PlayerControllerModel(
         }
     }
     private suspend fun bitmapFromSrc(src:IMediaSource, position:Long):Bitmap? {
-        if(src.isPhoto) {
-            return bitmapFromPhoto(src)
+        return if(src.isPhoto) {
+            bitmapFromPhoto(src)
         } else {
-            return when(snapshotSource) {
+            when(snapshotSource) {
                 SnapshotSource.CAPTURE_PLAYER -> bitmapFromExoPlayer()
                 SnapshotSource.FRAME_EXTRACTOR -> bitmapFromFrameExtractor(src, position)
             }
