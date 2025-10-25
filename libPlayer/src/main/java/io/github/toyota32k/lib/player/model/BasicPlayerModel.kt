@@ -3,10 +3,12 @@ package io.github.toyota32k.lib.player.model
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.util.Size
 import android.widget.ImageView
 import androidx.annotation.OptIn
+import androidx.core.graphics.drawable.toBitmap
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -626,6 +628,8 @@ open class BasicPlayerModel(
         photoSlideShowModel.enablePhotoViewer(duration)
     }
 
+    override val shownBitmap: StateFlow<Bitmap?> = MutableStateFlow(null)
+
     @SuppressLint("CheckResult")
     override fun attachPhotoView(photoView: ImageView): IDisposable {
         return currentSource.disposableObserve {
@@ -663,6 +667,7 @@ open class BasicPlayerModel(
                                 val height = resource.intrinsicHeight
                                 videoSize.mutable.value = Size(width, height)
                                 state.mutable.value = PlayerState.Ready
+                                shownBitmap.mutable.value = resource.toBitmap()
                                 return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                             }
                         })
@@ -670,6 +675,8 @@ open class BasicPlayerModel(
                 }
             } else {
                 photoView.setImageBitmap(null)
+                shownBitmap.value?.recycle()
+                shownBitmap.mutable.value = null
             }
 
         }

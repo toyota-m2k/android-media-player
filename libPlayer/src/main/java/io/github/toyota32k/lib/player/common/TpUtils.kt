@@ -9,10 +9,10 @@
 package io.github.toyota32k.lib.player.common
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.util.Size
 import android.view.View
 import android.view.ViewGroup
-import android.content.ContextWrapper
 import androidx.fragment.app.FragmentActivity
 import io.github.toyota32k.lib.player.TpLib
 import java.text.SimpleDateFormat

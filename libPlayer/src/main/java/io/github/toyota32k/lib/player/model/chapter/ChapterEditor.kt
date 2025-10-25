@@ -3,6 +3,8 @@ package io.github.toyota32k.lib.player.model.chapter
 import io.github.toyota32k.lib.player.model.IChapter
 import io.github.toyota32k.lib.player.model.IChapterList
 import io.github.toyota32k.lib.player.model.IMutableChapterList
+import io.github.toyota32k.lib.player.model.NeighborChapter
+import io.github.toyota32k.lib.player.model.Range
 import io.github.toyota32k.lib.player.model.addChapter
 import io.github.toyota32k.lib.player.model.chapterAt
 import io.github.toyota32k.lib.player.model.chapterOn
@@ -25,7 +27,8 @@ interface IChapterEditor : IMutableChapterList {
  * IMutableChapterList にUndo/Redoの機能を授けるｗ
  */
 @Suppress("unused")
-class ChapterEditor(private val target:IMutableChapterList) : IChapterEditor, IChapterList by target {
+class ChapterEditor(private var target:IMutableChapterList) : IChapterEditor {
+    constructor() : this(MutableChapterList())
     interface IOperation {
         fun redo()
         fun undo()
@@ -34,6 +37,14 @@ class ChapterEditor(private val target:IMutableChapterList) : IChapterEditor, IC
     private val history = mutableListOf<IOperation>()
     private val current = MutableStateFlow(0)     // 次回挿入位置を指している（undoされていなければ buffer.size と等しい）
     private var dirtyMark = 0   // 編集開始時はゼロ、編集後保存すると、保存時の"current" の値となる。current.value == dirtyMark なら編集ナシと判断する。
+
+    fun setTarget(target:IMutableChapterList) {
+        this.target = target
+        history.clear()
+        current.value = 0
+        dirtyMark = 0
+        target.invalidate()
+    }
 
     inner class AddOperation(private val position:Long, private val label:String, private val skip:Boolean?):IOperation {
         override fun redo() {
@@ -53,7 +64,6 @@ class ChapterEditor(private val target:IMutableChapterList) : IChapterEditor, IC
             target.addChapter(chapter)
         }
     }
-
 
     inner class UpdateOperation(private val position:Long, private val label:String?, private val skip:Boolean?, val chapter:IChapter) : IOperation {
         override fun redo() {
@@ -133,4 +143,45 @@ class ChapterEditor(private val target:IMutableChapterList) : IChapterEditor, IC
 
     override val modifiedListener: Listeners<Unit>
         get() = target.modifiedListener
+
+    override fun invalidate() {
+        target.invalidate()
+    }
+
+    // 以下、targetをvarに変更したことにより、委譲できなくなったため、１つずつ定義。。。
+
+    override val chapters: List<IChapter>
+        get() = target.chapters
+
+    override fun prev(current: Long): IChapter? {
+        return target.prev(current)
+    }
+
+    override fun next(current: Long): IChapter? {
+        return target.next(current)
+    }
+
+    override fun getChapterAround(position: Long): IChapter? {
+        return target.getChapterAround(position)
+    }
+
+    override fun enabledRanges(trimming: Range): List<Range> {
+        return target.enabledRanges(trimming)
+    }
+
+    override fun disabledRanges(trimming: Range): List<Range> {
+        return target.disabledRanges(trimming)
+    }
+
+    override fun getNeighborChapters(pivot: Long): NeighborChapter {
+        return target.getNeighborChapters(pivot)
+    }
+
+    override fun indexOf(position: Long): Int {
+        return target.indexOf(position)
+    }
+
+    override fun adjustWithEnabledRanges(enabledRanges: List<Range>): List<IChapter> {
+        return target.adjustWithEnabledRanges(enabledRanges)
+    }
 }

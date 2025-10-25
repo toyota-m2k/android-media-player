@@ -1,6 +1,7 @@
 package io.github.toyota32k.lib.player.model
 
 import android.app.Application
+import android.graphics.Bitmap
 import android.util.Size
 import android.widget.ImageView
 import androidx.annotation.OptIn
@@ -71,6 +72,7 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
 
     // PhotoViewer /Slide Show を有効化する
     fun enablePhotoViewer(duration: Duration)
+    val shownBitmap: StateFlow<Bitmap?>
 
     // ExoPlayerHost から呼ぶ
     fun attachPhotoView(photoView: ImageView) : IDisposable

@@ -258,28 +258,6 @@ open class ChapterList(list: List<IChapter>) : IChapterList {
         return rangeCache.disabledRange(trimming)
     }
 
-    /**
-     * 動画ファイルのトリミングによって無効範囲がカットされた状態に合わせてチャプターリストを再構成する。
-     */
-    @Deprecated("buggy!")
-    override fun defrag(trimming: Range): List<IChapter> {
-        val ranges = enabledRanges()
-        val list = mutableListOf<IChapter>()
-        var start = 0L
-        for(r in ranges) {
-            val c = chapterOn(r.start)
-            list.add(Chapter(start, c?.label?:""))
-            val span = r.span
-            if(span<=0) {
-                break
-            }
-            start += span
-        }
-        return list
-    }
-
-
-
     override fun adjustWithEnabledRanges(enabledRanges: List<Range>): List<IChapter> {
         // result: addChapterのロジックを利用するため、MutableChapterListを使う
         val list = MutableChapterList()
@@ -395,7 +373,10 @@ class MutableChapterList(initialList:List<IChapter> = emptyList()) : ChapterList
         return true
     }
 
-    private fun invalidate() {
+    /**
+     * 変更イベントを発行
+     */
+    override fun invalidate() {
         rangeCache.invalidate()
         modifiedListener.invoke(Unit)
     }
