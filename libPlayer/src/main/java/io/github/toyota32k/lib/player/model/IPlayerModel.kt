@@ -12,12 +12,16 @@ import io.github.toyota32k.binder.command.IUnitCommand
 import io.github.toyota32k.utils.IDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlin.time.Duration
 
 interface IPhotoSlideShowModel {
     val isPhotoViewerEnabled: Boolean
     var photoSlideShowDuration: Duration
+    val isPhotoSlideShowEnabled: Boolean
 }
 
 interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
@@ -76,6 +80,11 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
 
     // ExoPlayerHost から呼ぶ
     fun attachPhotoView(photoView: ImageView) : IDisposable
+
+    val currentSourceType: StateFlow<String?> // get() = currentSource.map { it?.type }.stateIn(scope, SharingStarted.Lazily,null)
+    val isCurrentSourcePhoto: StateFlow<Boolean> // get
+    val isCurrentSourceVideo: StateFlow<Boolean> // get
+
 }
 
 interface IPlaylistHandler {

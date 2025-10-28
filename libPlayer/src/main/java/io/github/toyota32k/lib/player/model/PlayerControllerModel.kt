@@ -158,7 +158,7 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-        fun enablePhotoViewer(slideDuration:Duration):Builder {
+        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE):Builder {
             mEnablePhotoViewer = true
             mPhotoSlideShowDuration = slideDuration
             return this
@@ -234,7 +234,7 @@ open class PlayerControllerModel(
     val mute: MutableStateFlow<Boolean> get() = playerModel.mute
     val commandVolume = LiteUnitCommand()
     val commandChangeRange = LiteCommand(::changeRange)
-    val isCurrentSourcePhoto: Flow<Boolean> = playerModel.currentSource.map { playerModel.isPhotoViewerEnabled && it?.isPhoto==true }
+//    val isCurrentSourcePhoto: Flow<Boolean> = playerModel.currentSource.map { playerModel.isPhotoViewerEnabled && it?.isPhoto==true }
 
     interface IScreenshotSource {
         suspend fun takeScreenshot():Bitmap?

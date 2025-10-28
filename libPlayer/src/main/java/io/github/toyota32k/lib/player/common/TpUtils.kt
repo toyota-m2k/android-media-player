@@ -18,47 +18,47 @@ import io.github.toyota32k.lib.player.TpLib
 import java.text.SimpleDateFormat
 import java.util.*
 
-fun View.setLayoutWidth(width:Int) {
-    val params = layoutParams
-    if(null!=params) {
-        params.width = width
-        layoutParams = params
-    }
-}
-
-fun View.getLayoutWidth() : Int {
-    return if((layoutParams?.width ?: -1) >= 0) {
-        layoutParams.width
-    } else {
-        width
-    }
-}
-
-fun View.setLayoutHeight(height:Int) {
-    val params = layoutParams
-    if(null!=params) {
-        params.height = height
-        layoutParams = params
-    }
-}
-
-@Suppress("unused")
-fun View.getLayoutHeight() : Int {
-    return if((layoutParams?.height ?: -1) >= 0) {
-        layoutParams.height
-    } else {
-        height
-    }
-}
-
-fun View.setLayoutSize(width:Int, height:Int) {
-    val params = layoutParams
-    if(null!=params) {
-        params.width = width
-        params.height = height
-        layoutParams = params
-    }
-}
+//fun View.setLayoutWidth(width:Int) {
+//    val params = layoutParams
+//    if(null!=params) {
+//        params.width = width
+//        layoutParams = params
+//    }
+//}
+//
+//fun View.getLayoutWidth() : Int {
+//    return if((layoutParams?.width ?: -1) >= 0) {
+//        layoutParams.width
+//    } else {
+//        width
+//    }
+//}
+//
+//fun View.setLayoutHeight(height:Int) {
+//    val params = layoutParams
+//    if(null!=params) {
+//        params.height = height
+//        layoutParams = params
+//    }
+//}
+//
+//@Suppress("unused")
+//fun View.getLayoutHeight() : Int {
+//    return if((layoutParams?.height ?: -1) >= 0) {
+//        layoutParams.height
+//    } else {
+//        height
+//    }
+//}
+//
+//fun View.setLayoutSize(width:Int, height:Int) {
+//    val params = layoutParams
+//    if(null!=params) {
+//        params.width = width
+//        params.height = height
+//        layoutParams = params
+//    }
+//}
 
 @Suppress("unused")
 fun View.measureAndGetSize() :Size {

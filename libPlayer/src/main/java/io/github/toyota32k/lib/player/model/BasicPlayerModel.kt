@@ -149,6 +149,14 @@ open class BasicPlayerModel(
      * 現在再生中の動画のソース
      */
     override val currentSource:StateFlow<IMediaSource?> = MutableStateFlow<IMediaSource?>(null)
+    override val currentSourceType: StateFlow<String?> = currentSource.map { it?.type?.lowercase() }.stateIn(scope, SharingStarted.Lazily,null)
+    override val isCurrentSourcePhoto: StateFlow<Boolean> = currentSourceType.map {
+        when (it) {
+            "jpg", "jpeg", "png", "gif" -> true
+            else -> false
+        }
+    }.stateIn(scope, SharingStarted.Lazily, false)
+    override val isCurrentSourceVideo: StateFlow<Boolean> = currentSourceType.map { it == "mp4" }.stateIn(scope, SharingStarted.Lazily, false)
 
     /**
      * 動画の全再生時間
@@ -594,7 +602,7 @@ open class BasicPlayerModel(
         val item = currentSource.value ?: return
         if (!item.isPhoto) {
             runOnPlayer { playWhenReady = true }
-        } else {
+        } else if (isPhotoSlideShowEnabled) {
             isPhotoPlaying.value = true
             CoroutineScope(Dispatchers.Main).launch {
                 delay(photoSlideShowDuration)
