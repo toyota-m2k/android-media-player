@@ -683,8 +683,11 @@ open class BasicPlayerModel(
                 }
             } else {
                 photoView.setImageBitmap(null)
-                shownBitmap.value?.recycle()
-                shownBitmap.mutable.value = null
+                val bitmap = shownBitmap.value
+                if (bitmap!=null) {
+                    shownBitmap.mutable.value = null
+//                    bitmap.recycle()      Glide が Bitmap を保持しているので外部でrecycleすると状態異常を起こす
+                }
             }
 
         }
