@@ -4,7 +4,7 @@ kotlin = "2.2.20"
 agp = "8.13.0"
 
 #libraries
-androidBinding = "1.9.13"
+androidBinding = "LOCAL"
 androidViewex = "1.1.19"
 androidDialog = "6.2.0"     # for Sample
 coreKtx = "1.17.0"
