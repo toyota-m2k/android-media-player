@@ -24,6 +24,14 @@ data class Range (val start:Long, val end:Long=0) {
         }
     }
 
+    fun actualEnd(duration:Long):Long {
+        return if(end>0) end else duration
+    }
+    fun actualSpan(duration:Long):Long {
+        return actualEnd(duration) - start
+    }
+
+
     val isEmpty:Boolean
         get() = start == 0L && end==0L
     val span:Long
