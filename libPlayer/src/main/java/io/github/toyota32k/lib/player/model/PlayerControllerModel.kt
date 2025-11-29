@@ -54,6 +54,7 @@ open class PlayerControllerModel(
     val counterInMs:Boolean,
     val snapshotSourceSelectable: Boolean,
     var snapshotSource: SnapshotSource,
+    val magnifySliderHandler:(suspend (RangedPlayModel?,duration:Long)->RangedPlayModel?)?
 ) : Closeable, IUtPropOwner {
     companion object {
         val logger by lazy { UtLog("CPM", TpLib.logger) }
@@ -93,6 +94,7 @@ open class PlayerControllerModel(
         private var mHideChapterViewIfEmpty = false
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
         private var mSnapshotSourceSelectable: Boolean = true
+        private var mMagnifySliderHandler:(suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?)? = null
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
             mSupportChapter = true
@@ -117,6 +119,10 @@ open class PlayerControllerModel(
         fun supportSnapshot(snapshotHandler:(Long,Bitmap)->Unit):Builder {
             mSnapshotHandler = snapshotHandler
             return this
+        }
+
+        fun supportMagnifySlider(handler:suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?) = apply {
+            mMagnifySliderHandler = handler
         }
 
         fun showNextPreviousButton():Builder {
@@ -208,7 +214,8 @@ open class PlayerControllerModel(
                 seekLarge = mSeekLarge,
                 counterInMs = mCounterInMs,
                 snapshotSource = mSnapshotSource,
-                snapshotSourceSelectable = mSnapshotSourceSelectable
+                snapshotSourceSelectable = mSnapshotSourceSelectable,
+                magnifySliderHandler = mMagnifySliderHandler
             )
         }
     }

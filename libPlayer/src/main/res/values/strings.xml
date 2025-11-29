@@ -22,4 +22,5 @@
     <string name="photo">Photo</string>
     <string name="snapshot_capture_player_screen">Capture Screen</string>
     <string name="snapshot_extract_frame">Extract Frame</string>
+    <string name="desc_magnify">Magnify Slider</string>
 </resources>
