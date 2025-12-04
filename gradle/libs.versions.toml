@@ -6,7 +6,7 @@ agp = "8.13.1"
 #libraries
 androidBinding = "LOCAL"
 androidViewex = "1.1.19"
-androidDialog = "6.2.0"     # for Sample
+androidDialog = "LOCAL"     # for Sample
 coreKtx = "1.17.0"
 glide = "5.0.5"
 junit = "4.13.2"
