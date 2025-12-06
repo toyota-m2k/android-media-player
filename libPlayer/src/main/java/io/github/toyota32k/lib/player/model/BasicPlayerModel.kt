@@ -4,11 +4,14 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.util.Size
 import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -22,6 +25,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import io.github.toyota32k.lib.player.R
@@ -47,6 +51,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.InputStream
 import kotlin.math.max
 import kotlin.time.Duration
 
@@ -642,6 +647,15 @@ open class BasicPlayerModel(
     override fun attachPhotoView(photoView: ImageView): IDisposable {
         return currentSource.disposableObserve {
             if(it?.isPhoto == true) {
+//                if (it.uri.startsWith("content:")) {
+//                    val bytes = context.contentResolver.openInputStream(it.uri.toUri())?.use { it.readBytes() } ?: return@disposableObserve
+//                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+//                    logger.info("Photo: bytes=${bytes.size}")
+//                    shownBitmap.mutable.value = bitmap
+//                    videoSize.mutable.value = Size(bitmap.width, bitmap.height)
+//                    state.mutable.value = PlayerState.Ready
+//                    return@disposableObserve
+//                }
                 CoroutineScope(Dispatchers.Main).launch {
                     state.mutable.value = PlayerState.Loading
                     Glide.with(photoView)
@@ -651,6 +665,7 @@ open class BasicPlayerModel(
                             }
                         }
                         .load(it.uri)
+                        .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                         .listener(object : RequestListener<Drawable> {
                             override fun onLoadFailed(
                                 e: GlideException?,
@@ -662,7 +677,6 @@ open class BasicPlayerModel(
                                 state.mutable.value = PlayerState.Error
                                 return false
                             }
-
                             override fun onResourceReady(
                                 resource: Drawable,
                                 model: Any,
