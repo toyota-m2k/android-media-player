@@ -3,10 +3,15 @@ package io.github.toyota32k.lib.player.model
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.util.Size
 import android.widget.ImageView
 import androidx.annotation.OptIn
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -20,6 +25,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import io.github.toyota32k.lib.player.R
@@ -45,6 +51,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.InputStream
 import kotlin.math.max
 import kotlin.time.Duration
 
@@ -147,6 +154,14 @@ open class BasicPlayerModel(
      * 現在再生中の動画のソース
      */
     override val currentSource:StateFlow<IMediaSource?> = MutableStateFlow<IMediaSource?>(null)
+    override val currentSourceType: StateFlow<String?> = currentSource.map { it?.type?.lowercase() }.stateIn(scope, SharingStarted.Lazily,null)
+    override val isCurrentSourcePhoto: StateFlow<Boolean> = currentSourceType.map {
+        when (it) {
+            "jpg", "jpeg", "png", "gif" -> true
+            else -> false
+        }
+    }.stateIn(scope, SharingStarted.Lazily, false)
+    override val isCurrentSourceVideo: StateFlow<Boolean> = currentSourceType.map { it == "mp4" }.stateIn(scope, SharingStarted.Lazily, false)
 
     /**
      * 動画の全再生時間
@@ -592,7 +607,7 @@ open class BasicPlayerModel(
         val item = currentSource.value ?: return
         if (!item.isPhoto) {
             runOnPlayer { playWhenReady = true }
-        } else {
+        } else if (isPhotoSlideShowEnabled) {
             isPhotoPlaying.value = true
             CoroutineScope(Dispatchers.Main).launch {
                 delay(photoSlideShowDuration)
@@ -626,10 +641,21 @@ open class BasicPlayerModel(
         photoSlideShowModel.enablePhotoViewer(duration)
     }
 
+    override val shownBitmap: StateFlow<Bitmap?> = MutableStateFlow(null)
+
     @SuppressLint("CheckResult")
     override fun attachPhotoView(photoView: ImageView): IDisposable {
         return currentSource.disposableObserve {
             if(it?.isPhoto == true) {
+//                if (it.uri.startsWith("content:")) {
+//                    val bytes = context.contentResolver.openInputStream(it.uri.toUri())?.use { it.readBytes() } ?: return@disposableObserve
+//                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+//                    logger.info("Photo: bytes=${bytes.size}")
+//                    shownBitmap.mutable.value = bitmap
+//                    videoSize.mutable.value = Size(bitmap.width, bitmap.height)
+//                    state.mutable.value = PlayerState.Ready
+//                    return@disposableObserve
+//                }
                 CoroutineScope(Dispatchers.Main).launch {
                     state.mutable.value = PlayerState.Loading
                     Glide.with(photoView)
@@ -639,6 +665,7 @@ open class BasicPlayerModel(
                             }
                         }
                         .load(it.uri)
+                        .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                         .listener(object : RequestListener<Drawable> {
                             override fun onLoadFailed(
                                 e: GlideException?,
@@ -650,7 +677,6 @@ open class BasicPlayerModel(
                                 state.mutable.value = PlayerState.Error
                                 return false
                             }
-
                             override fun onResourceReady(
                                 resource: Drawable,
                                 model: Any,
@@ -663,6 +689,7 @@ open class BasicPlayerModel(
                                 val height = resource.intrinsicHeight
                                 videoSize.mutable.value = Size(width, height)
                                 state.mutable.value = PlayerState.Ready
+                                shownBitmap.mutable.value = resource.toBitmap()
                                 return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                             }
                         })
@@ -670,6 +697,11 @@ open class BasicPlayerModel(
                 }
             } else {
                 photoView.setImageBitmap(null)
+                val bitmap = shownBitmap.value
+                if (bitmap!=null) {
+                    shownBitmap.mutable.value = null
+//                    bitmap.recycle()      Glide が Bitmap を保持しているので外部でrecycleすると状態異常を起こす
+                }
             }
 
         }

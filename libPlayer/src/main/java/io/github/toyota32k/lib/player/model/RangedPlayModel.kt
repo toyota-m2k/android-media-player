@@ -7,12 +7,14 @@ package io.github.toyota32k.lib.player.model
  * @param spanLength 分割されたパートの長さ
  * @param amountOfMovement next()/previous()による移動量（デフォルト60秒）
  */
-@Suppress("MemberVisibilityCanBePrivate")
-class RangedPlayModel(
+data class RangedPlayModel(
     val duration:Long,
     val spanLength:Long,
     val amountOfMovement:Long=60*1000L) {
 
+    companion object {
+        const val MIN_DURATION = 60*2*1000L     // 2分以上ないとSliderが作れない
+    }
     private var start:Long = 0
     private var end:Long = spanLength
 

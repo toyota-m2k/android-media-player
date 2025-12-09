@@ -172,6 +172,13 @@
                 android:background="?attr/selectableItemBackground"
                 android:contentDescription="@string/desc_unlock_slider" />
 
+            <ImageButton
+                android:id="@+id/magnify_button"
+                android:layout_width="@dimen/media_button_width"
+                android:layout_height="@dimen/media_button_height"
+                app:srcCompat="@drawable/ic_magnifier"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/desc_magnify" />
 
             <ImageButton
                 android:id="@+id/pinp_button"

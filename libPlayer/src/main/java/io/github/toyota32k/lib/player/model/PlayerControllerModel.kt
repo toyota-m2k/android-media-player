@@ -6,7 +6,6 @@ import android.graphics.Matrix
 import androidx.annotation.OptIn
 import androidx.annotation.StringRes
 import androidx.media3.common.util.UnstableApi
-import com.bumptech.glide.Glide
 import io.github.toyota32k.binder.command.LiteCommand
 import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.lib.player.R
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.Closeable
 import java.lang.ref.WeakReference
 import kotlin.time.Duration
@@ -54,6 +52,7 @@ open class PlayerControllerModel(
     val counterInMs:Boolean,
     val snapshotSourceSelectable: Boolean,
     var snapshotSource: SnapshotSource,
+    val magnifySliderHandler:(suspend (RangedPlayModel?,duration:Long)->RangedPlayModel?)?
 ) : Closeable, IUtPropOwner {
     companion object {
         val logger by lazy { UtLog("CPM", TpLib.logger) }
@@ -93,6 +92,7 @@ open class PlayerControllerModel(
         private var mHideChapterViewIfEmpty = false
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
         private var mSnapshotSourceSelectable: Boolean = true
+        private var mMagnifySliderHandler:(suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?)? = null
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
             mSupportChapter = true
@@ -117,6 +117,10 @@ open class PlayerControllerModel(
         fun supportSnapshot(snapshotHandler:(Long,Bitmap)->Unit):Builder {
             mSnapshotHandler = snapshotHandler
             return this
+        }
+
+        fun supportMagnifySlider(handler:suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?) = apply {
+            mMagnifySliderHandler = handler
         }
 
         fun showNextPreviousButton():Builder {
@@ -158,7 +162,7 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-        fun enablePhotoViewer(slideDuration:Duration):Builder {
+        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE):Builder {
             mEnablePhotoViewer = true
             mPhotoSlideShowDuration = slideDuration
             return this
@@ -208,7 +212,8 @@ open class PlayerControllerModel(
                 seekLarge = mSeekLarge,
                 counterInMs = mCounterInMs,
                 snapshotSource = mSnapshotSource,
-                snapshotSourceSelectable = mSnapshotSourceSelectable
+                snapshotSourceSelectable = mSnapshotSourceSelectable,
+                magnifySliderHandler = mMagnifySliderHandler
             )
         }
     }
@@ -234,7 +239,7 @@ open class PlayerControllerModel(
     val mute: MutableStateFlow<Boolean> get() = playerModel.mute
     val commandVolume = LiteUnitCommand()
     val commandChangeRange = LiteCommand(::changeRange)
-    val isCurrentSourcePhoto: Flow<Boolean> = playerModel.currentSource.map { playerModel.isPhotoViewerEnabled && it?.isPhoto==true }
+//    val isCurrentSourcePhoto: Flow<Boolean> = playerModel.currentSource.map { playerModel.isPhotoViewerEnabled && it?.isPhoto==true }
 
     interface IScreenshotSource {
         suspend fun takeScreenshot():Bitmap?
@@ -328,14 +333,16 @@ open class PlayerControllerModel(
     val takingSnapshot: StateFlow<Boolean> = MutableStateFlow(false)
 
     private suspend fun bitmapFromPhoto(src:IMediaSource):Bitmap? {
-        if(!src.isPhoto) return null
-        return withContext(Dispatchers.IO) {
-            Glide.with(context)
-                .asBitmap() // Bitmapとしてロードすることを明示
-                .load(src.uri)
-                .submit()
-                .get()
-        }
+        if (!src.isPhoto) return null
+        if (playerModel.currentSource.value != src) return null
+        return playerModel.shownBitmap.value
+//        return withContext(Dispatchers.IO) {
+//            Glide.with(context)
+//                .asBitmap() // Bitmapとしてロードすることを明示
+//                .load(src.uri)
+//                .submit()
+//                .get()
+//        }
     }
     private suspend fun bitmapFromExoPlayer():Bitmap? {
         return exoPlayerSnapshotSource?.takeScreenshot()
@@ -346,21 +353,25 @@ open class PlayerControllerModel(
             extractor.extractFrame(position)
         }
     }
-    private suspend fun bitmapFromSrc(src:IMediaSource, position:Long):Bitmap? {
+    private suspend fun bitmapFromSrc(src:IMediaSource, position:Long, angle:Int):Bitmap? {
         return if(src.isPhoto) {
-            bitmapFromPhoto(src)
+            bitmapFromPhoto(src)?.rotate(angle, true)
         } else {
             when(snapshotSource) {
                 SnapshotSource.CAPTURE_PLAYER -> bitmapFromExoPlayer()
                 SnapshotSource.FRAME_EXTRACTOR -> bitmapFromFrameExtractor(src, position)
-            }
+            }?.rotate(angle, false)
         }
     }
 
-    private fun Bitmap.rotate(angle:Int):Bitmap {
-        if(angle==0) return this
+    private fun Bitmap.rotate(angle:Int, needCopy:Boolean):Bitmap {
+        if(angle==0 && !needCopy) return this
         val matrix = Matrix().apply { postRotate(angle.toFloat()) }
-        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true).also {
+            if (!needCopy) {
+                recycle()
+            }
+        }
     }
 
     private fun snapshot() {
@@ -372,7 +383,7 @@ open class PlayerControllerModel(
             try {
                 val pos: Long = if (src.isPhoto) 0L else playerModel.currentPosition
                 val angle = Rotation.normalize(playerModel.rotation.value)
-                val bitmap = bitmapFromSrc(src, pos)?.rotate(angle)
+                val bitmap = bitmapFromSrc(src, pos, angle)
                 if (bitmap != null) {
                     handler(pos, bitmap)
                 }

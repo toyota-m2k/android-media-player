@@ -46,9 +46,6 @@ interface IChapterList {
 
     val isNotEmpty:Boolean get() = !isEmpty
 
-    @Deprecated("buggy!")
-    fun defrag(trimming: Range=Range.empty):List<IChapter>
-
     fun adjustWithEnabledRanges(enabledRanges:List<Range>):List<IChapter>
 
     object Empty : IChapterList {
@@ -82,11 +79,6 @@ interface IChapterList {
 
         override fun indexOf(position: Long): Int {
             return -1
-        }
-
-        @Deprecated("buggy!", ReplaceWith("adjustWithEnabledRanges()"))
-        override fun defrag(trimming: Range): List<IChapter> {
-            return emptyList()
         }
 
         override fun adjustWithEnabledRanges(enabledRanges:List<Range>):List<IChapter> {
@@ -140,6 +132,8 @@ interface IMutableChapterList : IChapterList {
     fun removeChapterAt(index:Int):Boolean
 
     val modifiedListener: Listeners<Unit>
+
+    fun invalidate()
 }
 
 fun IMutableChapterList.addChapter(chapter:IChapter):Boolean

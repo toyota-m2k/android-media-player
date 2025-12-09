@@ -17,6 +17,7 @@ import com.google.android.material.slider.Slider
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BoolConvert
 import io.github.toyota32k.binder.VisibilityBinding
+import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.binder.command.bindCommand
 import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.longClickBinding
@@ -29,6 +30,7 @@ import io.github.toyota32k.lib.player.databinding.V2ControlPanelBinding
 import io.github.toyota32k.lib.player.model.IChapterHandler
 import io.github.toyota32k.lib.player.model.IPlaylistHandler
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.lib.player.model.RangedPlayModel
 import io.github.toyota32k.lib.player.model.Rotation
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.activity
@@ -113,8 +115,8 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
         val playlistHandler = model.playerModel as? IPlaylistHandler
 
         binder
-            .visibilityBinding(controls.playButton, model.playerModel.isPlaying, BoolConvert.Inverse, VisibilityBinding.HiddenMode.HideByGone)
-            .visibilityBinding(controls.pauseButton, model.playerModel.isPlaying, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.playButton, combine(model.playerModel.isPlaying, model.playerModel.isCurrentSourcePhoto) { playing, photo -> !playing && (!photo||model.playerModel.isPhotoSlideShowEnabled) }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.pauseButton, combine(model.playerModel.isPlaying, model.playerModel.isCurrentSourcePhoto) { playing, photo -> playing && (!photo||model.playerModel.isPhotoSlideShowEnabled) }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.fullscreenButton, model.windowMode.map { model.supportFullscreen && it!=PlayerControllerModel.WindowMode.FULLSCREEN }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.collapseButton, model.windowMode.map { model.supportFullscreen && it!=PlayerControllerModel.WindowMode.NORMAL }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.pinpButton, ConstantLiveData(model.supportPinP), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
@@ -123,11 +125,12 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .visibilityBinding(controls.rotateRight, ConstantLiveData(model.enableRotateRight), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.volumeButton, model.mute.map { !it && model.enableVolumeController }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.volumeMutedButton, model.mute.map { it && model.enableVolumeController }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
-            .visibilityBinding(controls.sliderPanel, model.isCurrentSourcePhoto, BoolConvert.Inverse, VisibilityBinding.HiddenMode.HideByInvisible)
-            .multiVisibilityBinding(arrayOf(controls.seekBackLButton,controls.seekForwardLButton), ConstantLiveData(model.seekLarge!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
-            .multiVisibilityBinding(arrayOf(controls.seekBackMButton,controls.seekForwardMButton), ConstantLiveData(model.seekMedium!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
-            .multiVisibilityBinding(arrayOf(controls.seekBackSButton,controls.seekForwardSButton), ConstantLiveData(model.seekSmall!=null), BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
-            .multiVisibilityBinding(arrayOf(controls.prevChapterButton, controls.nextChapterButton), ConstantLiveData(chapterHandler!=null), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.sliderPanel, model.playerModel.isCurrentSourcePhoto, BoolConvert.Inverse, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.magnifyButton, model.playerModel.isCurrentSourcePhoto.map { !it && model.magnifySliderHandler!=null }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .multiVisibilityBinding(arrayOf(controls.seekBackLButton,controls.seekForwardLButton), model.playerModel.isCurrentSourcePhoto.map { !it && model.seekLarge!=null }, BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
+            .multiVisibilityBinding(arrayOf(controls.seekBackMButton,controls.seekForwardMButton), model.playerModel.isCurrentSourcePhoto.map { !it && model.seekMedium!=null}, BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
+            .multiVisibilityBinding(arrayOf(controls.seekBackSButton,controls.seekForwardSButton), model.playerModel.isCurrentSourcePhoto, BoolConvert.Inverse,VisibilityBinding.HiddenMode.HideByGone)
+            .multiVisibilityBinding(arrayOf(controls.prevChapterButton, controls.nextChapterButton), model.playerModel.isCurrentSourcePhoto.map { !it && chapterHandler!=null}, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevVideoButton, controls.nextVideoButton), ConstantLiveData(playlistHandler!=null && model.showNextPreviousButton), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiEnableBinding(arrayOf(
                 controls.playButton,
@@ -150,15 +153,16 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 controls.unlockSliderButton,
                 controls.volumeButton,
                 controls.volumeMutedButton,
-                ), combine(model.playerModel.isReady, model.isCurrentSourcePhoto) { r, p -> r && !p })
+                ), combine(model.playerModel.isReady, model.playerModel.isCurrentSourcePhoto) { r, p -> r && !p })
             .enableBinding(controls.snapshotButton, combine(model.playerModel.isReady,model.takingSnapshot, model.permitSnapshot) { r, s, p -> r && !s && p})
+//            .enableBinding(controls.magnifyButton, model.lockSlider, BoolConvert.Inverse)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPause, controls.pauseButton)
             .bindCommand(model.commandLockSlider, controls.lockSliderButton, controls.unlockSliderButton)
             .bindCommand(model.commandVolume, controls.volumeButton, controls.volumeMutedButton)
-            .visibilityBinding(controls.lockSliderButton, model.lockSlider.map { model.enableSliderLock && !it }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
-            .visibilityBinding(controls.unlockSliderButton, model.lockSlider.map { model.enableSliderLock && it }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.lockSliderButton, combine(model.lockSlider, model.playerModel.isCurrentSourcePhoto) { lock,photo-> model.enableSliderLock && !lock && !photo }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.unlockSliderButton, combine(model.lockSlider, model.playerModel.isCurrentSourcePhoto) { lock,photo-> model.enableSliderLock && lock && !photo }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .conditional(model.seekLarge!=null) {
                 bindCommand(model.commandSeekLarge, controls.seekBackLButton, false)
                 bindCommand(model.commandSeekLarge, controls.seekForwardLButton, true)
@@ -194,6 +198,20 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 if(chapterHandler!=null) {
                     bindCommand(chapterHandler.commandNextChapter, controls.nextChapterButton)
                     bindCommand(chapterHandler.commandPrevChapter, controls.prevChapterButton)
+                }
+                if(model.magnifySliderHandler!=null) {
+                    bindCommand(LiteUnitCommand {
+                        if (model.playerModel.isCurrentSourcePhoto.value) return@LiteUnitCommand
+                        val duration = model.playerModel.naturalDuration.value
+                        if (duration < RangedPlayModel.MIN_DURATION) return@LiteUnitCommand
+                        model.playerModel.scope.launch {
+                            val before = model.rangePlayModel.value
+                            val after = model.magnifySliderHandler(before, duration)
+                            if (before!=after) {
+                                model.setRangePlayModel(after)
+                            }
+                        }
+                    }, controls.magnifyButton)
                 }
             }
     }

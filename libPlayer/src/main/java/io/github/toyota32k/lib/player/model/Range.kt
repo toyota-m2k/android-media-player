@@ -3,7 +3,6 @@ package io.github.toyota32k.lib.player.model
 import kotlin.math.max
 import kotlin.math.min
 
-@Suppress("unused")
 data class Range (val start:Long, val end:Long=0) {
     /**
      * pos が start-end 内に収まるようクリップする
@@ -23,6 +22,14 @@ data class Range (val start:Long, val end:Long=0) {
             start<=pos
         }
     }
+
+    fun actualEnd(duration:Long):Long {
+        return if(end>0) end else duration
+    }
+    fun actualSpan(duration:Long):Long {
+        return actualEnd(duration) - start
+    }
+
 
     val isEmpty:Boolean
         get() = start == 0L && end==0L
