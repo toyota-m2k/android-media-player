@@ -3,7 +3,6 @@ package io.github.toyota32k.lib.player.model
 import kotlin.math.max
 import kotlin.math.min
 
-@Suppress("unused")
 data class Range (val start:Long, val end:Long=0) {
     /**
      * pos が start-end 内に収まるようクリップする
