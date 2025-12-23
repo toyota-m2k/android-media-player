@@ -1,7 +1,6 @@
 package io.github.toyota32k.lib.player.model
 
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Support PhotoViewer / SlideShow

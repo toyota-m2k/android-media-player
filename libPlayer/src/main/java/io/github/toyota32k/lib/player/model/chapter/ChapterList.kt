@@ -5,7 +5,6 @@ import io.github.toyota32k.lib.player.model.IChapterList
 import io.github.toyota32k.lib.player.model.IMutableChapterList
 import io.github.toyota32k.lib.player.model.NeighborChapter
 import io.github.toyota32k.lib.player.model.Range
-import io.github.toyota32k.lib.player.model.chapterOn
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.UtSortedList
 import io.github.toyota32k.utils.UtSorter
@@ -15,7 +14,7 @@ import kotlinx.serialization.json.Json
 import kotlin.math.abs
 
 open class ChapterList(list: List<IChapter>) : IChapterList {
-    protected val sortedList = UtSortedList(if(list is MutableList<IChapter>) list else list.toMutableList(), actionOnDuplicate = UtSorter.ActionOnDuplicate.REJECT, comparator = ::chapterComparator)
+    protected val sortedList = UtSortedList(list as? MutableList<IChapter> ?: list.toMutableList(), actionOnDuplicate = UtSorter.ActionOnDuplicate.REJECT, comparator = ::chapterComparator)
     private val workPosition = UtSorter.Position()
     protected val workChapter = DmyChapter()  // 検索用のダミー
     protected class DmyChapter:IChapter {
@@ -55,7 +54,7 @@ open class ChapterList(list: List<IChapter>) : IChapterList {
     }
 
     fun serialize(): String {
-        val list:List<Chapter> = sortedList.map { if(it is Chapter) it else Chapter(it) }
+        val list:List<Chapter> = sortedList.map { it as? Chapter ?: Chapter(it) }
         return Json.encodeToString(list)
     }
 
@@ -68,7 +67,7 @@ open class ChapterList(list: List<IChapter>) : IChapterList {
             val list = Json.decodeFromString<List<Chapter>>(json)
             sortedList.clear()
             sortedList.addAll(list)
-            if(sortedList.size==0 || sortedList[0].position>0) {
+            if(sortedList.isEmpty() || sortedList[0].position>0) {
                 sortedList.add(Chapter(0))
             }
         } catch(e:Throwable) {
