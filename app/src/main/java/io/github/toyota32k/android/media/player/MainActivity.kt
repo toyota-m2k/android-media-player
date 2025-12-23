@@ -28,6 +28,7 @@ import io.github.toyota32k.lib.player.model.chapter.MutableChapterList
 import io.github.toyota32k.lib.player.model.chapterAt
 import io.github.toyota32k.lib.player.model.skipChapter
 import io.github.toyota32k.logger.UtLog
+import io.github.toyota32k.utils.android.RefBitmap
 import io.github.toyota32k.utils.gesture.UtGestureInterpreter
 import io.github.toyota32k.utils.gesture.UtManipulationAgent
 import io.github.toyota32k.utils.gesture.UtSimpleManipulationTarget
@@ -134,7 +135,7 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
             }
         }
 
-        private fun onSnapshot(pos:Long, bitmap: Bitmap) {
+        private fun onSnapshot(pos:Long, bitmap: RefBitmap) {
             SnapshotDialog.showBitmap(bitmap)
         }
 

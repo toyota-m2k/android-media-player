@@ -1,6 +1,5 @@
 package io.github.toyota32k.lib.player.model
 
-import io.github.toyota32k.utils.IDisposable
 import java.util.concurrent.atomic.AtomicLong
 
 @Suppress("unused")

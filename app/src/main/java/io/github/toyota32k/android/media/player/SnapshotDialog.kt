@@ -1,6 +1,5 @@
 package io.github.toyota32k.android.media.player
 
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import io.github.toyota32k.android.media.player.databinding.DialogSnapshotBinding
@@ -9,10 +8,16 @@ import io.github.toyota32k.dialog.task.UtDialogViewModel
 import io.github.toyota32k.dialog.task.UtImmortalTask
 import io.github.toyota32k.dialog.task.createViewModel
 import io.github.toyota32k.dialog.task.getViewModel
+import io.github.toyota32k.utils.android.RefBitmap
+import io.github.toyota32k.utils.android.RefBitmapHolder
 
 class SnapshotDialog : UtDialogEx() {
     class SnapshotViewModel : UtDialogViewModel() {
-        lateinit var snapshot: Bitmap
+        var snapshot: RefBitmap? by RefBitmapHolder()
+        override fun onCleared() {
+            super.onCleared()
+            snapshot = null
+        }
     }
     override fun preCreateBodyView() {
         heightOption = HeightOption.FULL
@@ -29,14 +34,14 @@ class SnapshotDialog : UtDialogEx() {
         inflater: IViewInflater
     ): View {
         controls = DialogSnapshotBinding.inflate(inflater.layoutInflater, null, false)
-        controls.imageView.setImageBitmap(viewModel.snapshot)
+        controls.imageView.setImageBitmap(viewModel.snapshot?.bitmapOrNull)
         return controls.root
     }
 
     companion object {
-        fun showBitmap(snapshot: Bitmap) {
+        fun showBitmap(snapshot: RefBitmap) {
             UtImmortalTask.launchTask(this::class.java.name) {
-                val vm = createViewModel<SnapshotViewModel> { this.snapshot = snapshot }
+                createViewModel<SnapshotViewModel> { this.snapshot = snapshot }
                 showDialog(taskName) { SnapshotDialog() }
             }
         }

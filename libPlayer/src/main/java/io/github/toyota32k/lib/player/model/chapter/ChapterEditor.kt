@@ -1,7 +1,6 @@
 package io.github.toyota32k.lib.player.model.chapter
 
 import io.github.toyota32k.lib.player.model.IChapter
-import io.github.toyota32k.lib.player.model.IChapterList
 import io.github.toyota32k.lib.player.model.IMutableChapterList
 import io.github.toyota32k.lib.player.model.NeighborChapter
 import io.github.toyota32k.lib.player.model.Range

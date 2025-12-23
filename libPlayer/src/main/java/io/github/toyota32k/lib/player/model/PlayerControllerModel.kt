@@ -2,7 +2,6 @@ package io.github.toyota32k.lib.player.model
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import androidx.annotation.OptIn
 import androidx.annotation.StringRes
 import androidx.media3.common.util.UnstableApi
@@ -15,6 +14,8 @@ import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.common.formatTimeMs
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.IUtPropOwner
+import io.github.toyota32k.utils.android.RefBitmap
+import io.github.toyota32k.utils.android.RefBitmap.Companion.toRef
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +40,7 @@ open class PlayerControllerModel(
     val playerModel: IPlayerModel,
     val supportFullscreen:Boolean,
     val supportPinP:Boolean,
-    val snapshotHandler:((Long,Bitmap)->Unit)?,
+    val snapshotHandler:((Long,RefBitmap)->Unit)?,
     val enableRotateRight:Boolean,
     val enableRotateLeft:Boolean,
     val showNextPreviousButton:Boolean,
@@ -76,7 +77,7 @@ open class PlayerControllerModel(
         private var mContinuousPlay:Boolean = false
         private var mSupportFullscreen:Boolean = false
         private var mSupportPinP:Boolean = false
-        private var mSnapshotHandler:((Long,Bitmap)->Unit)? = null
+        private var mSnapshotHandler:((Long,RefBitmap)->Unit)? = null
         private var mEnableRotateRight:Boolean = false
         private var mEnableRotateLeft:Boolean = false
         private var mShowNextPreviousButton:Boolean = false
@@ -114,7 +115,7 @@ open class PlayerControllerModel(
             return this
         }
 
-        fun supportSnapshot(snapshotHandler:(Long,Bitmap)->Unit):Builder {
+        fun supportSnapshot(snapshotHandler:(Long,RefBitmap)->Unit):Builder {
             mSnapshotHandler = snapshotHandler
             return this
         }
@@ -232,7 +233,7 @@ open class PlayerControllerModel(
     open val autoAssociatePlayer:Boolean = true
 
     val showControlPanel = MutableStateFlow(true)
-    val rangePlayModel:StateFlow<RangedPlayModel?> = MutableStateFlow<RangedPlayModel?>(null)
+    val rangePlayModel:StateFlow<RangedPlayModel?> = MutableStateFlow(null)
     val hasNextRange = MutableStateFlow(false)
     val hasPrevRange = MutableStateFlow(false)
     val volume: MutableStateFlow<Float> get() = playerModel.volume  // 0-100
@@ -332,7 +333,7 @@ open class PlayerControllerModel(
     val permitSnapshot: StateFlow<Boolean> = MutableStateFlow(true)
     val takingSnapshot: StateFlow<Boolean> = MutableStateFlow(false)
 
-    private suspend fun bitmapFromPhoto(src:IMediaSource):Bitmap? {
+    private fun bitmapFromPhoto(src:IMediaSource): RefBitmap? {
         if (!src.isPhoto) return null
         if (playerModel.currentSource.value != src) return null
         return playerModel.shownBitmap.value
@@ -353,24 +354,14 @@ open class PlayerControllerModel(
             extractor.extractFrame(position)
         }
     }
-    private suspend fun bitmapFromSrc(src:IMediaSource, position:Long, angle:Int):Bitmap? {
+    private suspend fun bitmapFromSrc(src:IMediaSource, position:Long, angle:Int):RefBitmap? {
         return if(src.isPhoto) {
-            bitmapFromPhoto(src)?.rotate(angle, true)
+            bitmapFromPhoto(src)?.rotate(angle.toFloat())
         } else {
             when(snapshotSource) {
                 SnapshotSource.CAPTURE_PLAYER -> bitmapFromExoPlayer()
                 SnapshotSource.FRAME_EXTRACTOR -> bitmapFromFrameExtractor(src, position)
-            }?.rotate(angle, false)
-        }
-    }
-
-    private fun Bitmap.rotate(angle:Int, needCopy:Boolean):Bitmap {
-        if(angle==0 && !needCopy) return this
-        val matrix = Matrix().apply { postRotate(angle.toFloat()) }
-        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true).also {
-            if (!needCopy) {
-                recycle()
-            }
+            }?.toRef()?.rotate(angle.toFloat())
         }
     }
 
