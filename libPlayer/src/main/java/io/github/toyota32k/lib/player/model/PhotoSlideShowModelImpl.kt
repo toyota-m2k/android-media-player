@@ -11,9 +11,8 @@ class PhotoSlideShowModelImpl : IPhotoSlideShowModel {
     override val isPhotoSlideShowEnabled: Boolean
         get() = isPhotoViewerEnabled && photoSlideShowDuration != Duration.INFINITE && 0<photoSlideShowDuration.inWholeSeconds
 
-    fun enablePhotoViewer(duration: Duration=Duration.INFINITE/*slide-show disabled*/) {
-        isPhotoViewerEnabled = true
-        photoSlideShowDuration = duration
+    override fun enablePhotoViewer(flag:Boolean) {
+        isPhotoViewerEnabled = flag
     }
 
 }

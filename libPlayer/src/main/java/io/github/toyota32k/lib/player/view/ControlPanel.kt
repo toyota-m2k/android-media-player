@@ -155,7 +155,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 controls.volumeMutedButton,
                 ), combine(model.playerModel.isReady, model.playerModel.isCurrentSourcePhoto) { r, p -> r && !p })
             .enableBinding(controls.snapshotButton, combine(model.playerModel.isReady,model.takingSnapshot, model.permitSnapshot) { r, s, p -> r && !s && p})
-//            .enableBinding(controls.magnifyButton, model.lockSlider, BoolConvert.Inverse)
+            .enableBinding(controls.magnifyButton, model.playerModel.naturalDuration.map { it>RangedPlayModel.MIN_DURATION })
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPlay, controls.playButton)
             .bindCommand(model.commandPause, controls.pauseButton)

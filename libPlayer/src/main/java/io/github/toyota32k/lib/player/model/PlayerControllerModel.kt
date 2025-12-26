@@ -90,6 +90,7 @@ open class PlayerControllerModel(
         private var mEnableVolumeController:Boolean = false
         private var mEnablePhotoViewer:Boolean = false
         private var mPhotoSlideShowDuration: Duration = 5.seconds
+        private var mCustomPhotoLoader: (suspend (IMediaSource)-> RefBitmap?)? = null
         private var mHideChapterViewIfEmpty = false
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
         private var mSnapshotSourceSelectable: Boolean = true
@@ -120,6 +121,9 @@ open class PlayerControllerModel(
             return this
         }
 
+        /**
+         * シークスライダーの拡大をサポートする
+         */
         fun supportMagnifySlider(handler:suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?) = apply {
             mMagnifySliderHandler = handler
         }
@@ -172,6 +176,10 @@ open class PlayerControllerModel(
             mEnablePhotoViewer = false
             return this
         }
+        fun customPhotoLoader(loader:suspend (IMediaSource)-> RefBitmap?):Builder {
+            mCustomPhotoLoader = loader
+            return this
+        }
         fun autoPlay(autoPlay:Boolean):Builder {
             mAutoPlay = autoPlay
             return this
@@ -180,6 +188,14 @@ open class PlayerControllerModel(
             mContinuousPlay = continuousPlay
             return this
         }
+
+        /**
+         * Snapshotの取得方法
+         *
+         * @param source    CAPTURE_PLAYER: ExoPlayerのSurfaceView/TextureViewからキャプチャする。一瞬リサイズが発生するため若干画面がチラつく。
+         *                  FRAME_EXTRACTOR: MediaMetadataRetrieverを使って、指定位置のフレームを抽出する。表示とのズレが生じる。
+         * @param selectable カメラボタン長押しで、ポップアップメニューを表示して、SnapshotSourceの切り替えをサポートする場合は true
+         */
         fun snapshotSource(source:SnapshotSource, selectable:Boolean=true):Builder {
             mSnapshotSource = source
             mSnapshotSourceSelectable = selectable
@@ -189,13 +205,14 @@ open class PlayerControllerModel(
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
             val playerModel = when {
-                mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mHideChapterViewIfEmpty)
-                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay)
-                mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay)
-                else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false)
+                mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mHideChapterViewIfEmpty)
+                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay, mCustomPhotoLoader)
+                mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader)
+                else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false, mCustomPhotoLoader)
             }
             if (mEnablePhotoViewer) {
-                playerModel.enablePhotoViewer(mPhotoSlideShowDuration)
+                playerModel.enablePhotoViewer(true)
+                playerModel.photoSlideShowDuration = mPhotoSlideShowDuration
             }
             return PlayerControllerModel(
                 playerModel,

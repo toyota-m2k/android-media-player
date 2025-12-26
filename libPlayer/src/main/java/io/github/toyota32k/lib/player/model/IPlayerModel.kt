@@ -19,6 +19,8 @@ interface IPhotoSlideShowModel {
     val isPhotoViewerEnabled: Boolean
     var photoSlideShowDuration: Duration
     val isPhotoSlideShowEnabled: Boolean
+
+    fun enablePhotoViewer(flag:Boolean)
 }
 
 interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
@@ -72,7 +74,7 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
     fun revivePlayer():Boolean
 
     // PhotoViewer /Slide Show を有効化する
-    fun enablePhotoViewer(duration: Duration)
+//    fun enablePhotoViewer(duration: Duration)
     val shownBitmap: StateFlow<RefBitmap?>
 
     // ExoPlayerHost から呼ぶ
