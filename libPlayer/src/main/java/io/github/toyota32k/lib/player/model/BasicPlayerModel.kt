@@ -30,6 +30,7 @@ import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.UtManualIncarnateResetableValue
+import io.github.toyota32k.utils.android.RefBitmap
 import io.github.toyota32k.utils.android.RefBitmap.Companion.toRef
 import io.github.toyota32k.utils.android.RefBitmapFlow
 import io.github.toyota32k.utils.lifecycle.disposableObserve
@@ -49,7 +50,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.max
-import kotlin.time.Duration
 
 @OptIn(UnstableApi::class)
 open class BasicPlayerModel(
@@ -57,8 +57,8 @@ open class BasicPlayerModel(
     coroutineScope: CoroutineScope,
     initialAutoPlay:Boolean,
     override val continuousPlay:Boolean,
-    private val photoSlideShowModel: PhotoSlideShowModelImpl = PhotoSlideShowModelImpl()
-) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by photoSlideShowModel {
+    private val customPhotoLoader: (suspend (IMediaSource)-> RefBitmap?)?,
+) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by PhotoSlideShowModelImpl() {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
     }
@@ -633,9 +633,10 @@ open class BasicPlayerModel(
 
     // region PhotoViewer + SlideShow
 
-    override fun enablePhotoViewer(duration: Duration) {
-        photoSlideShowModel.enablePhotoViewer(duration)
-    }
+//    override fun enablePhotoViewer(duration: Duration) {
+//        photoSlideShowModel.enablePhotoViewer(true)
+//        photoSlideShowModel.setSlideShowDuration(duration)
+//    }
 
     override val shownBitmap: RefBitmapFlow = RefBitmapFlow()
 
@@ -654,6 +655,19 @@ open class BasicPlayerModel(
 //                }
                 CoroutineScope(Dispatchers.Main).launch {
                     state.mutable.value = PlayerState.Loading
+
+                    // カスタムローダーがセットされていれば、それを試す。
+                    if (customPhotoLoader!=null) {
+                        val bitmap = customPhotoLoader(it)
+                        if (bitmap!=null) {
+                            videoSize.mutable.value = Size(bitmap.width, bitmap.height)
+                            state.mutable.value = PlayerState.Ready
+                            shownBitmap.value = bitmap
+                            return@launch
+                        }
+                        // カスタムローダーが null を返したら、Glideを使用。
+                    }
+
                     Glide.with(photoView)
                         .apply {
                             if (it.type == "gif") {

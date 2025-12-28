@@ -14,6 +14,7 @@ import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.lib.player.model.VisibleAreaParams
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,4 +86,6 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     val manipulationTarget: IUtManipulationTarget
         get() = controls.player.manipulationTarget // SimpleManipulationTarget(controls.root, controls.player) // if(model.playerModel.isPhotoViewerEnabled) ExtendedManipulationTarget() else SimpleManipulationTarget(controls.root, controls.photoView)
+    val visibleAreaParams: VisibleAreaParams?
+        get() = controls.player.getVisibleAreaParams()
 }

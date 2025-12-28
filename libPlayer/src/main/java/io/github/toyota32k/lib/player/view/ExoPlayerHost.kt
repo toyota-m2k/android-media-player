@@ -29,6 +29,7 @@ import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2VideoExoPlayerBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.lib.player.model.VisibleAreaParams
 import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.android.FitMode
 import io.github.toyota32k.utils.android.StyledAttrRetriever
@@ -51,6 +52,8 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 @Suppress("unused")
 class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -284,5 +287,51 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             }
         }
     }
+
+    fun getVisibleAreaParams(): VisibleAreaParams? {
+//        val bitmap = viewModel.playlist.photoBitmap.value ?: return null
+
+        val srcSize = model.playerModel.videoSize.value ?: return null
+        val sourceWidth: Int = srcSize.width
+        val sourceHeight: Int = srcSize.height
+
+        val scale = playerContainer.scaleX               // x,y 方向のscaleは同じ
+        if (scale == 1f) return VisibleAreaParams.IDENTITY
+
+        val rtx = playerContainer.translationX
+        val rty = playerContainer.translationY
+
+        val tx = rtx / scale
+        val ty = rty / scale
+
+        val vw = playerContainer.width                   // imageView のサイズ
+        val vh = playerContainer.height
+        val fitter = UtFitter(FitMode.Inside, vw, vh)
+        fitter.fit(sourceWidth, sourceHeight)
+        val iw = fitter.resultWidth                         // imageView内での bitmapの表示サイズ
+        val ih = fitter.resultHeight
+        val mx = (vw-iw)/2                                  // imageView と bitmap のマージン
+        val my = (vh-ih)/2
+
+        // scale: 画面中央をピボットとする拡大率
+        // translation：中心座標の移動距離 x scale
+        val sw = vw / scale                                 // scaleを補正した表示サイズ
+        val sh = vh / scale
+        val cx = vw/2f - tx                                 // 現在表示されている画面の中央の座標（scale前の元の座標系）
+        val cy = vh/2f - ty
+        val sx = max(cx - sw/2 - mx, 0f)              // 表示されている画像の座標（表示画像内の座標系）
+        val sy = max(cy - sh/2 - my, 0f)
+        val ex = min(cx + sw/2 - mx, iw)
+        val ey = min(cy + sh/2 - my, ih)
+
+        val bs = sourceWidth.toFloat()/iw                            // 画像の拡大率を補正して、元画像座標系に変換
+        val x = sx * bs
+        val y = sy * bs
+        val w = (ex - sx) * bs
+        val h = (ey - sy) * bs
+
+        return VisibleAreaParams.fromSize(sourceWidth, sourceHeight, x, y, w, h)
+    }
+    
 
 }
