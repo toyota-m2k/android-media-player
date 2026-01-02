@@ -8,6 +8,7 @@ import android.util.Size
 import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -21,8 +22,10 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.signature.ObjectKey
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.logger.UtLog
@@ -49,6 +52,9 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileInputStream
+import java.security.MessageDigest
 import kotlin.math.max
 
 @OptIn(UnstableApi::class)
@@ -642,6 +648,26 @@ open class BasicPlayerModel(
 
     @SuppressLint("CheckResult")
     override fun attachPhotoView(photoView: ImageView): IDisposable {
+        fun sha1OfFile(uri: String): String? {
+            try {
+                if (!uri.startsWith("file:")) return null
+                val file = File(uri.toUri().path!!)
+                val buffer = ByteArray(1024 * 8)
+                val digest = MessageDigest.getInstance("SHA-1")
+                FileInputStream(file).use { fis ->
+                    var read = fis.read(buffer)
+                    while (read > 0) {
+                        digest.update(buffer, 0, read)
+                        read = fis.read(buffer)
+                    }
+                }
+                return digest.digest().joinToString("") { "%02x".format(it) }
+            } catch (e:Throwable) {
+                logger.error(e)
+                return null
+            }
+        }
+
         return currentSource.disposableObserve {
             if(it?.isPhoto == true) {
 //                if (it.uri.startsWith("content:")) {
@@ -668,6 +694,7 @@ open class BasicPlayerModel(
                         // カスタムローダーが null を返したら、Glideを使用。
                     }
 
+                    val hash = sha1OfFile(it.uri)
                     Glide.with(photoView)
                         .apply {
                             if (it.type == "gif") {
@@ -707,6 +734,12 @@ open class BasicPlayerModel(
                                 return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                             }
                         })
+                        .apply {
+                            if (hash!=null) {
+                                signature(ObjectKey(hash))
+                            }
+                        }
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .into(photoView)
                 }
             } else {
