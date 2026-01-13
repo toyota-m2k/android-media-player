@@ -2,8 +2,8 @@ package io.github.toyota32k.lib.player.model
 
 import androidx.core.net.toUri
 import io.github.toyota32k.lib.player.model.BasicPlayerModel.Companion.logger
+import io.github.toyota32k.utils.android.IUtFile
 import io.github.toyota32k.utils.android.RefBitmap
-import io.github.toyota32k.utils.android.UtFile
 import io.github.toyota32k.utils.android.toUtFile
 import java.io.File
 import java.io.FileInputStream
@@ -84,9 +84,9 @@ class BitmapInfo constructor(override val bitmap: RefBitmap?, override val cache
             }
         }
 
-        private fun sha1OfFile(uri: String): String? {
+        private fun sha1OfFile(utFile: IUtFile): String? {
             return try {
-                uri.toUri().toUtFile().fileInputStream { stream->
+                utFile.fileInputStream { stream->
                     sha1OfStream(stream)
                 }
             } catch (e:Throwable) {
@@ -95,6 +95,13 @@ class BitmapInfo constructor(override val bitmap: RefBitmap?, override val cache
             }
         }
 
+        private fun sha1OfFile(uri: String): String? {
+            return sha1OfFile(uri.toUri().toUtFile())
+        }
+
+        private fun sha1OfFile(file: File): String? {
+            return sha1OfFile(file.toUtFile())
+        }
     }
 }
 
