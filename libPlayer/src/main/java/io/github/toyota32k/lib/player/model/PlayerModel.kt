@@ -25,7 +25,7 @@ open class PlaylistPlayerModel (private val playerModel: IPlayerModel, private v
     }
 }
 
-fun PlaylistPlayerModel(context:Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, initialAutoPlay:Boolean, continuousPlay:Boolean, customPhotoLoader: (suspend (IMediaSource)-> RefBitmap?)?):PlaylistPlayerModel {
+fun PlaylistPlayerModel(context:Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, initialAutoPlay:Boolean, continuousPlay:Boolean, customPhotoLoader: IPhotoLoader?):PlaylistPlayerModel {
     val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay, customPhotoLoader)
     val playlistHandler = PlaylistHandlerImpl(playerModel, playlist)
     return PlaylistPlayerModel(playerModel, playlistHandler)
@@ -34,7 +34,7 @@ fun PlaylistPlayerModel(context:Context, coroutineScope: CoroutineScope, playlis
 class ChapterPlayerModel (private val playerModel: IPlayerModel, private val chapterHandler: ChapterHandlerImpl)
     : IPlayerModel by playerModel, IChapterHandler by chapterHandler
 
-fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChapterViewIfEmpty: Boolean, initialAutoPlay: Boolean, customPhotoLoader: (suspend (IMediaSource)-> RefBitmap?)?):ChapterPlayerModel {
+fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChapterViewIfEmpty: Boolean, initialAutoPlay: Boolean, customPhotoLoader: IPhotoLoader?):ChapterPlayerModel {
     val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay=false, customPhotoLoader)
     val chapterHandler = ChapterHandlerImpl(playerModel,hideChapterViewIfEmpty)
     return ChapterPlayerModel(playerModel, chapterHandler)
@@ -43,7 +43,7 @@ fun ChapterPlayerModel(context:Context, coroutineScope: CoroutineScope, hideChap
 class PlaylistChapterPlayerModel (playerModel: IPlayerModel, playlistHandler: IPlaylistHandler, private val chapterHandler: ChapterHandlerImpl)
     : PlaylistPlayerModel(playerModel, playlistHandler), IChapterHandler by chapterHandler
 
-fun PlaylistChapterPlayerModel(context: Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, initialAutoPlay: Boolean, continuousPlay: Boolean, customPhotoLoader: (suspend (IMediaSource)-> RefBitmap?)?, hideChapterViewIfEmpty:Boolean):PlaylistChapterPlayerModel {
+fun PlaylistChapterPlayerModel(context: Context, coroutineScope: CoroutineScope, playlist:IMediaFeed, initialAutoPlay: Boolean, continuousPlay: Boolean, customPhotoLoader:IPhotoLoader?, hideChapterViewIfEmpty:Boolean):PlaylistChapterPlayerModel {
     val playerModel = BasicPlayerModel(context, coroutineScope,initialAutoPlay, continuousPlay, customPhotoLoader)
     val playlistHandler = PlaylistHandlerImpl(playerModel, playlist)
     val chapterHandler = ChapterHandlerImpl(playerModel,hideChapterViewIfEmpty)

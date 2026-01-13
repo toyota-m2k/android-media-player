@@ -63,7 +63,7 @@ open class BasicPlayerModel(
     coroutineScope: CoroutineScope,
     initialAutoPlay:Boolean,
     override val continuousPlay:Boolean,
-    private val customPhotoLoader: (suspend (IMediaSource)-> RefBitmap?)?,
+    private val customPhotoLoader: IPhotoLoader?
 ) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by PhotoSlideShowModelImpl() {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
@@ -683,18 +683,26 @@ open class BasicPlayerModel(
                     state.mutable.value = PlayerState.Loading
 
                     // カスタムローダーがセットされていれば、それを試す。
-                    if (customPhotoLoader!=null) {
-                        val bitmap = customPhotoLoader(it)
+                    val hash = if (customPhotoLoader!=null) {
+                        val info = customPhotoLoader.loadBitmap(it)
+                        if (info==null) {
+                            // loadBitmapが null を返したときはbitmapを表示しない
+                            photoView.setImageBitmap(null)
+                            shownBitmap.value = null
+                            return@launch
+                        }
+                        val bitmap = info.bitmap
                         if (bitmap!=null) {
                             videoSize.mutable.value = Size(bitmap.width, bitmap.height)
                             state.mutable.value = PlayerState.Ready
+                            photoView.setImageBitmap(bitmap.bitmap)
                             shownBitmap.value = bitmap
                             return@launch
                         }
-                        // カスタムローダーが null を返したら、Glideを使用。
-                    }
+                        info.cacheHint
+                    } else null
 
-                    val hash = sha1OfFile(it.uri)
+//                    val hash = sha1OfFile(it.uri)
                     Glide.with(photoView)
                         .apply {
                             if (it.type == "gif") {

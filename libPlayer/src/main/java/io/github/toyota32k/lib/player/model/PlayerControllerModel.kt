@@ -90,7 +90,7 @@ open class PlayerControllerModel(
         private var mEnableVolumeController:Boolean = false
         private var mEnablePhotoViewer:Boolean = false
         private var mPhotoSlideShowDuration: Duration = 5.seconds
-        private var mCustomPhotoLoader: (suspend (IMediaSource)-> RefBitmap?)? = null
+        private var mCustomPhotoLoader: IPhotoLoader? = null
         private var mHideChapterViewIfEmpty = false
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
         private var mSnapshotSourceSelectable: Boolean = true
@@ -176,9 +176,16 @@ open class PlayerControllerModel(
             mEnablePhotoViewer = false
             return this
         }
-        fun customPhotoLoader(loader:suspend (IMediaSource)-> RefBitmap?):Builder {
+        fun customPhotoLoader(loader:suspend (IMediaSource)-> RefBitmap?):Builder = apply {
+            mCustomPhotoLoader = object: IPhotoLoader {
+                override suspend fun loadBitmap(src: IMediaSource): IBitmapInfo? {
+                    val bitmap = loader(src) ?: return BitmapInfo.useGlide
+                    return BitmapInfo.withBitmap(bitmap)
+                }
+            }
+        }
+        fun customPhotoLoader(loader: IPhotoLoader):Builder = apply {
             mCustomPhotoLoader = loader
-            return this
         }
         fun autoPlay(autoPlay:Boolean):Builder {
             mAutoPlay = autoPlay
