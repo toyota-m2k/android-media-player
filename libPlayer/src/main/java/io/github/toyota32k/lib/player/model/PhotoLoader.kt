@@ -54,7 +54,7 @@ class BitmapInfo constructor(override val bitmap: RefBitmap?, override val cache
         /**
          * カスタムなcacheHintとともに、Glide ローダーを使用する。
          */
-        fun useGlide(cacheHint: Any?) = BitmapInfo(null, cacheHint)
+        fun useGlideWithCustomHint(cacheHint: Any?) = BitmapInfo(null, cacheHint)
 
         /**
          * fileのsha1ハッシュを cacheHintにして Glide ローダーを使用する。
