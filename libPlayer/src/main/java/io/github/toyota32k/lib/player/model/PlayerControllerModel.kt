@@ -176,6 +176,7 @@ open class PlayerControllerModel(
             mEnablePhotoViewer = false
             return this
         }
+        @Deprecated("use IPhotoLoader")
         fun customPhotoLoader(loader:suspend (IMediaSource)-> RefBitmap?):Builder = apply {
             mCustomPhotoLoader = object: IPhotoLoader {
                 override suspend fun loadBitmap(src: IMediaSource): IBitmapInfo? {
