@@ -1,7 +1,6 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.android.build.api.dsl.LibraryExtension
 
 plugins {
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.android.library)
     id("maven-publish")
@@ -10,7 +9,7 @@ plugins {
 group = "com.github.toyota-m2k"
 version="1.0"
 
-android {
+configure<LibraryExtension> {
     namespace = "io.github.toyota32k.lib.player"
     compileSdk = 36
 
@@ -40,12 +39,6 @@ android {
         }
     }
 
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-    }
 }
 
 dependencies {

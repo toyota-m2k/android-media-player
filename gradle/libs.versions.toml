@@ -1,11 +1,11 @@
 [versions]
 #plugins
-kotlin = "2.3.0"
-agp = "8.13.2"
+agp = "9.0.0"
+kotlin="2.3.0"
 
 #libraries
 androidBinding = "1.12.2"
-androidViewex = "1.1.19"
+androidViewex = "1.1.20"
 androidDialog = "6.3.5"     # for Sample
 coreKtx = "1.17.0"
 glide = "5.0.5"
@@ -38,6 +38,5 @@ android-dialog = { module = "com.github.toyota-m2k:android-dialog", version.ref 
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
