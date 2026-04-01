@@ -710,7 +710,6 @@ open class BasicPlayerModel(
                             }
                         }
                         .load(it.uri)
-                        .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                         .listener(object : RequestListener<Drawable> {
                             override fun onLoadFailed(
                                 e: GlideException?,
@@ -743,6 +742,11 @@ open class BasicPlayerModel(
                             }
                         })
                         .apply {
+                            if (loadInOriginalPhotoSize) {
+                                override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
+                            } else {
+                                override(photoView.width, photoView.height)
+                            }
                             if (hash!=null) {
                                 signature(ObjectKey(hash))
                             }

@@ -19,6 +19,7 @@ interface IPhotoSlideShowModel {
     val isPhotoViewerEnabled: Boolean
     var photoSlideShowDuration: Duration
     val isPhotoSlideShowEnabled: Boolean
+    var loadInOriginalPhotoSize: Boolean
 
     fun enablePhotoViewer(flag:Boolean)
 }
