@@ -590,10 +590,19 @@ open class BasicPlayerModel(
      */
     override fun togglePlay() {
         if(isDisposed) return
-        if(runOnPlayer(false) { playWhenReady} ) {
-            stop()
-        } else {
-            play()
+        val item = currentSource.value ?: return
+        if (!item.isPhoto) {
+            if (runOnPlayer(false) { playWhenReady }) {
+                stop()
+            } else {
+                play()
+            }
+        } else if (isPhotoSlideShowEnabled) {
+            if (isPhotoPlaying.value) {
+                stop()
+            } else {
+                play()
+            }
         }
     }
 
