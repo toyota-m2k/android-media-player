@@ -90,7 +90,7 @@ open class PlayerControllerModel(
         private var mEnableVolumeController:Boolean = false
         private var mEnablePhotoViewer:Boolean = false
         private var mPhotoSlideShowDuration: Duration = 5.seconds
-        private var mLoadInOriginalPhotoSize: Boolean = true
+        private var mPhotoSizeOption: PhotoSizeOption = PhotoSizeOption.Original
         private var mCustomPhotoLoader: IPhotoLoader? = null
         private var mHideChapterViewIfEmpty = false
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
@@ -168,10 +168,10 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE, loadInOriginalPhotoSize:Boolean=true):Builder {
+        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE, photoSizeOption: PhotoSizeOption):Builder {
             mEnablePhotoViewer = true
             mPhotoSlideShowDuration = slideDuration
-            mLoadInOriginalPhotoSize = loadInOriginalPhotoSize
+            mPhotoSizeOption = photoSizeOption
             return this
         }
         fun disablePhotoViewer():Builder {
@@ -221,9 +221,7 @@ open class PlayerControllerModel(
                 else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false, mCustomPhotoLoader)
             }
             if (mEnablePhotoViewer) {
-                playerModel.enablePhotoViewer(true)
-                playerModel.photoSlideShowDuration = mPhotoSlideShowDuration
-                playerModel.loadInOriginalPhotoSize = mLoadInOriginalPhotoSize
+                playerModel.enablePhotoViewer(true, mPhotoSlideShowDuration, mPhotoSizeOption)
             }
             return PlayerControllerModel(
                 playerModel,

@@ -15,13 +15,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 
+enum class PhotoSizeOption {
+    Original,
+    FitToImageView,
+    LimitByScreen,
+}
+
 interface IPhotoSlideShowModel {
     val isPhotoViewerEnabled: Boolean
-    var photoSlideShowDuration: Duration
+    val photoSlideShowDuration: Duration
     val isPhotoSlideShowEnabled: Boolean
-    var loadInOriginalPhotoSize: Boolean
+    val photoSizeOption: PhotoSizeOption
 
-    fun enablePhotoViewer(flag:Boolean)
+    fun enablePhotoViewer(flag:Boolean, slideShowDuration: Duration=Duration.INFINITE, photoSizeOption: PhotoSizeOption=PhotoSizeOption.Original)
 }
 
 interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {

@@ -33,7 +33,6 @@ import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.UtManualIncarnateResetableValue
-import io.github.toyota32k.utils.android.RefBitmap
 import io.github.toyota32k.utils.android.RefBitmap.Companion.toRef
 import io.github.toyota32k.utils.android.RefBitmapFlow
 import io.github.toyota32k.utils.lifecycle.disposableObserve
@@ -703,7 +702,8 @@ open class BasicPlayerModel(
                     } else null
 
 //                    val hash = sha1OfFile(it.uri)
-                    Glide.with(photoView)
+                    val context = photoView.context
+                    Glide.with(context)
                         .apply {
                             if (it.type == "gif") {
                                 asGif()
@@ -742,10 +742,10 @@ open class BasicPlayerModel(
                             }
                         })
                         .apply {
-                            if (loadInOriginalPhotoSize) {
-                                override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
-                            } else {
-                                override(photoView.width, photoView.height)
+                            when (photoSizeOption) {
+                                PhotoSizeOption.Original -> override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
+                                PhotoSizeOption.FitToImageView -> override(photoView.width, photoView.height)
+                                PhotoSizeOption.LimitByScreen -> override( context.resources.displayMetrics.run { max(widthPixels, heightPixels) }, context.resources.displayMetrics.run { max(widthPixels, heightPixels) })
                             }
                             if (hash!=null) {
                                 signature(ObjectKey(hash))
