@@ -10,11 +10,12 @@ class PhotoSlideShowModelImpl : IPhotoSlideShowModel {
     override var isPhotoViewerEnabled: Boolean = false
     override val isPhotoSlideShowEnabled: Boolean
         get() = isPhotoViewerEnabled && photoSlideShowDuration != Duration.INFINITE && 0<photoSlideShowDuration.inWholeSeconds
-    override var loadInOriginalPhotoSize: Boolean = true
+    override var photoSizeOption: PhotoSizeOption = PhotoSizeOption.Original
 
-    override fun enablePhotoViewer(flag:Boolean) {
+    override fun enablePhotoViewer(flag: Boolean, slideShowDuration: Duration, photoSizeOption: PhotoSizeOption) {
         isPhotoViewerEnabled = flag
+        photoSlideShowDuration = slideShowDuration
+        this.photoSizeOption = photoSizeOption
     }
-
 }
 
