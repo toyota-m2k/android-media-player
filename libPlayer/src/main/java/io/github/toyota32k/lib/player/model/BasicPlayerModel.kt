@@ -14,9 +14,11 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerNotificationManager
@@ -62,7 +64,13 @@ open class BasicPlayerModel(
     coroutineScope: CoroutineScope,
     initialAutoPlay:Boolean,
     override val continuousPlay:Boolean,
-    private val customPhotoLoader: IPhotoLoader?
+    private val customPhotoLoader: IPhotoLoader?,
+    /**
+     * 自己署名サーバや独自プロキシなど、ExoPlayer の既定 (HttpsURLConnection ベース) と異なる
+     * トラスト設定や HTTP クライアントを使いたいときにアプリから差し替える。null なら
+     * `DefaultDataSource.Factory(context)` を使う (=従来挙動)。
+     */
+    private val dataSourceFactory: DataSource.Factory? = null,
 ) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by PhotoSlideShowModelImpl() {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
@@ -98,15 +106,28 @@ open class BasicPlayerModel(
     final override val volume = MutableStateFlow(1f)
     final override val mute = MutableStateFlow(false)
 
+    /**
+     * メディア取得用 DataSource.Factory。アプリから渡された factory を優先し、
+     * なければ ExoPlayer 既定 (`DefaultDataSource.Factory(context)`) を使う。
+     */
+    private val effectiveDataSourceFactory: DataSource.Factory =
+        dataSourceFactory ?: DefaultDataSource.Factory(context)
+
 //    private val resetables = ManualResetables()
     private val resetablePlayer = UtManualIncarnateResetableValue(
         onIncarnate = {
-            ExoPlayer.Builder(context).build().apply {
-                addListener(listener)
-                playerNotificationManager?.setPlayer(this)
-                this@BasicPlayerModel.volume.value = this.volume
-                this@BasicPlayerModel.mute.value = false
-            }
+            // ExoPlayer 内部が MediaItem から MediaSource を作るパス用にも
+            // DataSource.Factory を差し込んでおく (setMediaItem 系を使った場合のため)。
+            val mediaSourceFactory = DefaultMediaSourceFactory(context)
+                .setDataSourceFactory(effectiveDataSourceFactory)
+            ExoPlayer.Builder(context)
+                .setMediaSourceFactory(mediaSourceFactory)
+                .build().apply {
+                    addListener(listener)
+                    playerNotificationManager?.setPlayer(this)
+                    this@BasicPlayerModel.volume.value = this.volume
+                    this@BasicPlayerModel.mute.value = false
+                }
         },
         onReset = { player->
             playerNotificationManager?.setPlayer(null)
@@ -535,7 +556,7 @@ open class BasicPlayerModel(
     }
 
     fun makeMediaSource(item:IMediaSource) : MediaSource {
-        return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context)).createMediaSource(MediaItem.Builder().setUri(item.uri).setTag(item).build())
+        return ProgressiveMediaSource.Factory(effectiveDataSourceFactory).createMediaSource(MediaItem.Builder().setUri(item.uri).setTag(item).build())
     }
 
     override fun setSource(src:IMediaSource?) {

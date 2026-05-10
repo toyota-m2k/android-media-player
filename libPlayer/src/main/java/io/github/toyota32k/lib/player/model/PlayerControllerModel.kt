@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import androidx.annotation.OptIn
 import androidx.annotation.StringRes
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import io.github.toyota32k.binder.command.LiteCommand
 import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.lib.player.R
@@ -96,6 +97,7 @@ open class PlayerControllerModel(
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
         private var mSnapshotSourceSelectable: Boolean = true
         private var mMagnifySliderHandler:(suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?)? = null
+        private var mDataSourceFactory: DataSource.Factory? = null
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
             mSupportChapter = true
@@ -200,6 +202,16 @@ open class PlayerControllerModel(
         }
 
         /**
+         * ExoPlayer 内部で使う [DataSource.Factory] をアプリから差し替える。
+         * 例: 自己署名サーバ証明書を信頼させたい場合に、独自 TrustManager を仕込んだ
+         * `OkHttpClient` をラップした `OkHttpDataSource.Factory` を渡す。
+         * 指定しない場合は ExoPlayer 既定 (`DefaultDataSource.Factory(context)`) を使う。
+         */
+        fun dataSourceFactory(factory: DataSource.Factory): Builder = apply {
+            mDataSourceFactory = factory
+        }
+
+        /**
          * Snapshotの取得方法
          *
          * @param source    CAPTURE_PLAYER: ExoPlayerのSurfaceView/TextureViewからキャプチャする。一瞬リサイズが発生するため若干画面がチラつく。
@@ -215,10 +227,10 @@ open class PlayerControllerModel(
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
             val playerModel = when {
-                mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mHideChapterViewIfEmpty)
-                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay, mCustomPhotoLoader)
-                mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader)
-                else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false, mCustomPhotoLoader)
+                mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mHideChapterViewIfEmpty, mDataSourceFactory)
+                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay, mCustomPhotoLoader, mDataSourceFactory)
+                mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mDataSourceFactory)
+                else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false, mCustomPhotoLoader, mDataSourceFactory)
             }
             if (mEnablePhotoViewer) {
                 playerModel.enablePhotoViewer(true, mPhotoSlideShowDuration, mPhotoSizeOption)
