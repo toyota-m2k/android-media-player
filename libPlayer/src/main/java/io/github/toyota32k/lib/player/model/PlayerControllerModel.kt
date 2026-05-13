@@ -6,6 +6,9 @@ import androidx.annotation.OptIn
 import androidx.annotation.StringRes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
+import com.bumptech.glide.Glide
+import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader
+import com.bumptech.glide.load.model.GlideUrl
 import io.github.toyota32k.binder.command.LiteCommand
 import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.lib.player.R
@@ -25,7 +28,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import java.io.Closeable
+import java.io.InputStream
 import java.lang.ref.WeakReference
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -97,7 +102,8 @@ open class PlayerControllerModel(
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
         private var mSnapshotSourceSelectable: Boolean = true
         private var mMagnifySliderHandler:(suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?)? = null
-        private var mDataSourceFactory: DataSource.Factory? = null
+        private var mDataSourceFactory: DataSource.Factory? = null  // for ExoPlayer
+        private var mOkHttpClient: OkHttpClient? = null // for Glide
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
             mSupportChapter = true
@@ -211,6 +217,10 @@ open class PlayerControllerModel(
             mDataSourceFactory = factory
         }
 
+        fun customOkHttpClient(client: OkHttpClient): Builder = apply {
+            mOkHttpClient = client
+        }
+
         /**
          * Snapshotの取得方法
          *
@@ -224,8 +234,17 @@ open class PlayerControllerModel(
             return this
         }
 
+
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
+            mOkHttpClient?.apply {
+                // Glide.get().registry を使って、OkHttpUrlLoader を動的に登録
+                Glide.get(context.applicationContext).registry.replace(
+                    GlideUrl::class.java,
+                    InputStream::class.java,
+                    OkHttpUrlLoader.Factory(this)
+                )
+            }
             val playerModel = when {
                 mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mHideChapterViewIfEmpty, mDataSourceFactory)
                 mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay, mCustomPhotoLoader, mDataSourceFactory)
