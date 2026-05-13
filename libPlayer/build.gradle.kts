@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.glide)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp3.integration)
 
     api(libs.android.binding)
     implementation(libs.android.viewex)

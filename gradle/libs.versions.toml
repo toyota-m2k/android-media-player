@@ -1,7 +1,7 @@
 [versions]
 #plugins
 agp = "9.2.1"
-kotlin="2.3.20"
+kotlin="2.3.21"
 
 #libraries
 androidBinding = "1.12.2"
@@ -17,7 +17,8 @@ kotlinxSerializationJson = "1.11.0"
 material = "1.13.0"
 activity = "1.13.0"
 constraintlayout = "2.2.1"
-media3ExoplayerVersion = "1.10.0"
+media3ExoplayerVersion = "1.10.1"
+okhttp = "5.3.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +36,8 @@ media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = 
 android-viewex = { module = "com.github.toyota-m2k:android-viewex", version.ref = "androidViewex" }
 android-binding = { module = "com.github.toyota-m2k:android-binding", version.ref = "androidBinding" }
 android-dialog = { module = "com.github.toyota-m2k:android-dialog", version.ref = "androidDialog" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp3-integration = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
