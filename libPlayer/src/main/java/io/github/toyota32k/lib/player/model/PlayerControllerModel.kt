@@ -176,7 +176,7 @@ open class PlayerControllerModel(
             mCounterInMs = sw
             return this
         }
-        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE, photoSizeOption: PhotoSizeOption):Builder {
+        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE, photoSizeOption: PhotoSizeOption=PhotoSizeOption.Original):Builder {
             mEnablePhotoViewer = true
             mPhotoSlideShowDuration = slideDuration
             mPhotoSizeOption = photoSizeOption
