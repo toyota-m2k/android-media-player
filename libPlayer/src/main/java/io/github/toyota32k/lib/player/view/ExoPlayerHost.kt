@@ -160,7 +160,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             }
             .visibilityBinding(controls.expErrorMessage, playerModel.isError, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
             .visibilityBinding(controls.serviceArea, combine(playerModel.isLoading,playerModel.isError) { l, e-> l||e}, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByInvisible)
-            .textBinding(controls.expErrorMessage, playerModel.errorMessage.filterNotNull())
+            .textBinding(controls.expErrorMessage, playerModel.errorMessage.map { it ?: context.getString(R.string.video_player_error)} )
             .combinatorialVisibilityBinding(model.playerModel.currentSource.map { model.playerModel.isPhotoViewerEnabled && it?.isPhoto == true }) {
                 straightInvisible(photoView)
                 inverseInvisible(exoPlayer)

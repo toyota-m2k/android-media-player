@@ -142,8 +142,8 @@ open class BasicPlayerModel(
     private val isPhotoPlaying = MutableStateFlow(false)
     final override val isPlaying: StateFlow<Boolean> = combine(isVideoPlaying, isPhotoPlaying) { v, p -> v || p }.stateIn(scope, SharingStarted.Eagerly, false)
     final override val isLoading = state.map { it == PlayerState.Loading }.stateIn(scope, SharingStarted.Eagerly, false)
-    final override val isReady = state.map { it== PlayerState.Ready }.stateIn(scope, SharingStarted.Eagerly, false)
-    final override val isError = errorMessage.map { !it.isNullOrBlank() }.stateIn(scope, SharingStarted.Lazily, false)
+    final override val isReady = state.map { it == PlayerState.Ready }.stateIn(scope, SharingStarted.Eagerly, false)
+    final override val isError = state.map { it == PlayerState.Error }.stateIn(scope, SharingStarted.Lazily, false)
 
     // ExoPlayer
     private val isDisposed:Boolean get() = !resetablePlayer.hasValue      // close済みフラグ
@@ -477,7 +477,6 @@ open class BasicPlayerModel(
             logger.stackTrace(error)
             if(!isReady.value) {
                 state.mutable.value = PlayerState.Error
-                errorMessage.mutable.value = context.getString(R.string.video_player_error)
             } else {
                 logger.warn("ignoring exo error.")
             }
@@ -599,11 +598,11 @@ open class BasicPlayerModel(
     override fun reset() {
         logger.debug()
         pause()
+        state.mutable.value = PlayerState.None
         currentSource.mutable.value = null
         playRange.mutable.value = null
         seekManager.reset()
         playerSeekPosition.mutable.value = 0L
-        errorMessage.mutable.value = null
     }
 
     /**
@@ -677,49 +676,43 @@ open class BasicPlayerModel(
 
     @SuppressLint("CheckResult")
     override fun attachPhotoView(photoView: ImageView): IDisposable {
-        fun sha1OfFile(uri: String): String? {
-            try {
-                if (!uri.startsWith("file:")) return null
-                val file = File(uri.toUri().path!!)
-                val buffer = ByteArray(1024 * 8)
-                val digest = MessageDigest.getInstance("SHA-1")
-                FileInputStream(file).use { fis ->
-                    var read = fis.read(buffer)
-                    while (read > 0) {
-                        digest.update(buffer, 0, read)
-                        read = fis.read(buffer)
-                    }
-                }
-                return digest.digest().joinToString("") { "%02x".format(it) }
-            } catch (e:Throwable) {
-                logger.error(e)
-                return null
-            }
-        }
+//        fun sha1OfFile(uri: String): String? {
+//            try {
+//                if (!uri.startsWith("file:")) return null
+//                val file = File(uri.toUri().path!!)
+//                val buffer = ByteArray(1024 * 8)
+//                val digest = MessageDigest.getInstance("SHA-1")
+//                FileInputStream(file).use { fis ->
+//                    var read = fis.read(buffer)
+//                    while (read > 0) {
+//                        digest.update(buffer, 0, read)
+//                        read = fis.read(buffer)
+//                    }
+//                }
+//                return digest.digest().joinToString("") { "%02x".format(it) }
+//            } catch (e:Throwable) {
+//                logger.error(e)
+//                return null
+//            }
+//        }
 
         return currentSource.disposableObserve {
             if(it?.isPhoto == true) {
-//                if (it.uri.startsWith("content:")) {
-//                    val bytes = context.contentResolver.openInputStream(it.uri.toUri())?.use { it.readBytes() } ?: return@disposableObserve
-//                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-//                    logger.info("Photo: bytes=${bytes.size}")
-//                    shownBitmap.mutable.value = bitmap
-//                    videoSize.mutable.value = Size(bitmap.width, bitmap.height)
-//                    state.mutable.value = PlayerState.Ready
-//                    return@disposableObserve
-//                }
                 CoroutineScope(Dispatchers.Main).launch {
                     state.mutable.value = PlayerState.Loading
 
                     // カスタムローダーがセットされていれば、それを試す。
                     val hash = if (customPhotoLoader!=null) {
                         val info = customPhotoLoader.loadBitmap(it)
-                        if (info==null) {
+                        if (info==null || info.error) {
                             // loadBitmapが null を返したときはbitmapを表示しない
+                            // info.error == true なら、ERRORの文字を表示する。
                             photoView.setImageBitmap(null)
                             shownBitmap.value = null
+                            state.mutable.value = if(info?.error==true) PlayerState.Error else  PlayerState.Ready
                             return@launch
                         }
+
                         val bitmap = info.bitmap
                         if (bitmap!=null) {
                             videoSize.mutable.value = Size(bitmap.width, bitmap.height)

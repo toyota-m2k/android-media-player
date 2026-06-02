@@ -25,6 +25,11 @@ interface IBitmapInfo {
      * bitmap フィールドに有効な RefBitmap が与えられた場合は、このフィールドは無視されます。
      */
     val cacheHint: Any?
+
+    /**
+     * Errorとして扱うかどうか
+     */
+    val error: Boolean
 }
 
 /**
@@ -43,30 +48,43 @@ fun interface IPhotoLoader {
 /**
  * IBitmapInfo の実装クラス
  */
-class BitmapInfo constructor(override val bitmap: RefBitmap?, override val cacheHint: Any?) : IBitmapInfo {
+class BitmapInfo private constructor(override val bitmap: RefBitmap?, override val cacheHint: Any?, override val error:Boolean=false) : IBitmapInfo {
     companion object {
         /**
          * 標準のGlideローダーを使用する（cacheHintを使用しない）。
          * IPhotoLoader を PlayerModel にセットしなかった場合のデフォルトの動作。
          */
-        val useGlide = BitmapInfo(null, null)
+        val useGlide: IBitmapInfo by lazy { BitmapInfo(null, null) }
+
+        /**
+         * エラー用 BitmapInfo（画面上に "ERROR" を表示する
+         * エラー表示を行わないばあいは、IBitmapInfo として null を返す。
+         */
+        val asError: IBitmapInfo by lazy { BitmapInfo(null,null,true) }
+
 
         /**
          * カスタムなcacheHintとともに、Glide ローダーを使用する。
          */
-        fun useGlideWithCustomHint(cacheHint: Any?) = BitmapInfo(null, cacheHint)
+        fun useGlideWithCustomHint(cacheHint: Any?): IBitmapInfo = BitmapInfo(null, cacheHint)
 
         /**
          * fileのsha1ハッシュを cacheHintにして Glide ローダーを使用する。
          */
-        fun useGlide(file: File) = BitmapInfo(null, sha1OfFile(file))
+        fun useGlide(file: File): IBitmapInfo = BitmapInfo(null, sha1OfFile(file))
 
         /**
          * uriのsha1ハッシュを cacheHintにして Glide ローダーを使用する。
          * file: スキーマの uri に限る。
          */
-        fun useGlide(uri: String) = BitmapInfo(null, sha1OfFile(uri))
-        fun withBitmap(bitmap: RefBitmap) = BitmapInfo(bitmap, null)
+        fun useGlide(uri: String): IBitmapInfo = BitmapInfo(null, sha1OfFile(uri))
+
+        /**
+         * ロードしたビットマップをセット
+         */
+        fun withBitmap(bitmap: RefBitmap): IBitmapInfo = BitmapInfo(bitmap, null)
+
+        // region HASH utilities
 
         private fun sha1OfStream(stream: FileInputStream): String? {
             return try {
@@ -102,6 +120,8 @@ class BitmapInfo constructor(override val bitmap: RefBitmap?, override val cache
         private fun sha1OfFile(file: File): String? {
             return sha1OfFile(file.toUtFile())
         }
+
+        // endregion
     }
 }
 
