@@ -37,6 +37,7 @@ interface IChapterList {
     fun getChapterAround(position:Long):IChapter?
     fun enabledRanges(trimming: Range=Range.empty) : List<Range>
     fun disabledRanges(trimming: Range=Range.empty) : List<Range>
+    fun prevEnabledChapter(current: Long): IChapter?
 
     fun getNeighborChapters(pivot:Long): NeighborChapter
 
@@ -60,6 +61,9 @@ interface IChapterList {
             return null
         }
 
+        override fun prevEnabledChapter(current: Long): IChapter? {
+            return null
+        }
 
         override fun getChapterAround(position: Long): IChapter? {
             return null

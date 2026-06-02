@@ -8,7 +8,6 @@ import android.util.Size
 import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -28,16 +27,15 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.signature.ObjectKey
-import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.FlowableEvent
+import io.github.toyota32k.utils.GenericDisposable
 import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.IUtPropOwner
 import io.github.toyota32k.utils.UtManualIncarnateResetableValue
 import io.github.toyota32k.utils.android.RefBitmap.Companion.toRef
 import io.github.toyota32k.utils.android.RefBitmapFlow
-import io.github.toyota32k.utils.lifecycle.disposableObserve
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -53,9 +51,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileInputStream
-import java.security.MessageDigest
+import java.lang.ref.WeakReference
 import kotlin.math.max
 
 @OptIn(UnstableApi::class)
@@ -186,6 +182,12 @@ open class BasicPlayerModel(
     override val isCurrentSourceVideo: StateFlow<Boolean> = currentSourceType.map { it == "mp4" }.stateIn(scope, SharingStarted.Lazily, false)
 
     /**
+     * Photo Viewer
+     */
+    private var photoViewRef: WeakReference<ImageView>? = null
+    override val shownBitmap: RefBitmapFlow = RefBitmapFlow()
+
+    /**
      * 動画の全再生時間
      */
     override val naturalDuration: StateFlow<Long> = MutableStateFlow(0L)
@@ -208,6 +210,11 @@ open class BasicPlayerModel(
     fun setErrorMessage(msg:String?) {
         errorMessage.mutable.value = msg
     }
+
+    /**
+     * Chapter List (cache)
+     */
+    override val chapterList: StateFlow<IChapterList?> = MutableStateFlow<IChapterList?>(null)
 
     // endregion
 
@@ -248,6 +255,17 @@ open class BasicPlayerModel(
             player?.volume = v
         }.launchIn(scope)
 
+        currentSource.onEach { src->
+            chapterList.mutable.value = null
+            if(src?.isPhoto == true) {
+                loadPhoto(src)
+            } else {
+                unloadPhoto()
+                chapterList.mutable.value = (src as? IMediaSourceWithChapter)?.getChapterList()
+            }
+        }.launchIn(scope)
+
+
         scope.launch {
             while (!isDisposed) {
                 watchPositionEvent.waitOne()
@@ -262,8 +280,8 @@ open class BasicPlayerModel(
                         var adjustedPosition = range.clamp(pos)
 
                         if (src is IMediaSourceWithChapter) {
-                            val chapterList = src.getChapterList()
-                            if (chapterList.isNotEmpty) {
+                            val chapterList = this@BasicPlayerModel.chapterList.value
+                            if (chapterList?.isNotEmpty==true) {
                                 // 無効区間、トリミングによる再生スキップの処理
                                 val dr = chapterList.disabledRanges(src.trimming)
                                 val hit = dr.firstOrNull { it.contains(adjustedPosition) }
@@ -289,6 +307,90 @@ open class BasicPlayerModel(
                 delay(50)
             }
         }
+    }
+
+    private fun unloadPhoto() {
+        photoViewRef?.get()?.setImageBitmap(null)
+        shownBitmap.value = null
+    }
+
+    private suspend fun loadPhoto(src:IMediaSource) {
+        val photoView = photoViewRef?.get() ?: return
+        state.mutable.value = PlayerState.Loading
+        // カスタムローダーがセットされていれば、それを試す。
+        val hash = if (customPhotoLoader!=null) {
+            val info = customPhotoLoader.loadBitmap(src)
+            if (info==null || info.error) {
+                // loadBitmapが null を返したときはbitmapを表示しない
+                // info.error == true なら、ERRORの文字を表示する。
+                unloadPhoto()
+                state.mutable.value = if(info?.error==true) PlayerState.Error else  PlayerState.Ready
+                return
+            }
+
+            val bitmap = info.bitmap
+            if (bitmap!=null) {
+                videoSize.mutable.value = Size(bitmap.width, bitmap.height)
+                state.mutable.value = PlayerState.Ready
+                photoView.setImageBitmap(bitmap.bitmap)
+                shownBitmap.value = bitmap
+                return
+            }
+            info.cacheHint
+        } else null
+
+        val context = photoView.context
+        Glide.with(context)
+            .apply {
+                if (src.type == "gif") {
+                    asGif()
+                }
+            }
+            .load(src.uri)
+            .listener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: com.bumptech.glide.request.target.Target<Drawable?>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    logger.error("Failed to load image: ${e?.message}")
+                    unloadPhoto()
+                    state.mutable.value = PlayerState.Error
+                    return false
+                }
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: com.bumptech.glide.request.target.Target<Drawable?>?,
+                    dataSource: com.bumptech.glide.load.DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    // ロードが成功した場合の処理
+                    val width = resource.intrinsicWidth
+                    val height = resource.intrinsicHeight
+                    videoSize.mutable.value = Size(width, height)
+                    state.mutable.value = PlayerState.Ready
+                    shownBitmap.value = resource.toBitmap().toRef().apply {
+                        // Glide が Bitmap を保持しているので外部でrecycleすると状態異常を起こす
+                        // これを防ぐため、Glideで作成したBitmapは、参照カウンタを常に１以上に保つ
+                        addRef()
+                    }
+                    return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
+                }
+            })
+            .apply {
+                when (photoSizeOption) {
+                    PhotoSizeOption.Original -> override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
+                    PhotoSizeOption.FitToImageView -> override(photoView.width, photoView.height)
+                    PhotoSizeOption.LimitByScreen -> override( context.resources.displayMetrics.run { max(widthPixels, heightPixels) }, context.resources.displayMetrics.run { max(widthPixels, heightPixels) })
+                }
+                if (hash!=null) {
+                    signature(ObjectKey(hash))
+                }
+            }
+            .diskCacheStrategy(DiskCacheStrategy.NONE)
+            .into(photoView)
     }
 
     override fun setPlayRange(range: Range?) {
@@ -672,116 +774,11 @@ open class BasicPlayerModel(
 //        photoSlideShowModel.setSlideShowDuration(duration)
 //    }
 
-    override val shownBitmap: RefBitmapFlow = RefBitmapFlow()
-
     @SuppressLint("CheckResult")
     override fun attachPhotoView(photoView: ImageView): IDisposable {
-//        fun sha1OfFile(uri: String): String? {
-//            try {
-//                if (!uri.startsWith("file:")) return null
-//                val file = File(uri.toUri().path!!)
-//                val buffer = ByteArray(1024 * 8)
-//                val digest = MessageDigest.getInstance("SHA-1")
-//                FileInputStream(file).use { fis ->
-//                    var read = fis.read(buffer)
-//                    while (read > 0) {
-//                        digest.update(buffer, 0, read)
-//                        read = fis.read(buffer)
-//                    }
-//                }
-//                return digest.digest().joinToString("") { "%02x".format(it) }
-//            } catch (e:Throwable) {
-//                logger.error(e)
-//                return null
-//            }
-//        }
-
-        return currentSource.disposableObserve {
-            if(it?.isPhoto == true) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    state.mutable.value = PlayerState.Loading
-
-                    // カスタムローダーがセットされていれば、それを試す。
-                    val hash = if (customPhotoLoader!=null) {
-                        val info = customPhotoLoader.loadBitmap(it)
-                        if (info==null || info.error) {
-                            // loadBitmapが null を返したときはbitmapを表示しない
-                            // info.error == true なら、ERRORの文字を表示する。
-                            photoView.setImageBitmap(null)
-                            shownBitmap.value = null
-                            state.mutable.value = if(info?.error==true) PlayerState.Error else  PlayerState.Ready
-                            return@launch
-                        }
-
-                        val bitmap = info.bitmap
-                        if (bitmap!=null) {
-                            videoSize.mutable.value = Size(bitmap.width, bitmap.height)
-                            state.mutable.value = PlayerState.Ready
-                            photoView.setImageBitmap(bitmap.bitmap)
-                            shownBitmap.value = bitmap
-                            return@launch
-                        }
-                        info.cacheHint
-                    } else null
-
-//                    val hash = sha1OfFile(it.uri)
-                    val context = photoView.context
-                    Glide.with(context)
-                        .apply {
-                            if (it.type == "gif") {
-                                asGif()
-                            }
-                        }
-                        .load(it.uri)
-                        .listener(object : RequestListener<Drawable> {
-                            override fun onLoadFailed(
-                                e: GlideException?,
-                                model: Any?,
-                                target: com.bumptech.glide.request.target.Target<Drawable?>,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                logger.error("Failed to load image: ${e?.message}")
-                                state.mutable.value = PlayerState.Error
-                                return false
-                            }
-                            override fun onResourceReady(
-                                resource: Drawable,
-                                model: Any,
-                                target: com.bumptech.glide.request.target.Target<Drawable?>?,
-                                dataSource: com.bumptech.glide.load.DataSource,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                // ロードが成功した場合の処理
-                                val width = resource.intrinsicWidth
-                                val height = resource.intrinsicHeight
-                                videoSize.mutable.value = Size(width, height)
-                                state.mutable.value = PlayerState.Ready
-                                shownBitmap.value = resource.toBitmap().toRef().apply {
-                                    // Glide が Bitmap を保持しているので外部でrecycleすると状態異常を起こす
-                                    // これを防ぐため、Glideで作成したBitmapは、参照カウンタを常に１以上に保つ
-                                    addRef()
-                                }
-                                return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
-                            }
-                        })
-                        .apply {
-                            when (photoSizeOption) {
-                                PhotoSizeOption.Original -> override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
-                                PhotoSizeOption.FitToImageView -> override(photoView.width, photoView.height)
-                                PhotoSizeOption.LimitByScreen -> override( context.resources.displayMetrics.run { max(widthPixels, heightPixels) }, context.resources.displayMetrics.run { max(widthPixels, heightPixels) })
-                            }
-                            if (hash!=null) {
-                                signature(ObjectKey(hash))
-                            }
-                        }
-                        .diskCacheStrategy(DiskCacheStrategy.NONE)
-                        .into(photoView)
-                }
-            } else {
-                photoView.setImageBitmap(null)
-                shownBitmap.value = null
-            }
-
+        photoViewRef = WeakReference(photoView)
+        return GenericDisposable {
+            photoViewRef = null
         }
     }
 

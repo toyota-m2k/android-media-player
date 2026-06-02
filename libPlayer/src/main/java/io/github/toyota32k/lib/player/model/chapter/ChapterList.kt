@@ -86,6 +86,18 @@ open class ChapterList(list: List<IChapter>) : IChapterList {
         return if(0<=workPosition.next&&workPosition.next<sortedList.size) sortedList[workPosition.next] else null
     }
 
+    override fun prevEnabledChapter(current: Long): IChapter? {
+        sortedList.sorter.findPosition(workChapter.at(current), workPosition)
+        if(workPosition.prev<0 || sortedList.size<=workPosition.prev) return null
+        for (i in workPosition.prev downTo 0) {
+            val chapter = sortedList[i]
+            if (!chapter.skip) {
+                return chapter
+            }
+        }
+        return null
+    }
+
     fun NeighborChapter.prevChapter():IChapter? {
         return if(0<=prev&&prev<sortedList.size) sortedList[prev] else null
     }

@@ -11,23 +11,19 @@ import io.github.toyota32k.binder.enableBinding
 import io.github.toyota32k.binder.multiVisibilityBinding
 import io.github.toyota32k.binder.observe
 import io.github.toyota32k.binder.textBinding
-import io.github.toyota32k.binder.visibilityBinding
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.common.setMargin
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
-import io.github.toyota32k.lib.player.model.IMediaSourceWithChapter
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_END
 import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_START
 import io.github.toyota32k.utils.GenericDisposable
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.dp
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
 class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr)  {
@@ -85,11 +81,8 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
             .bindCommand(model.commandChangeRange, controls.prevRangeButton, false)
             .bindCommand(model.commandChangeRange, controls.nextRangeButton, true)
             .add( GenericDisposable { controls.playerSlider.setValueChangedByUserListener(null) } )
-            .observe(model.playerModel.currentSource) {src->
-                val sourceWithChapter = src as? IMediaSourceWithChapter ?: return@observe
-                MainScope().launch {
-                    controls.playerSlider.setChapterList(sourceWithChapter.getChapterList())
-                }
+            .observe(model.playerModel.chapterList) { list->
+                controls.playerSlider.setChapterList(list)
             }
             .observe(model.playerModel.playRange) {
                 controls.playerSlider.setPlayRange(it)

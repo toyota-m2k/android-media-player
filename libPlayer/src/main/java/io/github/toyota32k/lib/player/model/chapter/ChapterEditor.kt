@@ -160,6 +160,10 @@ class ChapterEditor(private var target:IMutableChapterList) : IChapterEditor {
         return target.next(current)
     }
 
+    override fun prevEnabledChapter(current: Long): IChapter? {
+        return target.prevEnabledChapter(current)
+    }
+
     override fun getChapterAround(position: Long): IChapter? {
         return target.getChapterAround(position)
     }

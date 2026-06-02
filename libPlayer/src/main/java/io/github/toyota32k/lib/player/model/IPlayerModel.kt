@@ -91,6 +91,7 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
     val isCurrentSourcePhoto: StateFlow<Boolean> // get
     val isCurrentSourceVideo: StateFlow<Boolean> // get
 
+    val chapterList: StateFlow<IChapterList?>
 }
 
 interface IPlaylistHandler {

@@ -4,11 +4,8 @@ import io.github.toyota32k.binder.command.LiteUnitCommand
 import io.github.toyota32k.lib.player.model.IChapter
 import io.github.toyota32k.lib.player.model.IChapterHandler
 import io.github.toyota32k.lib.player.model.IChapterList
-import io.github.toyota32k.lib.player.model.IMediaSourceWithChapter
 import io.github.toyota32k.lib.player.model.IPlayerModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import io.github.toyota32k.logger.UtLog
 
 class ChapterHandlerImpl(
     val playerModel: IPlayerModel,
@@ -40,24 +37,31 @@ class ChapterHandlerImpl(
 //        }
 //    }
 
-    private fun seekToChapter(getChapter:(chapterList:IChapterList, current:Long)-> IChapter?) {
-        val src = playerModel.currentSource.value as? IMediaSourceWithChapter ?: return
-        CoroutineScope(Dispatchers.Main).launch {
-            val chapterList = src.getChapterList()
-            val chapter = getChapter(chapterList, playerModel.currentPosition) ?: return@launch
-            playerModel.seekTo(chapter.position)
-        }
-    }
+//    private fun seekToChapter(getChapter:(chapterList:IChapterList, current:Long)-> IChapter?) {
+//        val chapterList = playerModel.chapterList.value ?: return
+//        val chapter = getChapter(chapterList, playerModel.currentPosition) ?: return
+//        playerModel.seekTo(chapter.position)
+//    }
 
     private fun nextChapter() {
-        seekToChapter { chapterList, current ->
-            chapterList.next(current)
-        }
+//        seekToChapter { chapterList, current ->
+//            chapterList.next(current)
+//        }
+        val chapterList = playerModel.chapterList.value ?: return
+        val pos = chapterList.next(playerModel.currentPosition)?.position ?: (playerModel.naturalDuration.value - 500L)
+        playerModel.seekTo(pos)
     }
 
     private fun prevChapter() {
-        seekToChapter { chapterList, current ->
-            chapterList.prev(current)
-        }
+        val chapterList = playerModel.chapterList.value ?: return
+        val current = playerModel.currentPosition
+        val pos = if (playerModel.isPlaying.value) {
+            // 再生中は、skip指定されたchapterへはシークしない
+            // 理由：skip属性を持ったchapterにシークすると、直後に、スキップされて、もとの位置の戻ってしまい不具合に見えるため。
+            chapterList.prevEnabledChapter(current)?.position
+        } else {
+            chapterList.prev(current)?.position
+        } ?: 0L
+        playerModel.seekTo(pos)
     }
 }
