@@ -69,10 +69,12 @@ open class PlayerControllerModel(
     enum class SnapshotSource(@param:StringRes val resId:Int) {
         // ExoPlayerのSurfaceView/TextureViewからキャプチャする。
         // FRAME_EXTRACTOR より正確な位置の画像が得られるし高速。
+        // ただし、一瞬ちらつく。
         CAPTURE_PLAYER(R.string.snapshot_capture_player_screen),
         // MediaMetadataRetrieverを使って、指定位置のフレームを抽出する。
         // 従来は、この方法しかなかったが、（HDRモードの動画で？）再生位置のズレが無視できないレベルになったので
         // 今後は、CAPTURE_PLAYERをデフォルトにする。
+        // ちなみに、証明書の認証をカスタマイズした https だと動作しない。
         FRAME_EXTRACTOR(R.string.snapshot_extract_frame),
     }
 
@@ -407,8 +409,15 @@ open class PlayerControllerModel(
     }
     private suspend fun bitmapFromFrameExtractor(src:IMediaSource, position:Long):Bitmap? {
         if (src.isPhoto) return null
-        return TpFrameExtractor.create(playerModel.context, src.uri).use { extractor ->
-            extractor.extractFrame(position)
+        return try {
+            TpFrameExtractor.create(playerModel.context, src.uri).use { extractor ->
+                extractor.extractFrame(position)
+            }
+        } catch(e:Throwable) {
+            logger.error(e)
+            // https＋オレオレ証明書の場合にMediaMetadataRetrieverのコンストラクタが失敗する
+            this.snapshotSource = SnapshotSource.CAPTURE_PLAYER
+            bitmapFromExoPlayer()
         }
     }
     private suspend fun bitmapFromSrc(src:IMediaSource, position:Long, angle:Int):RefBitmap? {
