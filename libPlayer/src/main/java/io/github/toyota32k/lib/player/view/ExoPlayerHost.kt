@@ -42,10 +42,8 @@ import io.github.toyota32k.utils.android.setLayoutSize
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
 import io.github.toyota32k.utils.gesture.UtAbstractManipulationTarget
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext

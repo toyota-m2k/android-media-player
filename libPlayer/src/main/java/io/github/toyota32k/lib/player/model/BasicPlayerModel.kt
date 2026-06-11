@@ -66,7 +66,7 @@ open class BasicPlayerModel(
      * トラスト設定や HTTP クライアントを使いたいときにアプリから差し替える。null なら
      * `DefaultDataSource.Factory(context)` を使う (=従来挙動)。
      */
-    private val dataSourceFactory: DataSource.Factory? = null,
+    dataSourceFactory: DataSource.Factory? = null,
 ) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by PhotoSlideShowModelImpl() {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
@@ -341,11 +341,19 @@ open class BasicPlayerModel(
 
         val context = photoView.context
         Glide.with(context)
-            .apply {
-                if (src.type == "gif") {
-                    asGif()
-                }
-            }
+            // このコードは無意味 ... asGif()が返す RequestBuilder<GifDrawable> が使われない
+//            .apply {
+//                if (src.type == "gif") {
+//                    asGif()
+//                }
+//            }
+            // やるなら、こんな実装 ... だが、Claude は、Glide が自動的に判別してくれる、と言っているし、
+            // 実際、↑のコードでも動作していたから、コメントアウトしておく。
+//            .run {
+//                if (src.type == "gif") {
+//                    asGif().load(src.uri) as RequestBuilder<Drawable>
+//                } else load(src.uri)
+//            }
             .load(src.uri)
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
@@ -379,15 +387,16 @@ open class BasicPlayerModel(
                     return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                 }
             })
-            .apply {
+            .run {
                 when (photoSizeOption) {
                     PhotoSizeOption.Original -> override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                     PhotoSizeOption.FitToImageView -> override(photoView.width, photoView.height)
-                    PhotoSizeOption.LimitByScreen -> override( context.resources.displayMetrics.run { max(widthPixels, heightPixels) }, context.resources.displayMetrics.run { max(widthPixels, heightPixels) })
+                    PhotoSizeOption.LimitByScreen -> override(context.resources.displayMetrics.run { max(widthPixels, heightPixels) }, context.resources.displayMetrics.run { max(widthPixels, heightPixels) })
                 }
+            }.run {
                 if (hash!=null) {
                     signature(ObjectKey(hash))
-                }
+                } else this
             }
             .diskCacheStrategy(DiskCacheStrategy.NONE)
             .into(photoView)
@@ -572,6 +581,7 @@ open class BasicPlayerModel(
      */
     inner class PlayerListener :  Player.Listener {
         override fun onVideoSizeChanged(videoSize: VideoSize) {
+            if (videoSize.width==0||videoSize.height==0) return
             this@BasicPlayerModel.videoSize.mutable.value = Size(videoSize.width, videoSize.height)
         }
 
