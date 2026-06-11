@@ -4,9 +4,9 @@ agp = "9.2.1"
 kotlin="2.3.21"
 
 #libraries
-androidBinding = "1.12.3"
+androidBinding = "LOCAL"
 androidViewex = "1.1.21"
-androidDialog = "6.3.6"     # for Sample
+androidDialog = "LOCAL"     # for Sample
 coreKtx = "1.18.0"
 glide = "5.0.7"
 junit = "4.13.2"
