@@ -341,11 +341,19 @@ open class BasicPlayerModel(
 
         val context = photoView.context
         Glide.with(context)
-            .apply {
-                if (src.type == "gif") {
-                    asGif()
-                }
-            }
+            // このコードは無意味 ... asGif()が返す RequestBuilder<GifDrawable> が使われない
+//            .apply {
+//                if (src.type == "gif") {
+//                    asGif()
+//                }
+//            }
+            // やるなら、こんな実装 ... だが、Claude は、Glide が自動的に判別してくれる、と言っているし、
+            // 実際、↑のコードでも動作していたから、コメントアウトしておく。
+//            .run {
+//                if (src.type == "gif") {
+//                    asGif().load(src.uri) as RequestBuilder<Drawable>
+//                } else load(src.uri)
+//            }
             .load(src.uri)
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
