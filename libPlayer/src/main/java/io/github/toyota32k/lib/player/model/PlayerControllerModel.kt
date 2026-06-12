@@ -410,8 +410,12 @@ open class PlayerControllerModel(
     private suspend fun bitmapFromFrameExtractor(src:IMediaSource, position:Long):Bitmap? {
         if (src.isPhoto) return null
         return try {
-            TpFrameExtractor.create(playerModel.context, src.uri).use { extractor ->
-                extractor.extractFrame(position)
+            if (src is IMediaMetadataRetrieverSource) {
+                src.withMediaMetadataRetriever { mmr->
+                    TpFrameExtractor(mmr, false).use { it.extractFrame(position) }
+                }
+            } else {
+                TpFrameExtractor.create(playerModel.context, src.uri).use { it.extractFrame(position) }
             }
         } catch(e:Throwable) {
             logger.error(e)
