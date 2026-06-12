@@ -15,20 +15,20 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import androidx.core.net.toUri
 
-class TpFrameExtractor(val analyzer:MediaMetadataRetriever) : AutoCloseable {
-    constructor(url:String) : this(MediaMetadataRetriever().apply {
-        setDataSource(url)
-    })
-    constructor(context:Context, uri:Uri): this(TpAndroidUri(uri).use { MediaMetadataRetriever().apply {
-        setDataSource(it.open(context)) }
-    })
+class TpFrameExtractor(val analyzer:MediaMetadataRetriever, val closeAnalyzer:Boolean = true) : AutoCloseable {
     companion object {
-        fun create(context:Context, url:String):TpFrameExtractor {
-            if(url.startsWith("http")) {
-                return TpFrameExtractor(url)
-            } else {
-                return TpFrameExtractor(context, url.toUri())
+        fun mediaMetadataRetriever(context: Context, url:String) : MediaMetadataRetriever {
+            return MediaMetadataRetriever().apply {
+                if(url.startsWith("http")) {
+                    setDataSource(url)
+                } else {
+                    setDataSource(TpAndroidUri(url.toUri()).open(context))
+                }
             }
+        }
+
+        fun     create(context:Context, url:String):TpFrameExtractor {
+            return TpFrameExtractor(mediaMetadataRetriever(context, url))
         }
     }
 
@@ -102,6 +102,8 @@ class TpFrameExtractor(val analyzer:MediaMetadataRetriever) : AutoCloseable {
     }
 
     override fun close() {
-        analyzer.close()
+        if (closeAnalyzer) {
+            analyzer.close()
+        }
     }
 }
