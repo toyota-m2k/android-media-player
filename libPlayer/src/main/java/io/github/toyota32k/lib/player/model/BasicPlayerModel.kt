@@ -673,6 +673,24 @@ open class BasicPlayerModel(
     override fun setSource(src:IMediaSource?) {
         reset()
         if (src == null) return
+        if (prepareAndSetSource(src)) return
+        setSourceCore(src)
+    }
+
+    private fun prepareAndSetSource(src: IMediaSource):Boolean {
+        if (src is IMediaSourcePreparer) {
+            CoroutineScope(Dispatchers.Main).launch {
+                if (src.onSourceLoading()) {
+                    setSourceCore(src)
+                    src.onSourceLoaded()
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun setSourceCore(src:IMediaSource) {
         naturalDuration.mutable.value = 0L
         currentSource.mutable.value = src
         setPlayRange(null)

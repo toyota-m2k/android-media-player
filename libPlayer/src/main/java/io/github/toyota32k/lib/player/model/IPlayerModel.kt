@@ -107,3 +107,14 @@ interface  IChapterHandler {
     val commandNextChapter: IUnitCommand
     val commandPrevChapter: IUnitCommand
 }
+
+/**
+ * プレイリストから、IMediaSource が setSource() される前に prepare() を呼び出すチャンスを与えるi/f
+ * 利用する場合は、IMediaSource の実装クラスで、このi/f を継承する。
+ * プレーヤーにURLをセットする前に認証を行う、などの用途を想定。
+ * IPlaylistHandlerを使う場合にのみ有効。
+ */
+interface IMediaSourcePreparer {
+    suspend fun onSourceLoading():Boolean
+    suspend fun onSourceLoaded()
+}
