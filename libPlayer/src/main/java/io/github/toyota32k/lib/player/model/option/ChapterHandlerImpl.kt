@@ -58,7 +58,7 @@ class ChapterHandlerImpl(
         val pos = if (playerModel.isPlaying.value) {
             // 再生中は、skip指定されたchapterへはシークしない
             // 理由：skip属性を持ったchapterにシークすると、直後に、スキップされて、もとの位置の戻ってしまい不具合に見えるため。
-            chapterList.prevEnabledChapter(current)?.position
+            chapterList.prevEnabledChapter((current-200).coerceAtLeast(0L))?.position
         } else {
             chapterList.prev(current)?.position
         } ?: 0L
