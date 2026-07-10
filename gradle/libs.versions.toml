@@ -6,7 +6,7 @@ kotlinSerialization ="2.4.0"
 #libraries
 androidBinding = "1.13.0"
 androidViewex = "1.1.21"
-androidDialog = "LOCAL"     # for Sample
+androidDialog = "7.0.0"     # for Sample
 coreKtx = "1.18.0"
 glide = "5.0.7"
 junit = "4.13.2"
