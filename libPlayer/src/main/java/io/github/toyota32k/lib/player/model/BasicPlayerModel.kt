@@ -805,6 +805,7 @@ open class BasicPlayerModel(
     @SuppressLint("CheckResult")
     override fun attachPhotoView(photoView: ImageView): IDisposable {
         photoViewRef = WeakReference(photoView)
+        photoView.setImageBitmap(shownBitmap.value?.bitmapOrNull)
         return GenericDisposable {
             photoViewRef = null
         }

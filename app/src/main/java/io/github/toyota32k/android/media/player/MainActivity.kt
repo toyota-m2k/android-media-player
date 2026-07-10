@@ -42,7 +42,7 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
     class MainViewModel(application: Application) : AndroidViewModel(application){
         val hasSource: Boolean
             get() = playerModel.currentSource.value != null
-        data class FileSource(val fileUri:Uri): IMediaSource {
+        data class FileSource(val fileUri:Uri, override val type:String): IMediaSource {
             override val id: String
                 get() = uri
             override val uri: String
@@ -50,7 +50,7 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
             override val name: String
                 get() = fileUri.lastPathSegment ?: "noname"
             override val trimming: Range = Range.empty
-            override val type: String get() = "mp4"
+//            override val type: String get() = "mp4"
             override val startPosition = AtomicLong(0)
         }
 
@@ -65,6 +65,7 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
             .enableSeekLarge(5000, 10000)
             .enableSliderLock(true)
             .counterInMs()
+            .enablePhotoViewer()
             .build()
         val playerModel get() = playerControllerModel.playerModel
         // region Chapter Editor
@@ -126,8 +127,8 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
 
         // Source File
 
-        fun setSource(source: Uri) {
-            playerModel.setSource(FileSource(source))
+        fun setSource(source: Uri, type:String) {
+            playerModel.setSource(FileSource(source, type))
             chapterList = ChapterEditor(MutableChapterList())
             if(chapterList.chapterAt(0)?.position!=0L) {
                 // 動画先頭位置が暗黙のチャプターとして登録されていることを前提に動作する。
@@ -188,7 +189,7 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
 
     private fun selectFile() {
         UtImmortalTask.launchTask("selectFile") {
-            val uri = activityBrokers.openFilePicker.selectFile(arrayOf("video/mp4", "video/*"))
+            val uri = activityBrokers.openFilePicker.selectFile(arrayOf("video/mp4", "video/*", "image/*"))
             if (uri == null) {
                 if (!viewModel.hasSource) {
                     logger.info("cancelled and finish app.")
@@ -196,7 +197,8 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
                 }
             } else {
                 logger.info("selected: $uri")
-                viewModel.setSource(uri)
+                val type = contentResolver.getType(uri)
+                viewModel.setSource(uri, if (type?.contains("image") ==true) "png" else "mp4")
             }
         }
     }
