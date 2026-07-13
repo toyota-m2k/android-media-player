@@ -733,6 +733,10 @@ open class BasicPlayerModel(
         playRange.mutable.value = null
         seekManager.reset()
         playerSeekPosition.mutable.value = 0L
+        withPlayer { player->
+            player.stop()
+            player.clearMediaItems()
+        }
     }
 
     /**
