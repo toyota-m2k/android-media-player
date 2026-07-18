@@ -11,7 +11,10 @@ version="1.0"
 
 configure<LibraryExtension> {
     namespace = "io.github.toyota32k.lib.player"
-    compileSdk = 37
+    compileSdk {
+        version = release(37)
+        compileSdkMinor = 1
+    }
 
     defaultConfig {
         minSdk = 26
@@ -59,7 +62,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp3.integration)
 
-    api(libs.android.binding)
+    implementation(libs.android.logger)
+    implementation(libs.android.utilities)
+    implementation(libs.android.binding)
     implementation(libs.android.viewex)
 
     testImplementation(libs.junit)
@@ -77,6 +82,7 @@ publishing {
             version = project.findProperty("githubReleaseTag") as String? ?: "LOCAL"
             afterEvaluate {
                 from(components["release"])
+                artifact(tasks.named("sourceReleaseJar"))
             }
         }
     }

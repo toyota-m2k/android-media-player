@@ -6,7 +6,10 @@ plugins {
 
 configure<ApplicationExtension> {
     namespace = "io.github.toyota32k.android.media.player"
-    compileSdk = 37
+    compileSdk {
+        version = release(37)
+        compileSdkMinor = 1
+    }
 
     defaultConfig {
         applicationId = "io.github.toyota32k.android.media.player"
@@ -46,6 +49,8 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
+    implementation(libs.android.logger)
+    implementation(libs.android.utilities)
     implementation(libs.android.binding)
     implementation(libs.android.viewex)
     implementation(libs.android.dialog)

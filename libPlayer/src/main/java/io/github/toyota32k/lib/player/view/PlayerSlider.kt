@@ -8,6 +8,9 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -16,6 +19,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
+import androidx.savedstate.SavedState
+import androidx.savedstate.savedState
 import io.github.toyota32k.binder.BaseBinding
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BindingMode
@@ -676,6 +681,45 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
                 slider?.setPositionNotNotify(v)
             }
         }
+    }
+
+    private class SavedState : BaseSavedState {
+        var position: Long = 0L
+
+        constructor(superState: Parcelable?) : super(superState)
+
+        private constructor(source: Parcel) : super(source) {
+            position = source.readLong()
+        }
+
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            super.writeToParcel(out, flags)
+            out.writeLong(position)
+        }
+
+        companion object {
+            @JvmField
+            val CREATOR: Parcelable.Creator<SavedState> =
+                object : Parcelable.Creator<SavedState> {
+                    override fun createFromParcel(source: Parcel): SavedState = SavedState(source)
+                    override fun newArray(size: Int): Array<SavedState?> = arrayOfNulls(size)
+                }
+        }
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val ss = SavedState(super.onSaveInstanceState())
+        ss.position = mPosition
+        return ss
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state !is SavedState) {
+            super.onRestoreInstanceState(state)
+            return
+        }
+        super.onRestoreInstanceState(state.superState)
+        mPosition = state.position
     }
 }
 
