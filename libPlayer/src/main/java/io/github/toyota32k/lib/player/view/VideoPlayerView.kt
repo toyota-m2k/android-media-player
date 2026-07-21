@@ -68,7 +68,12 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     fun associatePlayer() {
         controls.player.associatePlayer()
+        val item = model.playerModel.currentSource.value
+        if (item!=null) {
+            model.playerModel.setSource(item)
+        }
     }
+
     fun dissociatePlayer() {
         controls.player.dissociatePlayer()
     }
