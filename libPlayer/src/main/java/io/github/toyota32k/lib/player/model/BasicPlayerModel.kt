@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import kotlin.math.max
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
 open class BasicPlayerModel(
@@ -340,6 +341,7 @@ open class BasicPlayerModel(
         } else null
 
         val context = photoView.context
+        val currentDrawable = photoView.drawable
         Glide.with(context)
             // このコードは無意味 ... asGif()が返す RequestBuilder<GifDrawable> が使われない
 //            .apply {
@@ -355,6 +357,11 @@ open class BasicPlayerModel(
 //                } else load(src.uri)
 //            }
             .load(src.uri)
+            // 次画像のロード中は直前画像を保持して、黒フラッシュを防ぐ
+            .placeholder(currentDrawable)
+            .fallback(currentDrawable)
+            .error(currentDrawable)
+            .dontAnimate()
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
                     e: GlideException?,
@@ -365,6 +372,14 @@ open class BasicPlayerModel(
                     logger.error("Failed to load image: ${e?.message}")
                     unloadPhoto()
                     state.mutable.value = PlayerState.Error
+                    if (isPhotoSlideShowEnabled) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(1.seconds)
+                            if (src == currentSource.value && isPhotoPlaying.value) {
+                                ended.value = true
+                            }
+                        }
+                    }
                     return false
                 }
                 override fun onResourceReady(
@@ -383,6 +398,14 @@ open class BasicPlayerModel(
                         // Glide が Bitmap を保持しているので外部でrecycleすると状態異常を起こす
                         // これを防ぐため、Glideで作成したBitmapは、参照カウンタを常に１以上に保つ
                         addRef()
+                    }
+                    if (isPhotoSlideShowEnabled) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(photoSlideShowDuration)
+                            if (src == currentSource.value && isPhotoPlaying.value) {
+                                ended.value = true
+                            }
+                        }
                     }
                     return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                 }
@@ -770,15 +793,10 @@ open class BasicPlayerModel(
         errorMessage.mutable.value = null
         val item = currentSource.value ?: return
         if (!item.isPhoto) {
+            isPhotoPlaying.value = false
             runOnPlayer { playWhenReady = true }
         } else if (isPhotoSlideShowEnabled) {
             isPhotoPlaying.value = true
-            CoroutineScope(Dispatchers.Main).launch {
-                delay(photoSlideShowDuration)
-                if (item == currentSource.value && isPhotoPlaying.value) {
-                    ended.value = true
-                }
-            }
         }
     }
 
@@ -788,7 +806,6 @@ open class BasicPlayerModel(
     override fun pause() {
         logger.debug()
         if(isDisposed) return
-        isPhotoPlaying.value = false
         runOnPlayer { playWhenReady = false }
     }
 
