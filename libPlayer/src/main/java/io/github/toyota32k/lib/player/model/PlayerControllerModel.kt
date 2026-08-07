@@ -2,6 +2,7 @@ package io.github.toyota32k.lib.player.model
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.view.View
 import androidx.annotation.OptIn
 import androidx.annotation.StringRes
 import androidx.media3.common.util.UnstableApi
@@ -9,8 +10,13 @@ import androidx.media3.datasource.DataSource
 import com.bumptech.glide.Glide
 import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader
 import com.bumptech.glide.load.model.GlideUrl
+import io.github.toyota32k.binder.Binder
+import io.github.toyota32k.binder.clickReleaseBinding
+import io.github.toyota32k.binder.command.ICommand
+import io.github.toyota32k.binder.command.IUnitCommand
 import io.github.toyota32k.binder.command.LiteCommand
 import io.github.toyota32k.binder.command.LiteUnitCommand
+import io.github.toyota32k.binder.command.bindCommand
 import io.github.toyota32k.lib.player.R
 import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.common.TpFrameExtractor
@@ -64,7 +70,32 @@ open class PlayerControllerModel(
     companion object {
         val logger by lazy { UtLog("CPM", TpLib.logger) }
     }
-    data class RelativeSeek(val backward:Long, val forward:Long)
+    data class RelativeSeek(val backward:Long, val forward:Long, val backwardRepeatInterval:Long, val forwardRepeatInterval:Long) {
+        fun bind(binder:Binder, seekCommand:ICommand<Boolean>, startCommand:ICommand<Boolean>, stopCommand: IUnitCommand, backButton: View, forwardButton:View) {
+            if (backwardRepeatInterval>0L) {
+                binder.clickReleaseBinding(backButton) { start->
+                    if (start) {
+                        startCommand.invoke(false)
+                    } else {
+                        stopCommand.invoke()
+                    }
+                }
+            } else {
+                binder.bindCommand(startCommand, backButton, false)
+            }
+            if (forwardRepeatInterval>0L) {
+                binder.clickReleaseBinding(forwardButton) { start->
+                    if (start) {
+                        startCommand.invoke(true)
+                    } else {
+                        stopCommand.invoke()
+                    }
+                }
+            } else {
+                binder.bindCommand(startCommand, forwardButton, true)
+            }
+        }
+    }
 
     enum class SnapshotSource(@param:StringRes val resId:Int) {
         // ExoPlayerのSurfaceView/TextureViewからキャプチャする。
@@ -152,16 +183,28 @@ open class PlayerControllerModel(
             mEnableRotateLeft = true
             return this
         }
-        fun enableSeekSmall(backward:Long, forward:Long):Builder {
-            mSeekSmall = RelativeSeek(backward, forward)
+        fun enableSeekSmall(backward:Long, forward:Long, repeatInterval: Long=300L):Builder {
+            mSeekSmall = RelativeSeek(backward, forward, repeatInterval, repeatInterval)
             return this
         }
-        fun enableSeekMedium(backward:Long, forward:Long):Builder {
-            mSeekMedium = RelativeSeek(backward, forward)
+        fun enableSeekSmall(backward:Long, forward:Long, backwardRepeatInterval: Long, forwardRepeatInterval: Long):Builder {
+            mSeekSmall = RelativeSeek(backward, forward, backwardRepeatInterval, forwardRepeatInterval)
             return this
         }
-        fun enableSeekLarge(backward:Long, forward:Long):Builder {
-            mSeekLarge = RelativeSeek(backward, forward)
+        fun enableSeekMedium(backward:Long, forward:Long, repeatInterval: Long=500L):Builder {
+            mSeekMedium = RelativeSeek(backward, forward, repeatInterval, repeatInterval)
+            return this
+        }
+        fun enableSeekMedium(backward:Long, forward:Long, backwardRepeatInterval: Long, forwardRepeatInterval: Long):Builder {
+            mSeekMedium = RelativeSeek(backward, forward, backwardRepeatInterval, forwardRepeatInterval)
+            return this
+        }
+        fun enableSeekLarge(backward:Long, forward:Long, repeatInterval: Long=500L):Builder {
+            mSeekLarge = RelativeSeek(backward, forward, repeatInterval, repeatInterval)
+            return this
+        }
+        fun enableSeekLarge(backward:Long, forward:Long, backwardRepeatInterval: Long, forwardRepeatInterval: Long):Builder {
+            mSeekLarge = RelativeSeek(backward, forward, backwardRepeatInterval, forwardRepeatInterval)
             return this
         }
 
@@ -353,13 +396,29 @@ open class PlayerControllerModel(
         }
     }
 
+    private fun startFrameStepping(forward:Boolean, s: RelativeSeek?) {
+        if(s==null) return
+        if(forward) {
+            playerModel.startFrameStepping(true, s.forward, s.forwardRepeatInterval)
+        } else {
+            playerModel.startFrameStepping(false, s.backward, s.backwardRepeatInterval)
+        }
+    }
+
     private val _lockSliderFlow = MutableStateFlow(initialEnableSliderLock)
     val lockSlider = _lockSliderFlow.map {enableSliderLock && it}
     val commandPlay = LiteUnitCommand(playerModel::play)
     val commandPause = LiteUnitCommand(playerModel::stop)
+
     val commandSeekLarge = LiteCommand<Boolean> { seekRelative(it, seekLarge) }
     val commandSeekMedium = LiteCommand<Boolean> { seekRelative(it, seekMedium) }
     val commandSeekSmall = LiteCommand<Boolean> { seekRelative(it, seekSmall) }
+
+    val commandStartFrameStepLarge = LiteCommand<Boolean> { startFrameStepping(it, seekLarge) }
+    val commandStartFrameStepMedium = LiteCommand<Boolean> { startFrameStepping(it, seekMedium) }
+    val commandStartFrameStepSmall = LiteCommand<Boolean> { startFrameStepping(it, seekSmall) }
+    val commandStopFrameStep = LiteUnitCommand { playerModel.stopFrameStepping() }
+
     val commandFullscreen = LiteUnitCommand { setWindowMode(WindowMode.FULLSCREEN) }
     val commandPinP = LiteUnitCommand { setWindowMode(WindowMode.PINP) }
     val commandCollapse = LiteUnitCommand { setWindowMode(WindowMode.NORMAL) }

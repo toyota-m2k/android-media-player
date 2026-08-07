@@ -34,7 +34,6 @@ import io.github.toyota32k.lib.player.model.RangedPlayModel
 import io.github.toyota32k.lib.player.model.Rotation
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.activity
-import io.github.toyota32k.utils.gesture.UtClickRepeater
 import io.github.toyota32k.utils.lifecycle.ConstantLiveData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -129,7 +128,7 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .visibilityBinding(controls.magnifyButton, model.playerModel.isCurrentSourcePhoto.map { !it && model.magnifySliderHandler!=null }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.seekBackLButton,controls.seekForwardLButton), model.playerModel.isCurrentSourcePhoto.map { !it && model.seekLarge!=null }, BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.seekBackMButton,controls.seekForwardMButton), model.playerModel.isCurrentSourcePhoto.map { !it && model.seekMedium!=null}, BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
-            .multiVisibilityBinding(arrayOf(controls.seekBackSButton,controls.seekForwardSButton), model.playerModel.isCurrentSourcePhoto, BoolConvert.Inverse,VisibilityBinding.HiddenMode.HideByGone)
+            .multiVisibilityBinding(arrayOf(controls.seekBackSButton,controls.seekForwardSButton), model.playerModel.isCurrentSourcePhoto.map { !it && model.seekSmall!=null}, BoolConvert.Straight,VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevChapterButton, controls.nextChapterButton), model.playerModel.isCurrentSourcePhoto.map { !it && chapterHandler!=null}, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiVisibilityBinding(arrayOf(controls.prevVideoButton, controls.nextVideoButton), ConstantLiveData(playlistHandler!=null && model.showNextPreviousButton), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .multiEnableBinding(arrayOf(
@@ -164,22 +163,13 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
             .visibilityBinding(controls.lockSliderButton, combine(model.lockSlider, model.playerModel.isCurrentSourcePhoto) { lock,photo-> model.enableSliderLock && !lock && !photo }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.unlockSliderButton, combine(model.lockSlider, model.playerModel.isCurrentSourcePhoto) { lock,photo-> model.enableSliderLock && lock && !photo }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .conditional(model.seekLarge!=null) {
-                bindCommand(model.commandSeekLarge, controls.seekBackLButton, false)
-                bindCommand(model.commandSeekLarge, controls.seekForwardLButton, true)
-                add(UtClickRepeater(controls.seekBackLButton))
-                add(UtClickRepeater(controls.seekForwardLButton))
+                model.seekLarge?.bind(this, model.commandSeekLarge, model.commandStartFrameStepLarge, model.commandStopFrameStep, controls.seekBackLButton, controls.seekForwardLButton)
             }
             .conditional(model.seekMedium!=null) {
-                bindCommand(model.commandSeekMedium, controls.seekBackMButton, false)
-                bindCommand(model.commandSeekMedium, controls.seekForwardMButton, true)
-                add(UtClickRepeater(controls.seekBackMButton))
-                add(UtClickRepeater(controls.seekForwardMButton))
+                model.seekMedium?.bind(this, model.commandSeekMedium, model.commandStartFrameStepMedium, model.commandStopFrameStep, controls.seekBackMButton, controls.seekForwardMButton)
             }
             .conditional(model.seekSmall!=null) {
-                bindCommand(model.commandSeekSmall, controls.seekBackSButton, false)
-                bindCommand(model.commandSeekSmall, controls.seekForwardSButton, true)
-                add(UtClickRepeater(controls.seekBackSButton))
-                add(UtClickRepeater(controls.seekForwardSButton))
+                model.seekSmall?.bind(this, model.commandSeekSmall, model.commandStartFrameStepSmall, model.commandStopFrameStep, controls.seekBackSButton, controls.seekForwardSButton)
             }
             .bindCommand(model.commandFullscreen, controls.fullscreenButton)
             .bindCommand(model.commandSnapshot, controls.snapshotButton)

@@ -44,6 +44,19 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
     fun seekRelativeByFrame(frameCount:Long)
     fun seekTo(seek:Long)
 
+    /**
+     * コマ送りの開始
+     * @param forward   true:進む / false:戻る
+     * @param stepMs    コマ送りのシーク時間(ms) / 0: 最小単位(frameDuration) / <0: キーフレームへシーク
+     */
+    fun startFrameStepping(forward:Boolean, stepMs: Long, intervalMs: Long)
+
+    /**
+     * コマ送り終了
+     */
+    fun stopFrameStepping()
+
+
     fun associatePlayerView(playerView: PlayerView)
     fun dissociatePlayerView(playerView: PlayerView)
 
