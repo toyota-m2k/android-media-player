@@ -46,9 +46,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -106,7 +105,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
             )
         }
         if (sar.sa.getBoolean(R.styleable.ControlPanel_ampPlayerCenteringVertically, false)) {
-            val params = controls.expPlayerView.layoutParams as FrameLayout.LayoutParams
+            val params = controls.expPlayerView.layoutParams as LayoutParams
             params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
             controls.expPlayerContainer.layoutParams = params
         }
@@ -147,7 +146,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
         val activeProgressRing = progressRing
         if (progressRingGravity!=0 && activeProgressRing!=null) {
-            val params = activeProgressRing.layoutParams as FrameLayout.LayoutParams
+            val params = activeProgressRing.layoutParams as LayoutParams
             params.gravity = progressRingGravity
             activeProgressRing.layoutParams = params
         }
@@ -232,9 +231,12 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
     private suspend fun takeScreenshotWithSurfaceView(surfaceView: SurfaceView): Bitmap? {
         logger.debug("capture from SurfaceView")
-        return suspendCoroutine { cont ->
+        return suspendCancellableCoroutine { cont ->
             takeScreenshotWithPixelCopy(surfaceView) { bmp->
-                cont.resume(bmp)
+                cont.resume(bmp) { _, bmp, _ ->
+                    logger.debug("takeScreenshotWithSurfaceView cancelled")
+                    bmp?.recycle()
+                }
             }
         }
     }
@@ -266,7 +268,7 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
         event.waitOne(1000L)
         @OptIn(UnstableApi::class)
         val surfaceView = exoPlayer.videoSurfaceView
-        if (surfaceView !is SurfaceView && surfaceView !is android.view.TextureView) {
+        if (surfaceView !is SurfaceView && surfaceView !is TextureView) {
             logger.error("Unknown surface view type: ${surfaceView?.javaClass?.name}")
             return null
         }

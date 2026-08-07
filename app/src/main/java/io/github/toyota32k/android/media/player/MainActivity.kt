@@ -4,6 +4,7 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.view.ViewCompat
@@ -28,6 +29,7 @@ import io.github.toyota32k.lib.player.model.chapter.MutableChapterList
 import io.github.toyota32k.lib.player.model.chapterAt
 import io.github.toyota32k.lib.player.model.skipChapter
 import io.github.toyota32k.logger.UtLog
+import io.github.toyota32k.logger.UtLogConfig
 import io.github.toyota32k.utils.android.RefBitmap
 import io.github.toyota32k.utils.gesture.UtGestureInterpreter
 import io.github.toyota32k.utils.gesture.UtManipulationAgent
@@ -156,6 +158,7 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
     private val manipulationAgent by lazy { UtManipulationAgent(UtSimpleManipulationTarget(controls.videoViewer,controls.videoViewer.controls.player)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        UtLogConfig.logLevel = Log.DEBUG
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         controls = ActivityMainBinding.inflate(layoutInflater)

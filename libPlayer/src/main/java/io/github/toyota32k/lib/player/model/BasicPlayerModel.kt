@@ -28,6 +28,7 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.signature.ObjectKey
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.lib.player.common.formatTimeMs
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.GenericDisposable
@@ -38,6 +39,7 @@ import io.github.toyota32k.utils.android.RefBitmap.Companion.toRef
 import io.github.toyota32k.utils.android.RefBitmapFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -50,9 +52,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import java.lang.ref.WeakReference
+import kotlin.coroutines.resume
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
@@ -164,7 +171,7 @@ open class BasicPlayerModel(
     private val frameDuration:Long get() {
         if(_frameDuration==0L) {
             val rate = runOnPlayer(0L) { videoFormat?.frameRate?.toLong() ?: 24L }
-            _frameDuration = if(rate>10) 1000L/rate else 100L
+            _frameDuration = (if(rate>10) 1000L/rate else 100L).coerceAtLeast(10L)
         }
         return _frameDuration
     }
@@ -596,6 +603,98 @@ open class BasicPlayerModel(
     }
 
     // endregion
+
+    // region Frame Step
+
+    /**
+     * 指定位置にシークして、そのフレームが描画されるのを待つ
+     */
+    private suspend fun ExoPlayer.seekAndAwaitFrame(pos: Long, seekParams: SeekParameters= SeekParameters.EXACT) {
+        return suspendCancellableCoroutine { cont ->
+            val l = object : Player.Listener {
+                override fun onRenderedFirstFrame() {
+                    removeListener(this)
+                    logger.debug {"frame-step: sought at ${formatTimeMs(currentPosition, duration)}" }
+                    if (cont.isActive) cont.resume(Unit)
+                }
+            }
+            addListener(l)
+            cont.invokeOnCancellation {
+                removeListener(l)
+                logger.debug("frame-step: canceled")
+            }
+            logger.debug{"frame-step: seeking to ${formatTimeMs(pos,duration)}"}
+            setSeekParameters(seekParams)
+            seekTo(pos)
+        }
+    }
+
+    private var frameStepJob: Job? = null
+    private var playingOnStartingFrameStep = false
+
+    /**
+     * コマ送りの開始
+     * @param forward   true:進む / false:戻る
+     * @param stepMs    コマ送りのシーク時間(ms) / 0: 最小単位(frameDuration) / <0: キーフレームへシーク
+     */
+    override fun startFrameStepping(forward:Boolean, stepMs: Long, intervalMs: Long) {
+        frameStepJob?.cancel()
+        frameStepJob = scope.launch {
+            playingOnStartingFrameStep = isPlaying.value
+            runOnPlayer { playWhenReady = false }
+            while (isActive) {
+                val player = player ?: break
+                val current = player.currentPosition
+                val sign = if (forward) 1L else -1L
+                var seekParams = SeekParameters.EXACT
+                val offset = if (stepMs < 0) {
+                    // NEXT_SYNC/PREVIOUS_SYNCで、フレーム単位（最小単位）でのシークができるかと期待したが、
+                    // 動かしてみると１秒程度シークしてしまう。
+                    if (forward) {
+                        seekParams = SeekParameters.NEXT_SYNC
+                    } else {
+                        seekParams = SeekParameters.PREVIOUS_SYNC
+                    }
+                    sign
+                } else if (stepMs == 0L) {
+                    frameDuration * sign
+                } else {
+                    stepMs * sign
+                }
+                val next = clipPosition( current+offset, currentSource.value?.trimming)
+                if (next == current) break
+                logger.debug {"frame-step: seek from $current to $next"}
+
+                val tick = System.currentTimeMillis()
+                // 描画されない場合の保険にタイムアウトを付ける
+                withTimeoutOrNull(5000.milliseconds) {
+                    player.seekAndAwaitFrame(next, seekParams)
+                }
+                // スライダーを合わせる
+                val after = player.currentPosition
+                playerSeekPosition.mutable.value = after
+                logger.debug {"frame-step: actual sought from $current to $after (${after-current} ms)"}
+
+                // シークに要した時間を差し引いて、インターバルの残りがあればを待つ。
+                val consumption = System.currentTimeMillis() - tick
+                logger.debug { "frame-step: seek-consumption: $consumption ms" }
+                val remain = intervalMs - consumption
+                if (remain > 0L) {
+                    logger.debug { "frame-step: delay $remain ms" }
+                    delay(remain.milliseconds)
+                }
+            }
+        }
+    }
+
+    override fun stopFrameStepping() {
+        frameStepJob?.cancel();
+        frameStepJob = null
+        if (playingOnStartingFrameStep) {
+            playingOnStartingFrameStep = false
+            runOnPlayer { playWhenReady = true }
+        }
+    }
 
     // region ExoPlayer Video Player
 
