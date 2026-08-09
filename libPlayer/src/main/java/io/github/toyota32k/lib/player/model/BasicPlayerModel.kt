@@ -661,19 +661,22 @@ open class BasicPlayerModel(
                 } else {
                     stepMs * sign
                 }
-                val next = clipPosition( current+offset, currentSource.value?.trimming)
+                val next = clipPosition(current + offset, currentSource.value?.trimming)
                 if (next == current) break
-                logger.debug {"frame-step: seek from $current to $next"}
+                logger.debug { "frame-step: seek from $current to $next" }
 
                 val tick = System.currentTimeMillis()
                 // 描画されない場合の保険にタイムアウトを付ける
-                withTimeoutOrNull(5000.milliseconds) {
-                    player.seekAndAwaitFrame(next, seekParams)
+                try {
+                    withTimeoutOrNull(5000.milliseconds) {
+                        player.seekAndAwaitFrame(next, seekParams)
+                    }
+                } finally {
+                    // スライダーを合わせる
+                    val after = player.currentPosition
+                    playerSeekPosition.mutable.value = after
+                    logger.debug {"frame-step: actual sought from $current to $after (${after-current} ms)"}
                 }
-                // スライダーを合わせる
-                val after = player.currentPosition
-                playerSeekPosition.mutable.value = after
-                logger.debug {"frame-step: actual sought from $current to $after (${after-current} ms)"}
 
                 // シークに要した時間を差し引いて、インターバルの残りがあればを待つ。
                 val consumption = System.currentTimeMillis() - tick
