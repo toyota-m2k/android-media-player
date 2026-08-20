@@ -30,6 +30,7 @@ import io.github.toyota32k.lib.player.model.chapterAt
 import io.github.toyota32k.lib.player.model.skipChapter
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.logger.UtLogConfig
+import io.github.toyota32k.utils.UtLib
 import io.github.toyota32k.utils.android.RefBitmap
 import io.github.toyota32k.utils.gesture.UtGestureInterpreter
 import io.github.toyota32k.utils.gesture.UtManipulationAgent
@@ -159,6 +160,7 @@ class MainActivity : UtMortalActivity(), IUtActivityBrokerStoreProvider {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         UtLogConfig.logLevel = Log.DEBUG
+        UtLib.initialize(applicationContext)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         controls = ActivityMainBinding.inflate(layoutInflater)
