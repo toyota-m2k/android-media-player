@@ -8,7 +8,6 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
-import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -19,8 +18,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
-import androidx.savedstate.SavedState
-import androidx.savedstate.savedState
 import io.github.toyota32k.binder.BaseBinding
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.BindingMode
@@ -30,10 +27,8 @@ import io.github.toyota32k.lib.player.model.IChapterList
 import io.github.toyota32k.lib.player.model.IMutableChapterList
 import io.github.toyota32k.lib.player.model.Range
 import io.github.toyota32k.utils.IDisposable
-import io.github.toyota32k.utils.android.IDimension
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.dp
-import io.github.toyota32k.utils.android.dp2px
 import io.github.toyota32k.utils.android.lifecycleOwner
 import io.github.toyota32k.utils.android.px
 import io.github.toyota32k.utils.lifecycle.LifecycleDisposer
@@ -41,6 +36,7 @@ import io.github.toyota32k.utils.lifecycle.asMutableLiveData
 import io.github.toyota32k.utils.lifecycle.disposableObserve
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -51,16 +47,14 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         val logger get() = TpLib.logger
         const val DEF_RAIL_HEIGHT = 4
         const val DEF_ENABLED_RANGE_HEIGHT = 12
-        const val DEF_MARKER_TICK_HEIGHT = DEF_ENABLED_RANGE_HEIGHT
         const val DEF_MARKER_TICK_WIDTH = 1
         const val DEF_MARKER_ICON_HEIGHT = 10
         const val DEF_MARKER_ICON_WIDTH = 5
-        const val DEF_THUMB_HEIGHT = DEF_ENABLED_RANGE_HEIGHT + 4
-        const val DEF_THUMB_WIDTH = 2
-        const val DEF_UNDER_THUMB_WIDTH = 4
         const val DEF_RAIL_MARGIN_START = 5
         const val DEF_RAIL_MARGIN_END = 5
     }
+
+
     // region Slider Values
     private var onValueChanged: ((Long)->Unit)? = null
     private var onValueChangedByUser: ((Long)->Unit)? = null
@@ -126,7 +120,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     val startPosition:Long get() = mPlayRange?.start ?: 0L
     val endPosition:Long get() = mPlayRange?.end ?: mDuration
     private val playLength:Long get() = endPosition - startPosition
-    private var mPlayRange:Range? = null
+    private var mPlayRange: Range? = null
 //    val range:Range get() = mPlayRange ?: Range.empty
 
     private fun clampPosition(position: Long):Long {
@@ -169,9 +163,9 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
      * （チャプター編集中に）IChapterListの中味が変化した場合に呼び出す。
      */
     private fun updateChapters(redraw:Boolean=true) {
-        markerPartsInfo.setMarkers(chapterList)
-        enabledChapterInfo.setRanges(chapterList?.enabledRanges() ?: emptyList())
-        disabledChapterInfo.setRanges(chapterList?.disabledRanges() ?: emptyList())
+        (markerPartsInfo as? MarkerPartsInfo)?.setChapterList(chapterList)
+        (enabledChapterInfo as? ChapterPartsInfo)?.setRanges(chapterList?.enabledRanges() ?: emptyList())
+        (disabledChapterInfo as? ChapterPartsInfo)?.setRanges(chapterList?.disabledRanges() ?: emptyList())
         if(redraw) {
             invalidate()
         }
@@ -200,18 +194,67 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         val isValid:Boolean get() = height > 0
         val hasOffset:Boolean get() = verticalOffset != Int.MIN_VALUE
-
         fun draw(canvas: Canvas)
     }
-    private val allParts get() = listOf(thumbPartsInfo, markerPartsInfo, railRightInfo, railLeftInfo, enabledChapterInfo, disabledChapterInfo, markerTickPartsInfo)
+    interface IIconPartsInfo: IPartsInfo {
+        val width: Int
+        val horizontalCenter: Int
+    }
+
+    private object EmptyPart : IIconPartsInfo {
+        override val description: String = "empty"
+        override val verticalOffset: Int = 0
+        override val height: Int = 0
+        override val zOrder: Int = 0
+        override val width: Int = 0
+        override val horizontalCenter: Int = 0
+        override fun draw(canvas: Canvas) {
+        }
+    }
+
+    private enum class Parts(val zOrder:Int) {
+        RailLeft(20),
+        RailRight(30),
+        EnabledChapter(10),
+        DisabledChapter(40),
+        Marker(50),
+
+        MarkerTick(1000),
+        UnderThumbOuter(1100),
+        UnderThumbInner(1200),
+        Thumb(2000),
+    }
+
+    private val allParts get() = listOf(thumbPartsInfo, underThumbOuterInfo, underThumbInnerInfo, markerPartsInfo, railRightInfo, railLeftInfo, enabledChapterInfo, disabledChapterInfo, markerTickPartsInfo)
+    private val railParts get() = listOf(railRightInfo, railLeftInfo, enabledChapterInfo, disabledChapterInfo)
     private var drawingParts:List<IPartsInfo> = emptyList()
     private fun updateDrawableParts() {
         drawingParts = allParts.filter { it.isValid }.sortedBy { it.zOrder }
     }
+    data class VerticalPosition(var offset:Int, var height:Int)
+    private fun getOutlinePosition(parts:List<IPartsInfo>):VerticalPosition {
+        return parts.fold(VerticalPosition(Int.MAX_VALUE,0)) { acc, p ->
+            acc.apply {
+                offset = min(offset, p.verticalOffset)
+                height = max(height, offset+p.height)
+            }
+        }.apply {
+            height -= offset
+        }
+
+    }
+    private var mRailBaseHeight: Int = 0 // px
+    private var mRailBasePaint: Paint? = null
+
+    private var mRailOutline: VerticalPosition? = null
+    private fun railOutlinePosition():VerticalPosition {
+        return mRailOutline ?: getOutlinePosition(railParts).apply { mRailOutline = this }
+    }
+
     // endregion
 
     // region Icon Parts
-    abstract inner class IconPartsInfo(val drawable:Drawable?, override val verticalOffset:Int, val width:Int, override val height:Int, val horizontalCenter: Int) : IPartsInfo {
+    abstract inner class IconPartsInfo(val drawable:Drawable?, override val verticalOffset:Int, override val width:Int, override val height:Int, override val horizontalCenter: Int) : IIconPartsInfo {
         private val top:Int get() =  sliderTop + upperHeight + verticalOffset
         protected fun drawAt(canvas:Canvas, p:Long) {
             if(drawable!=null) {
@@ -225,66 +268,75 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     /**
      * Thumb アイコン
      */
-    inner class ThumbPartsInfo(drawable:Drawable?, verticalOffset:Int, width:Int, height:Int, horizontalCenter: Int, private val underThumbInfo:ThumbPartsInfo?=null): IconPartsInfo(drawable, verticalOffset, width, height, horizontalCenter) {
+    inner class ThumbPartsInfo(
+        drawable:Drawable?, verticalOffset:Int, width:Int, height:Int, horizontalCenter: Int, override val zOrder: Int): IconPartsInfo(drawable, verticalOffset, width, height, horizontalCenter) {
         override val description: String = "Thumb"
-        override val zOrder: Int = Int.MAX_VALUE
+
         override fun draw(canvas: Canvas) {
-            underThumbInfo?.draw(canvas)
             drawAt(canvas, position)
         }
     }
-    private var thumbPartsInfo:ThumbPartsInfo = ThumbPartsInfo(null,0,0,0,0, null)
-    private fun getDefaultThumbDrawable(context:Context):Drawable = AppCompatResources.getDrawable(context, R.drawable.ic_player_slider_thumb)!!
+    private var thumbPartsInfo:IIconPartsInfo = EmptyPart
+//    private fun getDefaultThumbDrawable(context:Context):Drawable = AppCompatResources.getDrawable(context, R.drawable.ic_player_slider_thumb)!!
 
-    private fun setUnderThumbAttrs(sar: StyledAttrRetriever, useCustomIcon:Boolean) :ThumbPartsInfo? {
-        val drawable:Drawable
-        val width: IDimension
-        val height: IDimension
-        if(!useCustomIcon) {
-            drawable = getDefaultThumbDrawable(context)
-            width = context.dp2px(DEF_UNDER_THUMB_WIDTH).px
-            height = context.dp2px(DEF_THUMB_HEIGHT).px
+
+    private var underThumbOuterInfo: IPartsInfo = EmptyPart
+    private var underThumbInnerInfo: IPartsInfo = EmptyPart
+
+    private fun setThumbAttrs(sar: StyledAttrRetriever) {
+        val drawable = sar.getDrawable(R.styleable.ControlPanel_ampThumbIcon)
+        thumbPartsInfo = if (drawable!=null) {
+            val w = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbIconWidth, drawable.intrinsicWidth.px)
+            val h = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbIconHeight, drawable.intrinsicHeight.px)
+            val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbVerticalOffset, (-h).px)
+            val horizontalCenter = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbHorizontalCenter, (w/2).px)
+            val tintColor = sar.sa.getColor(R.styleable.ControlPanel_ampThumbTintColor, 0)
+            if(tintColor != 0) {
+                drawable.setTint(tintColor)
+            }
+            ThumbPartsInfo(drawable, verticalOffset, w, h, horizontalCenter, Parts.Thumb.zOrder)
         } else {
-            drawable = sar.getDrawable(R.styleable.ControlPanel_ampUnderThumbIcon) ?:return null
-            width = drawable.intrinsicWidth.px
-            height = drawable.intrinsicHeight.px
+            ThumbPartsInfo(null, 0, 0,0, 0, Parts.Thumb.zOrder)
         }
-        val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbVerticalOffset, -height/2)
-        val w = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampUnderThumbIconWidth, width)
-        val h = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampUnderThumbIconHeight, height)
-        val horizontalCenter = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampUnderThumbHorizontalCenter, width/2)
-        val tintColor = sar.getColor(R.styleable.ControlPanel_ampUnderThumbTintColor, com.google.android.material.R.attr.colorSurface, 0xFF000000.toInt())
-        if(tintColor != 0) {
-            drawable.setTint(tintColor)
+        val railOutline = railOutlinePosition()
+        val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampUnderThumbVerticalOffset, railOutline.offset.px)
+        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampUnderThumbHeight, railOutline.height.px)
+        val widthOuter = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampUnderThumbOuterWidth, 3.dp)
+        val widthInner = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampUnderThumbInnerWidth, 1.dp)
+        val colorInner = sar.getColor(R.styleable.ControlPanel_ampUnderThumbInnerColor, com.google.android.material.R.attr.colorPrimaryFixed, 0xFF000000.toInt())
+        val colorOuter = sar.getColor(R.styleable.ControlPanel_ampUnderThumbOuterColor, com.google.android.material.R.attr.colorSurface, 0xFFFFFFFF.toInt())
+
+        underThumbOuterInfo =if (widthOuter>0) {
+            UnderThumbPartsInfo(colorOuter, widthOuter, height, verticalOffset, Parts.UnderThumbOuter.zOrder)
+        } else {
+            EmptyPart
         }
-        return ThumbPartsInfo(drawable, verticalOffset, w, h, horizontalCenter)
+        underThumbInnerInfo = if (widthInner>0) {
+            UnderThumbPartsInfo(colorInner, widthInner, height, verticalOffset, Parts.UnderThumbInner.zOrder)
+        } else {
+            EmptyPart
+        }
     }
 
-    private fun setThumbAttrs(sar: StyledAttrRetriever) :ThumbPartsInfo {
-        val customIcon = sar.getDrawable(R.styleable.ControlPanel_ampThumbIcon)
-        val drawable = customIcon ?: getDefaultThumbDrawable(context)
-        val width: IDimension
-        val height: IDimension
-        if(customIcon==null) {
-            // アイコンが指定されていなければ、デフォルト値を使用
-            width = context.dp2px(DEF_THUMB_WIDTH).px
-            height = context.dp2px(DEF_THUMB_HEIGHT).px
-        } else {
-            width = drawable.intrinsicWidth.px
-            height = drawable.intrinsicHeight.px
+    /**
+     * UnderThumb Line
+     */
+    inner class UnderThumbPartsInfo(
+        @ColorInt color: Int,
+        val width: Int,
+        height:Int,
+        verticalOffset:Int,
+        zOrder:Int) : RangePartsInfo("UnderThumb($width)", color,height,verticalOffset,zOrder) {
+        override val drawRailBaseIfNeed: Boolean = false
+        override fun draw(canvas: Canvas) {
+            val d = width/2
+            val sx = positionToX(position) - d
+            val ex = sx + width
+            val y = yCenter
+            canvas.drawLine(sx,y,ex,y,paint)
         }
-        val w = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbIconWidth, width)
-        val h = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbIconHeight, height)
-        val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbVerticalOffset, -height/2)
-        val horizontalCenter = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampThumbHorizontalCenter, width/2)
-        val tintColor = sar.getColor(R.styleable.ControlPanel_ampThumbTintColor, com.google.android.material.R.attr.colorTertiaryFixed, androidx.appcompat.R.attr.colorAccent, 0xFF00FFFF.toInt())
-
-        if(tintColor != 0) {
-            drawable.setTint(tintColor)
-        }
-        val underThumb = setUnderThumbAttrs(sar,  customIcon!=null)
-        return ThumbPartsInfo(drawable, verticalOffset, w, h, horizontalCenter, underThumb).apply { thumbPartsInfo = this }
     }
+
 
     /**
      * Marker Icon
@@ -293,10 +345,11 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         override val description: String = "Marker"
 
         var markers:List<Long> = emptyList()
+            private set
         override val isValid: Boolean
             get() = height>0 && showChapterBar
 
-        fun setMarkers(chapterList: IChapterList?) {
+        fun setChapterList(chapterList: IChapterList?) {
             markers = chapterList?.chapters?.drop(1)?.map { it.position } ?: emptyList()
         }
 
@@ -306,34 +359,27 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             }
         }
     }
-    var markerPartsInfo: MarkerPartsInfo = MarkerPartsInfo(null, 0, 0, 0, 0, 0)
+    var markerPartsInfo: IIconPartsInfo = EmptyPart
     private fun getDefaultMarkerDrawable(context:Context):Drawable = AppCompatResources.getDrawable(context, R.drawable.ic_player_slider_marker)!!
-    private fun setMarkerAttrs(sar:StyledAttrRetriever) :MarkerPartsInfo {
+    private fun setMarkerAttrs(sar:StyledAttrRetriever) {
         val customIcon = sar.getDrawable(R.styleable.ControlPanel_ampMarkerIcon)
-        val drawable = customIcon ?: getDefaultMarkerDrawable(context)
-        val width: IDimension
-        val height: IDimension
-        var zOrder:Int
-        if(customIcon==null) {
-            // アイコンが指定されていなければ、デフォルト値を使用
-            width = context.dp2px(DEF_MARKER_ICON_WIDTH).px
-            height = context.dp2px(DEF_MARKER_ICON_HEIGHT).px
-            zOrder = 3
+        val drawable = customIcon ?: if (sar.sa.getBoolean(R.styleable.ControlPanel_ampMarkerUseDefaultIcon, true)) getDefaultMarkerDrawable(context) else null
+        markerPartsInfo = if (drawable == null) {
+            // markerを描画しない
+            MarkerPartsInfo(null, 0, 0, 0, 0, 0)
         } else {
-            width = drawable.intrinsicWidth.px
-            height = drawable.intrinsicHeight.px
-            zOrder = Int.MAX_VALUE
+            val outlineRail = railOutlinePosition()
+            val w = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerIconWidth, DEF_MARKER_ICON_WIDTH.dp)
+            val h = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerIconHeight, DEF_MARKER_ICON_HEIGHT.dp)
+            val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerVerticalOffset, (outlineRail.offset + outlineRail.height).px)
+            val horizontalCenter = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerHorizontalCenter, (w / 2).px)
+            val tintColor = sar.getColor(R.styleable.ControlPanel_ampMarkerTintColor, com.google.android.material.R.attr.colorOnSurfaceVariant, 0xFF000000.toInt())
+            val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampMarkerZOrder, Parts.Marker.zOrder)
+            if (tintColor != 0) {
+                drawable.setTint(tintColor)
+            }
+            MarkerPartsInfo(drawable, verticalOffset, w, h, horizontalCenter, zOrder)
         }
-        val w = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerIconWidth, width)
-        val h = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerIconHeight, height)
-        val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerVerticalOffset, (context.dp2px(DEF_ENABLED_RANGE_HEIGHT)/2).px)
-        val horizontalCenter = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampMarkerHorizontalCenter, width/2)
-        val tintColor = sar.getColor(R.styleable.ControlPanel_ampMarkerTintColor, com.google.android.material.R.attr.colorOnSurfaceVariant, 0xFF000000.toInt())
-        zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampMarkerZOrder, zOrder)
-        if(tintColor != 0) {
-            drawable.setTint(tintColor)
-        }
-        return MarkerPartsInfo(drawable, verticalOffset, w, h, horizontalCenter, zOrder).apply { markerPartsInfo = this }
     }
 
     // endregion
@@ -350,7 +396,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     abstract inner class RangePartsInfo(override val description: String, val paint: Paint, final override val height:Int, override val verticalOffset:Int, override val zOrder:Int) : IPartsInfo {
         constructor(description:String, @ColorInt color:Int, height:Int, verticalOffset:Int, zOrder:Int) : this(description, paintOfColor(color), height, verticalOffset, zOrder)
-
+        protected open val drawRailBaseIfNeed:Boolean = true
         init {
             paint.strokeWidth = height.toFloat()
         }
@@ -363,6 +409,15 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
             val ex = positionToX(clampPosition(end))
             val sx = positionToX(clampPosition(start))
+
+            if (drawRailBaseIfNeed && (verticalOffset>-(mRailBaseHeight/2) || verticalOffset+height>mRailBaseHeight/2)) {
+                val basePaint = mRailBasePaint
+                if (basePaint!=null) {
+                    val y = (sliderTop + upperHeight).toFloat()
+                    canvas.drawLine(sx, y, ex, y, basePaint)
+                }
+            }
+
             val y = yCenter
             paint.alpha = if(isEnabled) 0xFF else 0x90
             paint.colorFilter =  if (isEnabled) null else ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
@@ -379,13 +434,13 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             drawRange(canvas, position, endPosition)
         }
     }
-    var railRightInfo:RailRightInfo = RailRightInfo(0,0,0,0)
+    var railRightInfo:IPartsInfo = EmptyPart
 
     private fun setRailRightAttrs(sar: StyledAttrRetriever) :RailRightInfo {
         val color = sar.getColor(R.styleable.ControlPanel_ampRailRightColor, com.google.android.material.R.attr.colorOnPrimaryFixedVariant, com.google.android.material.R.attr.colorPrimaryVariant, Color.DKGRAY)
-        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailRightHeight,DEF_RAIL_HEIGHT.dp)
+        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailRightHeight,mRailBaseHeight.px)
         val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailRightVerticalOffset,(-DEF_RAIL_HEIGHT / 2).dp)
-        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRailRightZOrder, 1)
+        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRailRightZOrder, Parts.RailRight.zOrder)
         return RailRightInfo(color,height,verticalOffset,zOrder).apply { railRightInfo = this }
     }
 
@@ -399,13 +454,13 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             drawRange(canvas, 0, position)
         }
     }
-    var railLeftInfo:RailLeftInfo = RailLeftInfo(0,0,0,0)
+    var railLeftInfo:IPartsInfo = EmptyPart
 
     private fun setRailLeftAttrs(sar:StyledAttrRetriever) :RailLeftInfo {
         val color = sar.getColor(R.styleable.ControlPanel_ampRailLeftColor, com.google.android.material.R.attr.colorPrimaryFixed, androidx.appcompat.R.attr.colorPrimary, Color.BLUE)
-        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailLeftHeight, DEF_RAIL_HEIGHT.dp)
+        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailLeftHeight, mRailBaseHeight.px)
         val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailLeftVerticalOffset, (-DEF_RAIL_HEIGHT/2).dp)
-        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRailLeftZOrder, 1)
+        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRailLeftZOrder, Parts.RailLeft.zOrder)
         return RailLeftInfo(color,height,verticalOffset,zOrder).apply { railLeftInfo = this }
     }
 
@@ -415,7 +470,8 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         @ColorInt color: Int,
         height:Int,
         verticalOffset:Int,
-        zOrder:Int
+        zOrder:Int,
+        override val drawRailBaseIfNeed: Boolean,
     ) : RangePartsInfo(description, color,height,verticalOffset,zOrder) {
         private var ranges:List<Range> = emptyList()
         override val isValid: Boolean
@@ -432,23 +488,23 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
     }
 
-    var disabledChapterInfo:ChapterPartsInfo = ChapterPartsInfo("DisabledChapters",0,0,0,0)
-    var enabledChapterInfo:ChapterPartsInfo = ChapterPartsInfo("EnabledChapters",0,0,0,0)
+    var disabledChapterInfo:IPartsInfo = EmptyPart
+    var enabledChapterInfo:IPartsInfo = EmptyPart
 
     private fun setEnabledChapterAttrs(sar: StyledAttrRetriever) :ChapterPartsInfo {
         val color = sar.getColor(R.styleable.ControlPanel_ampRangeEnabledColor,com.google.android.material.R.attr.colorSecondaryFixedDim, com.google.android.material.R.attr.colorSecondary, Color.GREEN)
         val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeEnabledHeight, DEF_ENABLED_RANGE_HEIGHT.dp)
         val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeEnabledVerticalOffset, (-DEF_ENABLED_RANGE_HEIGHT / 2).dp)
-        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRangeEnabledZOrder, 0)
-        return ChapterPartsInfo("EnabledChapters", color,height,verticalOffset,zOrder).apply { enabledChapterInfo = this }
+        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRangeEnabledZOrder, Parts.EnabledChapter.zOrder)
+        return ChapterPartsInfo("EnabledChapters", color,height,verticalOffset,zOrder, drawRailBaseIfNeed = false).apply { enabledChapterInfo = this }
     }
 
     private fun setDisabledChapterAttrs(sar: StyledAttrRetriever) :ChapterPartsInfo {
         val color = sar.getColor(R.styleable.ControlPanel_ampRangeDisabledColor,com.google.android.material.R.attr.colorOutline, 0xFF808080.toInt())
-        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeDisabledHeight,DEF_RAIL_HEIGHT.dp)
+        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeDisabledHeight, mRailBaseHeight.px)
         val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeDisabledVerticalOffset,(-DEF_RAIL_HEIGHT / 2).dp)
-        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRangeDisabledZOrder, 2)
-        return ChapterPartsInfo("DisabledChapters",color,height,verticalOffset,zOrder).apply { disabledChapterInfo = this }
+        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRangeDisabledZOrder, Parts.DisabledChapter.zOrder)
+        return ChapterPartsInfo("DisabledChapters",color,height,verticalOffset,zOrder, drawRailBaseIfNeed = true).apply { disabledChapterInfo = this }
     }
 
     inner class MarkerTickPartsInfo(
@@ -457,13 +513,14 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         height:Int,
         verticalOffset:Int,
         zOrder:Int) : RangePartsInfo("MarkerTick", color,height,verticalOffset,zOrder) {
-
+        override val drawRailBaseIfNeed: Boolean = false
         override val isValid: Boolean
             get() = height>0 && showChapterBar
 
         override fun draw(canvas: Canvas) {
+            val markerParts = markerPartsInfo as? MarkerPartsInfo ?: return
             val d = width/2
-            for(p in markerPartsInfo.markers) {
+            for(p in markerParts.markers) {
                 val sx = positionToX(p) - d
                 val ex = sx + width
                 val y = yCenter
@@ -471,33 +528,38 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             }
         }
     }
-    var markerTickPartsInfo:MarkerTickPartsInfo = MarkerTickPartsInfo(0,0,0,0,0)
+    var markerTickPartsInfo:IPartsInfo = EmptyPart
 
     private fun setMarkerTickAttrs(sar: StyledAttrRetriever):MarkerTickPartsInfo {
+        val railOutline = railOutlinePosition()
         val color = sar.getColor(R.styleable.ControlPanel_ampRangeTickColor, com.google.android.material.R.attr.colorOutline, Color.BLACK)
         val width = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeTickWidth, DEF_MARKER_TICK_WIDTH.dp)
-        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeTickHeight, DEF_MARKER_TICK_HEIGHT.dp)
-        val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeTickVerticalOffset, (-DEF_ENABLED_RANGE_HEIGHT / 2).dp)
-        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRangeTickZOrder, 4)
+        val height = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeTickHeight, railOutline.height.px)
+        val verticalOffset = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRangeTickVerticalOffset, railOutline.offset.px)
+        val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRangeTickZOrder, Parts.MarkerTick.zOrder)
         return MarkerTickPartsInfo(color,width,height,verticalOffset,zOrder).apply { markerTickPartsInfo = this }
     }
 
     // endregion
     fun setPlayerSliderAttributes(sar: StyledAttrRetriever, reLayout:Boolean=true) {
         if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
-            setThumbAttrs(sar)
-            setMarkerAttrs(sar)
+            mRailOutline = null // 要再計算
+            mRailBaseHeight = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailBaseHeight, DEF_RAIL_HEIGHT.dp)
+            mRailBasePaint = paintOfColor(sar.sa.getColor(R.styleable.ControlPanel_ampRailBaseColor, Color.TRANSPARENT)).apply { strokeWidth = mRailBaseHeight.toFloat() }
             setRailLeftAttrs(sar)
             setRailRightAttrs(sar)
             setEnabledChapterAttrs(sar)
             setDisabledChapterAttrs(sar)
+            setThumbAttrs(sar)
+            setMarkerAttrs(sar)
             setMarkerTickAttrs(sar)
             showChapterBar = sar.sa.getBoolean(R.styleable.ControlPanel_ampShowChapterBar, true)
             updateDrawableParts()
             staticMarginLeft = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginStart, DEF_RAIL_MARGIN_START.dp)
             staticMarginRight = sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginEnd, DEF_RAIL_MARGIN_END.dp)
+            calcLayoutBasis()
             if(reLayout) {
-                calcLayoutBasis()
+                requestLayout()
             }
         }
     }
@@ -535,7 +597,6 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         leftMargin = maxOf(staticMarginLeft, thumbPartsInfo.horizontalCenter, markerPartsInfo.horizontalCenter).toFloat()
         rightMargin = maxOf(staticMarginRight, thumbPartsInfo.width-thumbPartsInfo.horizontalCenter, markerPartsInfo.width-markerPartsInfo.horizontalCenter).toFloat()
         horizontalMargin = leftMargin + rightMargin
-        requestLayout()
     }
 
 

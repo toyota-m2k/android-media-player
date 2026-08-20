@@ -721,6 +721,7 @@ open class BasicPlayerModel(
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             isVideoPlaying.value = playWhenReady
+            playerSeekPosition.mutable.value = currentPosition
         }
 
         override fun onPlaybackStateChanged(playbackState:Int) {

@@ -48,7 +48,7 @@ class ChapterHandlerImpl(
 //            chapterList.next(current)
 //        }
         val chapterList = playerModel.chapterList.value ?: return
-        val pos = chapterList.next(playerModel.currentPosition)?.position ?: (playerModel.naturalDuration.value - 500L)
+        val pos = chapterList.next(playerModel.currentPosition)?.position ?: (playerModel.naturalDuration.value)
         playerModel.seekTo(pos)
     }
 

@@ -76,16 +76,14 @@
         <attr name="ampThumbTintColor" format="color" />                    <!-- Thumbの色 -->
 
         <!--
-        スライダーサムの下に描画するシャドウ的なやつ。
-        ampThumbIcon に自前のアイコンをセットしている場合にのみ有効（それ以外は無視される）
-        ampUnderThumbTintColor:          色（デフォルト：colorSurface）
+        Rail上に表示する再生位置マーカーライン
         -->
-        <attr name="ampUnderThumbIcon" format="reference" />                <!-- ThumbのDrawable -->
-        <attr name="ampUnderThumbVerticalOffset" format="dimension" />      <!-- ベースラインに対するThumbの垂直方向オフセット -->
-        <attr name="ampUnderThumbIconWidth" format="dimension" />           <!-- Thumbの幅（無指定ならdrawableから取得） -->
-        <attr name="ampUnderThumbIconHeight" format="dimension" />          <!-- Thumbの高さ（無指定ならdrawableから取得） -->
-        <attr name="ampUnderThumbHorizontalCenter" format="dimension" />    <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
-        <attr name="ampUnderThumbTintColor" format="color" />               <!-- Thumbの色 -->
+        <attr name="ampUnderThumbVerticalOffset" format="dimension" />      <!-- ベースラインに対する垂直方向オフセット -->
+        <attr name="ampUnderThumbHeight" format="dimension" />              <!-- マーカーラインの高さ -->
+        <attr name="ampUnderThumbOuterWidth" format="dimension" />           <!-- 外側のラインの幅 (default: 1dp) -->
+        <attr name="ampUnderThumbOuterColor" format="color" />               <!-- 外側のラインの色 (default: white) -->
+        <attr name="ampUnderThumbInnerWidth" format="dimension" />           <!-- 内側のラインの幅 (default: 1dp)-->
+        <attr name="ampUnderThumbInnerColor" format="color" />               <!-- 内側のラインの色 (default: black)-->
 
 
         <!--
@@ -95,12 +93,21 @@
         ampMarkerZOrder: マーカーのzOrder（デフォルト: Int.MAX_VALUE）
         -->
         <attr name="ampMarkerIcon" format="reference" />                    <!-- MarkerのDrawable -->
+        <attr name="ampMarkerUseDefaultIcon" format="boolean"/>             <!-- ampMarkerIcon が nullの場合、デフォルトのアイコンを表示するか（default=true)-->
         <attr name="ampMarkerVerticalOffset" format="dimension" />          <!-- ベースラインに対するMarkerの垂直方向オフセット -->
         <attr name="ampMarkerIconWidth" format="dimension" />               <!-- Markerの幅（無指定ならdrawableから取得） -->
         <attr name="ampMarkerIconHeight" format="dimension" />              <!-- Markerの高さ（無指定ならdrawableから取得） -->
         <attr name="ampMarkerHorizontalCenter" format="dimension" />        <!-- Markerの左端から中央までの距離（無指定なら width/2） -->
         <attr name="ampMarkerTintColor" format="color" />                   <!-- Markerの色 -->
         <attr name="ampMarkerZOrder" format="integer"/>
+
+        <!--
+        レールの高さ（left/right/disabled共通）
+        ベースライン位置に、この高さを背景色で塗りつぶした後、
+        left/right/disabled の順（zOrderで変更は可能）に描画する。
+        -->
+        <attr name="ampRailBaseHeight" format="dimension" />
+        <attr name="ampRailBaseColor" format="color" />
 
         <!--
         レール：再生済み部分（サムの左）
@@ -119,7 +126,7 @@
         <attr name="ampRailRightColor" format="color" />                    <!-- Railの未再生部分の色 -->
         <attr name="ampRailRightHeight" format="dimension" />               <!-- Railの未再生部分の高さ -->
         <attr name="ampRailRightVerticalOffset" format="dimension" />       <!-- ベースラインに対するRailの未再生部分の垂直方向オフセット -->
-        <attr name="ampRailRightZOrder" format="dimension" />               <!-- Railの未再生部分のZOrder -->
+        <attr name="ampRailRightZOrder" format="integer" />               <!-- Railの未再生部分のZOrder -->
 
         <!--
         有効なチャプター範囲
