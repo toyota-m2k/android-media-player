@@ -1,11 +1,13 @@
 package io.github.toyota32k.lib.player.common
 
 import android.content.Context
+import io.github.toyota32k.utils.UtLib
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 class TpTempFile(val file: File) : AutoCloseable {
     constructor(context: Context, prefix:String, suffix:String):this(File.createTempFile(prefix, suffix, context.cacheDir))
+    constructor(prefix:String, suffix:String):this(UtLib.applicationContext, prefix, suffix)
 
     private var detached = AtomicBoolean(false)
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.net.Uri
 import io.github.toyota32k.lib.player.TpLib
+import io.github.toyota32k.utils.UtLib
 import java.io.FileDescriptor
 
 @Suppress("unused")
@@ -23,6 +24,8 @@ class TpAndroidUri(val uri:Uri):AutoCloseable {
         }
         return afd?.fileDescriptor
     }
+    fun open(mode:String="r") : FileDescriptor?
+        = open(UtLib.applicationContext, mode)
 
     /**
      * ファイルの長さ
@@ -54,4 +57,6 @@ class TpAndroidUri(val uri:Uri):AutoCloseable {
             }
         }
     }
+    fun getAsTempFile(prefix:String, suffix:String): TpTempFile?
+        = getAsTempFile(UtLib.applicationContext, prefix, suffix)
 }

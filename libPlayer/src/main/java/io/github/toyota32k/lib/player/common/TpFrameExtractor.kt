@@ -14,6 +14,7 @@ import java.util.*
 import kotlin.math.min
 import kotlin.math.roundToInt
 import androidx.core.net.toUri
+import io.github.toyota32k.utils.UtLib
 
 class TpFrameExtractor(val analyzer:MediaMetadataRetriever, val closeAnalyzer:Boolean = true) : AutoCloseable {
     companion object {
@@ -26,10 +27,14 @@ class TpFrameExtractor(val analyzer:MediaMetadataRetriever, val closeAnalyzer:Bo
                 }
             }
         }
+        fun mediaMetadataRetriever(url:String) : MediaMetadataRetriever
+            = mediaMetadataRetriever(UtLib.applicationContext, url)
 
-        fun     create(context:Context, url:String):TpFrameExtractor {
+        fun create(context:Context, url:String):TpFrameExtractor {
             return TpFrameExtractor(mediaMetadataRetriever(context, url))
         }
+        fun create(url:String):TpFrameExtractor
+            = create(UtLib.applicationContext, url)
     }
 
     data class BasicProperties(

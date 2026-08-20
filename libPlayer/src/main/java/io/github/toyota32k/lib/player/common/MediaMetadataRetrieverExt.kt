@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import java.util.*
+import androidx.core.graphics.scale
 
 /**
  * ビットマップのサイズを変更する
@@ -15,7 +16,7 @@ private fun fitBitmapScale(src: Bitmap, width:Int, height:Int) : Bitmap {
     if(src.width==width && src.height==height) {
         return src
     }
-    val bmp = Bitmap.createScaledBitmap(src, width, height, true)
+    val bmp = src.scale(width, height)
     src.recycle()
     return bmp
 }

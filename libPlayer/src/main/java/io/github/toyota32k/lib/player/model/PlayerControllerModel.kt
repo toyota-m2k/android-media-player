@@ -24,6 +24,7 @@ import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.common.formatTimeMs
 import io.github.toyota32k.logger.UtLog
 import io.github.toyota32k.utils.IUtPropOwner
+import io.github.toyota32k.utils.UtLib
 import io.github.toyota32k.utils.android.RefBitmap
 import io.github.toyota32k.utils.android.RefBitmap.Companion.toRef
 import kotlinx.coroutines.CoroutineScope
@@ -109,7 +110,9 @@ open class PlayerControllerModel(
         FRAME_EXTRACTOR(R.string.snapshot_extract_frame),
     }
 
-    class Builder(val context:Context, private val coroutineScope: CoroutineScope) {
+    class Builder(val coroutineScope: CoroutineScope) {
+        constructor(context: Context, coroutineScope: CoroutineScope) : this(coroutineScope) { mContext = context }
+        private var mContext:Context? = null
         private var mSupportChapter:Boolean = false
         private var mPlaylist:IMediaFeed? = null
         private var mAutoPlay:Boolean = false
@@ -137,6 +140,11 @@ open class PlayerControllerModel(
         private var mMagnifySliderHandler:(suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?)? = null
         private var mDataSourceFactory: DataSource.Factory? = null  // for ExoPlayer
         private var mOkHttpClient: OkHttpClient? = null // for Glide
+
+        fun applicationContext(context:Context): Builder {
+            mContext = context
+            return this
+        }
 
         fun supportChapter(hideChapterViewIfEmpty:Boolean=false):Builder {
             mSupportChapter = true
@@ -282,9 +290,10 @@ open class PlayerControllerModel(
 
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
+            val context = mContext?.applicationContext ?: UtLib.applicationContext
             mOkHttpClient?.apply {
                 // Glide.get().registry を使って、OkHttpUrlLoader を動的に登録
-                Glide.get(context.applicationContext).registry.replace(
+                Glide.get(context).registry.replace(
                     GlideUrl::class.java,
                     InputStream::class.java,
                     OkHttpUrlLoader.Factory(this)
