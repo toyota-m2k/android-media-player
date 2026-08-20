@@ -107,6 +107,12 @@
         left/right/disabled の順（zOrderで変更は可能）に描画する。
         -->
         <attr name="ampRailBaseHeight" format="dimension" />
+        <!--
+        Disabled Range のように、RailBase より細いレールを描く場合、ampRailBaseColorで塗りつぶしてから、各レールを描画する。
+        指定しない場合は、TRANSPARENTで塗りつぶすが、Canvas#saveLayer() で前の描画を消すことになり、オーバーヘッドが大きいので、
+        可能なら、明示的に、ampRailBaseColor を設定することにより、このオーバーヘッドを回避できる。
+        とはいうものの、実際に使ってみた範囲では、特に遅いと感じることはなかったので、あまり気にしなくてもよいのかもしれない。
+        -->
         <attr name="ampRailBaseColor" format="color" />
 
         <!--
@@ -136,6 +142,7 @@
         <attr name="ampRangeEnabledHeight" format="dimension" />            <!-- 有効範囲の高さ -->
         <attr name="ampRangeEnabledVerticalOffset" format="dimension" />    <!-- ベースラインに対する有効範囲の垂直方向オフセット -->
         <attr name="ampRangeEnabledZOrder" format="integer" />              <!-- 有効範囲のZOrder -->
+        <attr name="ampRangeEnabledEraseRail" format="boolean" />
 
         <!--
         無効なチャプター範囲
@@ -145,6 +152,7 @@
         <attr name="ampRangeDisabledHeight" format="dimension" />           <!-- 無効範囲の高さ -->
         <attr name="ampRangeDisabledVerticalOffset" format="dimension" />   <!-- ベースラインに対する無効範囲の垂直方向オフセット -->
         <attr name="ampRangeDisabledZOrder" format="integer" />             <!-- 無効範囲のZOrder -->
+        <attr name="ampRangeDisabledEraseRail" format="boolean" />
 
         <attr name="ampRangeTickColor" format="color" />                    <!-- Tickの色 -->
         <attr name="ampRangeTickWidth" format="dimension" />                <!-- Tickの幅 -->
