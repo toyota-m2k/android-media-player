@@ -407,12 +407,13 @@ open class BasicPlayerModel(
                         addRef()
                     }
                     if (isPhotoSlideShowEnabled) {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            delay(photoSlideShowDuration)
-                            if (src == currentSource.value && isPhotoPlaying.value) {
-                                ended.value = true
-                            }
-                        }
+                        startSlideShow(src)
+//                        CoroutineScope(Dispatchers.Main).launch {
+//                            delay(photoSlideShowDuration)
+//                            if (src  == currentSource.value && isPhotoPlaying.value) {
+//                                ended.value = true
+//                            }
+//                        }
                     }
                     return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                 }
@@ -886,6 +887,30 @@ open class BasicPlayerModel(
         }
     }
 
+    private var slideShowJob: Job? = null
+    private fun startSlideShow(src: IMediaSource) {
+        if (isPhotoSlideShowEnabled) {
+            if (!src.isPhoto) return
+            slideShowJob?.cancel()
+            slideShowJob = null
+            isPhotoPlaying.value = true
+            slideShowJob = CoroutineScope(Dispatchers.Main).launch {
+                delay(photoSlideShowDuration)
+                if (src == currentSource.value && isPhotoPlaying.value) {
+                    ended.value = true
+                }
+            }
+        }
+    }
+    private fun stopSlideShow() {
+        if (isPhotoSlideShowEnabled) {
+            isPhotoPlaying.value = false
+            slideShowJob?.cancel()
+            slideShowJob = null
+        }
+    }
+
+
     /**
      * （再生中でなければ）再生を開始する
      */
@@ -898,8 +923,8 @@ open class BasicPlayerModel(
         if (!item.isPhoto) {
             isPhotoPlaying.value = false
             runOnPlayer { playWhenReady = true }
-        } else if (isPhotoSlideShowEnabled) {
-            isPhotoPlaying.value = true
+        } else {
+            startSlideShow(item)
         }
     }
 
@@ -909,6 +934,7 @@ open class BasicPlayerModel(
     override fun pause() {
         logger.debug()
         if(isDisposed) return
+        stopSlideShow()
         runOnPlayer { playWhenReady = false }
     }
 
