@@ -58,8 +58,6 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         const val DEF_MARKER_ICON_WIDTH = 5f
         const val DEF_RAIL_MARGIN_START = 5f
         const val DEF_RAIL_MARGIN_END = 5f
-
-        private const val GETA = 1e-5f  // float の丸め誤差を補正するため
     }
 
 
@@ -460,31 +458,6 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
             val ex = positionToX(clampPosition(end))
             val sx = positionToX(clampPosition(start))
-
-            if (description=="DisabledChapter") {
-//            if (drawRailBaseIfNeed && (verticalOffset>-(mRailBaseHeight/2f) || verticalOffset+height-GETA>mRailBaseHeight/2f)) {
-                // val basePaint = mRailBaseHeight
-                val basePaint = Paint().apply {
-                    style = Paint.Style.STROKE
-                    strokeWidth = mRailBaseHeight
-                    xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
-                }
-                if (basePaint!=null) {
-                    basePaint.strokeWidth = mRailBaseHeight
-                    if (true/*basePaint.xfermode!=null*/) {
-                        // 一旦オフスクリーンレイヤーに退避（重要）
-                        val top = getYTop(0f,mRailBaseHeight)
-//                        val layer = canvas.saveLayer(leftMargin, top, leftMargin+sliderRange, top+mRailBaseHeight, null)
-                        val layer = canvas.saveLayer(sx, top, ex, top+mRailBaseHeight, null)
-                        val y = getYCenter(0f)
-                        canvas.drawLine(sx, y, ex, y, basePaint)
-                        canvas.restoreToCount(layer)
-                    } else {
-                        val y = getYCenter(0f)
-                        canvas.drawLine(sx, y, ex, y, basePaint)
-                    }
-                }
-            }
 
             val y = yCenter
             paint.alpha = if(isEnabled) 0xFF else 0x90
