@@ -262,8 +262,10 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
     private fun getOutlinePosition(parts:List<IPartsInfo>):VerticalPosition {
         return parts.fold(VerticalPosition(Float.MAX_VALUE,0f)) { acc, p ->
             acc.apply {
-                top = min(top, p.verticalOffset-p.height/2)
-                bottom = max( bottom, p.verticalOffset+p.height/2)
+                if (p.isValid) {
+                    top = min(top, p.verticalOffset - p.height / 2)
+                    bottom = max(bottom, p.verticalOffset + p.height / 2)
+                }
             }
         }
     }
@@ -301,7 +303,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     // region Icon Parts
     abstract inner class IconPartsInfo(val drawable:Drawable?, override val verticalOffset: Float, override val width: Float, override val height: Float, override val horizontalCenter: Float) : IIconPartsInfo {
-        private val mTop:Float =  getYTop(verticalOffset,height)
+//        private val mTop:Float =  getYTop(verticalOffset,height)
         protected fun drawAt(canvas:Canvas, p:Long) {
             if(drawable!=null) {
                 val left = positionToX(p) - horizontalCenter
@@ -724,7 +726,12 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         viewHeight = h
         sliderRange = viewWidth - horizontalMargin
 //        sliderTop = (viewHeight - allOverHeight)/2f
-        upperMargin = (viewHeight - allOverOutline().height)/2f
+        val contentHeight = allOverOutline().height
+        upperMargin = if (contentHeight<viewHeight) {
+            (viewHeight - contentHeight)/2f
+        } else {
+            0f
+        }
     }
 
     private val canvasLayer = CanvasLayer()
