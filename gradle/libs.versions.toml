@@ -1,15 +1,15 @@
 [versions]
 #plugins
-agp = "9.3.1"
+agp = "9.3.2"
 kotlinSerialization ="2.4.10"
 
 #libraries
 
-androidLogger = "2.2.4"
-androidUtilities = "LOCAL"
-androidBinding = "LOCAL"
-androidViewex = "1.2.2"
-androidDialog = "7.2.2"     # for Sample
+androidLogger = "2.3.2"
+androidUtilities = "4.17.1"
+androidBinding = "1.16.1"
+androidViewex = "1.2.3"
+androidDialog = "7.3.0"     # for Sample
 coreKtx = "1.19.0"
 glide = "5.0.9"
 junit = "4.13.2"
