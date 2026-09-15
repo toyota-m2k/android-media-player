@@ -1,15 +1,15 @@
 [versions]
 #plugins
-agp = "9.3.2"
-kotlinSerialization ="2.4.10"
+agp = "9.4.0"
+kotlinSerialization ="2.4.20"
 
 #libraries
 
-androidLogger = "2.3.2"
-androidUtilities = "4.17.1"
-androidBinding = "1.16.1"
-androidViewex = "1.2.3"
-androidDialog = "7.3.0"     # for Sample
+androidLogger = "2.3.3"
+androidUtilities = "4.18.0"
+androidBinding = "1.16.2"
+androidViewex = "1.2.4"
+androidDialog = "7.3.1"     # for Sample
 coreKtx = "1.19.0"
 glide = "5.0.9"
 junit = "4.13.2"
@@ -20,7 +20,7 @@ kotlinxSerializationJson = "1.11.0"
 material = "1.14.0"
 activity = "1.13.0"
 constraintlayout = "2.2.2"
-media3ExoplayerVersion = "1.11.0"
+media3ExoplayerVersion = "1.11.1"
 okhttp = "5.5.0"
 
 [libraries]
