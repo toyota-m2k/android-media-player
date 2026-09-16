@@ -22,5 +22,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "android-media-player"
-include(":app")
 include(":libPlayer")
+if (System.getenv("JITPACK") == null) {
+    include(":app")
+}
