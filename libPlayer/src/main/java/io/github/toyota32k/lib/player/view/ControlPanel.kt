@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.PopupMenu
+import androidx.core.content.res.getColorOrThrow
 import androidx.core.view.children
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -65,39 +66,44 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
                 intArrayOf(buttonEnabled, buttonDisabled)
             )
         }
+
+        fun isAttrByParent(sar: StyledAttrRetriever):Boolean {
+            return sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, false)
+        }
     }
 
     val controls = V2ControlPanelBinding.inflate(LayoutInflater.from(context), this, true)
 
     fun setControlPanelAttributes(sar:StyledAttrRetriever) {
-        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
-            val panelBackground = sar.getDrawableWithAlphaOnFallback(
-                R.styleable.ControlPanel_ampPanelBackgroundColor,
-                com.google.android.material.R.attr.colorSurface,
-                def = Color.WHITE, alpha = 0x50
-            )
+        val panelBackground = sar.getDrawableWithAlphaOnFallback(
+            R.styleable.ControlPanel_ampPanelBackgroundColor,
+            com.google.android.material.R.attr.colorSurface,
+            def = Color.WHITE, alpha = 0x50
+        )
 
-            val buttonTint = createButtonColorStateList(sar)
-            val padding = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPadding, 0)
-            val paddingStart = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingStart, padding)
-            val paddingTop = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingTop, padding)
-            val paddingEnd = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingEnd, padding)
-            val paddingBottom = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingBottom, padding)
+        val buttonTint = createButtonColorStateList(sar)
+        val padding = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPadding, 0)
+        val paddingStart = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingStart, padding)
+        val paddingTop = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingTop, padding)
+        val paddingEnd = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingEnd, padding)
+        val paddingBottom = sar.sa.getDimensionPixelSize(R.styleable.ControlPanel_ampPanelPaddingBottom, padding)
 
-            controls.apply {
-                controlPanelRoot.background = panelBackground
-                controlPanelRoot.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
-                controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
-            }
-
-            controls.sliderPanel.setSliderPanelAttributes(sar)
+        controls.apply {
+            controlPanelRoot.background = panelBackground
+            controlPanelRoot.setPadding(paddingStart, paddingTop, paddingEnd, paddingBottom)
+            controlButtons.children.forEach { (it as? ImageButton)?.imageTintList = buttonTint }
         }
+
+        controls.sliderPanel.setSliderPanelAttributes(sar)
     }
 
 
     init {
         StyledAttrRetriever(context, attrs,R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
-            setControlPanelAttributes(sar)
+            if (!isAttrByParent(sar)) {
+                // 親の属性を継承しないときは、initのタイミングで属性を設定
+                setControlPanelAttributes(sar)
+            }
         }
     }
 

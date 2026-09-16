@@ -30,6 +30,7 @@ import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2VideoExoPlayerBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.model.VisibleAreaParams
+import io.github.toyota32k.lib.player.view.ControlPanel.Companion.isAttrByParent
 import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.android.FitMode
 import io.github.toyota32k.utils.android.StyledAttrRetriever
@@ -97,13 +98,11 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
     private val rootViewSize = MutableStateFlow<Size?>(null)
 
     fun setPlayerAttributes(sar: StyledAttrRetriever) {
-        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
-            controls.expPlayerRoot.background = sar.getDrawable(
-                R.styleable.ControlPanel_ampPlayerBackground,
-                com.google.android.material.R.attr.colorSurface,
-                Color.BLACK
-            )
-        }
+        controls.expPlayerRoot.background = sar.getDrawable(
+            R.styleable.ControlPanel_ampPlayerBackground,
+            com.google.android.material.R.attr.colorSurface,
+            Color.BLACK
+        )
         if (sar.sa.getBoolean(R.styleable.ControlPanel_ampPlayerCenteringVertically, false)) {
             val params = controls.expPlayerView.layoutParams as LayoutParams
             params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
@@ -122,7 +121,10 @@ class ExoPlayerHost @JvmOverloads constructor(context: Context, attrs: Attribute
 
     init {
         StyledAttrRetriever(context,attrs,R.styleable.ControlPanel,defStyleAttr,0).use { sar ->
-            setPlayerAttributes(sar)
+            if (!isAttrByParent(sar)) {
+                // 親の属性を継承しないときは、initのタイミングで属性を設定
+                setPlayerAttributes(sar)
+            }
         }
     }
 

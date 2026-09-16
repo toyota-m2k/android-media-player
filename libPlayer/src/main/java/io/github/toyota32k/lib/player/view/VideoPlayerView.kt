@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.core.content.res.getColorOrThrow
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.VisibilityBinding
 import io.github.toyota32k.binder.clickBinding
@@ -15,6 +16,7 @@ import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2PlayerViewBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.model.VisibleAreaParams
+import io.github.toyota32k.lib.player.view.ControlPanel.Companion.isAttrByParent
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.gesture.IUtManipulationTarget
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,19 +32,19 @@ class VideoPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
     val controls:V2PlayerViewBinding =
         V2PlayerViewBinding.inflate(LayoutInflater.from(context), this, true)
 
-    private fun setVideoPlayerViewAttributes(sar: StyledAttrRetriever) {
-        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
-            controls.player.setPlayerAttributes(sar)
-            controls.controller.setControlPanelAttributes(sar)
-        }
+    fun setVideoPlayerViewAttributes(sar: StyledAttrRetriever) {
+        controls.player.setPlayerAttributes(sar)
+        controls.controller.setControlPanelAttributes(sar)
     }
 
 
     init {
         StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
-            setVideoPlayerViewAttributes(sar)
+            if (!isAttrByParent(sar)) {
+                // 親の属性を継承しないときは、initのタイミングで属性を設定
+                setVideoPlayerViewAttributes(sar)
+            }
         }
-
     }
 
     private lateinit var model: PlayerControllerModel

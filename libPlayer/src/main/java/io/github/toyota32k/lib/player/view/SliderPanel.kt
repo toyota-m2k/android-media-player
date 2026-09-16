@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.core.content.res.getColorOrThrow
 import io.github.toyota32k.binder.Binder
 import io.github.toyota32k.binder.command.bindCommand
 import io.github.toyota32k.binder.enableBinding
@@ -17,6 +18,7 @@ import io.github.toyota32k.lib.player.common.formatTime
 import io.github.toyota32k.lib.player.common.setMargin
 import io.github.toyota32k.lib.player.databinding.V2SliderPanelBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
+import io.github.toyota32k.lib.player.view.ControlPanel.Companion.isAttrByParent
 import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_END
 import io.github.toyota32k.lib.player.view.PlayerSlider.Companion.DEF_RAIL_MARGIN_START
 import io.github.toyota32k.utils.GenericDisposable
@@ -35,29 +37,30 @@ class SliderPanel @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private lateinit var model: PlayerControllerModel
 
     fun setSliderPanelAttributes(sar:StyledAttrRetriever) {
-        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
-            val panelText = sar.getColor(
-                R.styleable.ControlPanel_ampPanelForegroundColor,
-                com.google.android.material.R.attr.colorOnSurface,
-                def = Color.BLACK
-            )
-            controls.counterLabel.setTextColor(panelText)
-            controls.durationLabel.setTextColor(panelText)
+        val panelText = sar.getColor(
+            R.styleable.ControlPanel_ampPanelForegroundColor,
+            com.google.android.material.R.attr.colorOnSurface,
+            def = Color.BLACK
+        )
+        controls.counterLabel.setTextColor(panelText)
+        controls.durationLabel.setTextColor(panelText)
 
-            val buttonTint = ControlPanel.createButtonColorStateList(sar)
-            controls.nextRangeButton.imageTintList = buttonTint
-            controls.prevRangeButton.imageTintList = buttonTint
+        val buttonTint = ControlPanel.createButtonColorStateList(sar)
+        controls.nextRangeButton.imageTintList = buttonTint
+        controls.prevRangeButton.imageTintList = buttonTint
 
-            controls.counterLabel.setMargin( sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginStart, DEF_RAIL_MARGIN_START.dp),0,0,0)
-            controls.durationLabel.setMargin(0,0,sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginEnd, DEF_RAIL_MARGIN_END.dp), 0)
+        controls.counterLabel.setMargin(sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginStart, DEF_RAIL_MARGIN_START.dp), 0, 0, 0)
+        controls.durationLabel.setMargin(0, 0, sar.getDimensionPixelSize(R.styleable.ControlPanel_ampRailMarginEnd, DEF_RAIL_MARGIN_END.dp), 0)
 
-            controls.playerSlider.setPlayerSliderAttributes(sar)
-        }
+        controls.playerSlider.setPlayerSliderAttributes(sar)
     }
 
     init {
         StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr,0).use { sar ->
-            setSliderPanelAttributes(sar)
+            if (!isAttrByParent(sar)) {
+                // 親の属性を継承しないときは、initのタイミングで属性を設定
+                setSliderPanelAttributes(sar)
+            }
         }
     }
 
