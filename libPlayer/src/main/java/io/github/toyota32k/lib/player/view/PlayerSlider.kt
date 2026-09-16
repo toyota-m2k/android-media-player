@@ -28,6 +28,7 @@ import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.model.IChapterList
 import io.github.toyota32k.lib.player.model.IMutableChapterList
 import io.github.toyota32k.lib.player.model.Range
+import io.github.toyota32k.lib.player.view.ControlPanel.Companion.isAttrByParent
 import io.github.toyota32k.utils.IDisposable
 import io.github.toyota32k.utils.android.StyledAttrRetriever
 import io.github.toyota32k.utils.android.dp
@@ -504,6 +505,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         val height = sar.getDimension(R.styleable.ControlPanel_ampRailLeftHeight, mRailBaseHeight.px)
         val verticalOffset = sar.sa.getDimension(R.styleable.ControlPanel_ampRailLeftVerticalOffset, 0f)
         val zOrder = sar.sa.getInt(R.styleable.ControlPanel_ampRailLeftZOrder, Parts.RailLeft.zOrder)
+        logger.info("leftColor=$color")
         return RailLeftInfo(color,height,verticalOffset,zOrder).apply { railLeftInfo = this }
     }
 
@@ -620,7 +622,7 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     // endregion
     fun setPlayerSliderAttributes(sar: StyledAttrRetriever, reLayout:Boolean=true) {
-        if (sar.sa.getBoolean(R.styleable.ControlPanel_ampAttrsByParent, true)) {
+        try {
             mRailOutline = null     // 要再計算
             mAllOverOutline = null  // 要再計算
             mRailBasePaint = null
@@ -638,23 +640,14 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
             staticMarginLeft = sar.getDimension(R.styleable.ControlPanel_ampRailMarginStart, DEF_RAIL_MARGIN_START.dp)
             staticMarginRight = sar.getDimension(R.styleable.ControlPanel_ampRailMarginEnd, DEF_RAIL_MARGIN_END.dp)
             calcLayoutBasis()
-            if(reLayout) {
+            if (reLayout) {
                 requestLayout()
             }
+        } catch(e:Throwable) {
+            logger.error(e)
         }
     }
 
-
-    init {
-        StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr, 0).use { sar ->
-            try {
-                setPlayerSliderAttributes(sar, false)
-            } catch (e: Throwable) {
-                logger.error(e)
-                throw e
-            }
-        }
-    }
 
     // static margin
     //
@@ -881,6 +874,16 @@ class PlayerSlider @JvmOverloads constructor(context: Context, attrs: AttributeS
         super.onRestoreInstanceState(state.superState)
         mPosition = state.position
     }
+
+    init {
+        StyledAttrRetriever(context, attrs, R.styleable.ControlPanel, defStyleAttr, 0).use { sar ->
+            if (!isAttrByParent(sar)) {
+                // 親の属性を継承しないときは、initのタイミングで属性を設定
+                setPlayerSliderAttributes(sar, false)
+            }
+        }
+    }
+
 }
 
 @Suppress("unused")

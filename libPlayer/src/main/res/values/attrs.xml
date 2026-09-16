@@ -3,8 +3,9 @@
     <declare-styleable name="ControlPanel">
         <!--
         ControlPanelやSliderPanelの属性値をPlayerSliderの属性に中継するか
-        デフォルトの実装(v2_player_view, v2_control_panel, v2_slider_panel, v2_video_exo_player)では、各子ビューに対して、ampAttrsByParent=trueを指定しているので、
-        例えば、アプリから、VideoPlayerView を使う場合、そのプロパティに、amp* 属性をしておけば、その子ビュー（ControlPanel, SliderPanelなど）に自動的に引き継がれる。
+        デフォルトの実装(v2_player_view, v2_control_panel, v2_slider_panel, v2_video_exo_player)では、各子ビューに対して、ampAttrsByParent=trueを指定が設定さている。
+        尚、ルートとなるビュー（通常はVideoPlayerView）には、ampAttrsByParentは指定しない（または、falseを指定）。
+        これにより、そのビュー（=ampAttrByParent==falseのビュー）を起点に、その子孫ビューに属性が中継される。
         -->
         <attr name="ampAttrsByParent" format="boolean"/>
 
