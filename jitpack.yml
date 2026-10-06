@@ -1,9 +1,19 @@
 jdk:
   - openjdk21
 
-# JitPack's built-in Gradle runner fails to launch gradle-wrapper.jar
-# ("An unexpected error occurred while trying to open file ..."), even though the
-# checked-out jar is byte-identical to the one in git and passes `unzip -t`.
-# Invoking ./gradlew ourselves from a custom install command works fine.
+# JitPack's tag builds hand us a gradle-wrapper.jar that the JVM refuses to open
+# ("An unexpected error occurred while trying to open file ..."), while branch/SNAPSHOT
+# builds of the very same commit work. The jar in git is fine (byte-identical sha256,
+# passes `unzip -t`), so don't depend on the checked-out wrapper at all: fetch the
+# official Gradle distribution and run it directly.
+before_install:
+  - echo "===== wrapper jar as checked out by JitPack ====="
+  - ls -la gradle/wrapper/ || true
+  - sha256sum gradle/wrapper/gradle-wrapper.jar || true
+  - unzip -t gradle/wrapper/gradle-wrapper.jar 2>&1 | tail -3 || true
+  - echo "===== installing gradle 9.7.1 ====="
+  - curl -sSLo /tmp/gradle.zip https://services.gradle.org/distributions/gradle-9.7.1-bin.zip
+  - unzip -q -o -d $HOME/gradle-dist /tmp/gradle.zip
+
 install:
-  - ./gradlew -Pgroup=$GROUP -Pversion=$VERSION publishToMavenLocal --console=plain --no-configuration-cache
+  - $HOME/gradle-dist/gradle-9.7.1/bin/gradle -Pgroup=$GROUP -Pversion=$VERSION publishToMavenLocal --console=plain --no-configuration-cache
