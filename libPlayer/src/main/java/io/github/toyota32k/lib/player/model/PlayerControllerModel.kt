@@ -452,13 +452,20 @@ open class PlayerControllerModel(
 
     // endregion
 
+    // region PinP
+    val permitPinP: StateFlow<Boolean> = MutableStateFlow(true)
+    fun permitPinP(permit:Boolean) {
+        permitPinP.mutable.value = permit
+    }
+
+    // endregion
+
     // region Snapshot
 
     fun permitSnapshot(permit:Boolean) {
         permitSnapshot.mutable.value = permit
     }
     val permitSnapshot: StateFlow<Boolean> = MutableStateFlow(true)
-    val permitPinP: StateFlow<Boolean> = MutableStateFlow(true)
     val takingSnapshot: StateFlow<Boolean> = MutableStateFlow(false)
 
     private fun bitmapFromPhoto(src:IMediaSource): RefBitmap? {
