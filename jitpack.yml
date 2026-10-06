@@ -1,0 +1,13 @@
+jdk:
+  - openjdk21
+
+before_install:
+  - echo "===== whoami ====="; id; umask
+  - echo "===== ls -la gradle/wrapper ====="; ls -la gradle/wrapper/
+  - echo "===== sha256 ====="; sha256sum gradle/wrapper/gradle-wrapper.jar
+  - echo "===== file ====="; file gradle/wrapper/gradle-wrapper.jar
+  - echo "===== unzip -t ====="; unzip -t gradle/wrapper/gradle-wrapper.jar 2>&1 | tail -5
+  - echo "===== git status ====="; git status --short || true
+
+install:
+  - ./gradlew -Pgroup=$GROUP -Pversion=$VERSION publishToMavenLocal --console=plain --stacktrace
