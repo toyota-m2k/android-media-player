@@ -6,4 +6,4 @@ jdk:
 # checked-out jar is byte-identical to the one in git and passes `unzip -t`.
 # Invoking ./gradlew ourselves from a custom install command works fine.
 install:
-  - ./gradlew -Pgroup=$GROUP -Pversion=$VERSION publishToMavenLocal --console=plain
+  - ./gradlew -Pgroup=$GROUP -Pversion=$VERSION publishToMavenLocal --console=plain --no-configuration-cache
