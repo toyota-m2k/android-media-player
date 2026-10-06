@@ -6,8 +6,13 @@ plugins {
     id("maven-publish")
 }
 
-group = "com.github.toyota-m2k"
-version="1.0"
+// JitPack invokes: gradle -Pgroup=<group> -Pversion=<tag> publishToMavenLocal
+// Read them from the start parameters so the hard-coded defaults below don't clobber them.
+val cliGroup = gradle.startParameter.projectProperties["group"]
+val cliVersion = gradle.startParameter.projectProperties["version"]
+
+group = cliGroup ?: "com.github.toyota-m2k"
+version = cliVersion ?: "1.0"
 
 configure<LibraryExtension> {
     namespace = "io.github.toyota32k.lib.player"
@@ -77,12 +82,16 @@ publishing {
     publications {
         // Creates a Maven publication called "release".
         register<MavenPublication>("release") {
-            groupId = "com.github.toyota-m2k"
+            groupId = project.group.toString()
             artifactId = "android-media-player"
-            version = project.findProperty("githubReleaseTag") as String? ?: "LOCAL"
+            // githubReleaseTag: GitHub Actions / cliVersion: JitPack (-Pversion=<tag>)
+            version = project.findProperty("githubReleaseTag") as String?
+                ?: cliVersion
+                ?: "LOCAL"
             afterEvaluate {
+                // withSourcesJar() already adds the sources artifact to the component,
+                // so adding sourceReleaseJar here would publish it again as the main jar.
                 from(components["release"])
-                artifact(tasks.named("sourceReleaseJar"))
             }
         }
     }
