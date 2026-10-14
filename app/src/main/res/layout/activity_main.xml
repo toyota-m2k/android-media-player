@@ -15,6 +15,9 @@
         android:layout_height="match_parent"
         app:ampRailLeftColor="#FFFF0000"
         app:ampRailRightColor="#FF00FFFF"
+        app:ampThumbIcon="@drawable/ic_slider_thumb"
+        app:ampThumbTintColor="?attr/colorPrimary"
+        app:ampThumbVerticalOffset="0dp"
         />
 
 
