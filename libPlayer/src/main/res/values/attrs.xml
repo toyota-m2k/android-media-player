@@ -60,24 +60,74 @@
         <attr name="ampPanelPaddingBottom" format="dimension"/>
 
         <!-- PlayerSlider-->
+
         <!--
         スライダーサム（ノブ）
-        ampThumbIcon:   スライダーサムのアイコン(drawable: 伸縮可能な vector pathを想定）
-        ampThumbVerticalOffset:     ベースラインからサムアイコンの上端までのオフセット(dp)
-        ampThumbIconWidth:          サムアイコンの描画幅（無指定なら drawable.width）
-        ampThumbIconHeight:         サムアイコンの描画高さ（無指定なら drawable.height）
-        ampThumbHorizontalCenter:   サムアイコンの左端から中央までの距離（無指定なら width/2）
-        ampThumbTintColor:          サムアイコンの色（デフォルト：colorTertiaryContainer / colorAccent)
+
+        ampThumbIcon:
+            スライダーサムのアイコン(drawable: 伸縮可能な vectorアイコンを想定）
+            無指定なら、ic_slider_thumb アイコンを使用。
+            この属性を指定する代わりに、ic_slider_thumb をアプリで定義してもよい。
+        ampThumbIconEnabled:
+            サムアイコンを表示するか？
+            デフォルト: true （表示する）
+        ampThumbVerticalOffset:
+            ベースラインからサムアイコンの中央までのオフセット
+            デフォルト： 0dp （レールの中央に配置。）
+            ベースラインとは、Y方向の基準位置。デフォルトではレールの中央ライン
+            例えば、レールの上辺に接するようにサムアイコンを配置したい場合は、ampRailBaseHeight（レールの高さ）/2 + サムアイコンの高さ/2 指定する。
+        ampThumbIconWidth:
+            サムアイコンの描画幅
+            デフォルト： drawable.intrinsicWidth
+        ampThumbIconHeight:
+            サムアイコンの描画高さ
+            デフォルト： drawable.intrinsicHeight
+        ampThumbHorizontalCenter:
+            サムアイコンの左端から中央までの距離
+            デフォルト： width/2
+        ampThumbTintColor:
+            サムアイコンの色
+            デフォルト：なし（thumbIcon に指定された色で描画）
+            ic_slider_thumb は、２つの pathを内包しており、ampThumbTintColorは、両方のpathの色が同じ色に変更される。
+            アイコンの色を詳細に指定するなら、ic_slider_thumb 自体をアプリで再定義すること。
+        ampThumbZOrder:
+            サムアイコンのZOrder
+            デフォルト： 2000 (最前面）
         -->
         <attr name="ampThumbIcon" format="reference" />                     <!-- ThumbのDrawable -->
-        <attr name="ampThumbVerticalOffset" format="dimension" />           <!-- ベースラインに対するThumbの垂直方向オフセット -->
+        <attr name="ampThumbIconEnabled" format="boolean"/>                 <!-- ThumvIcon を表示するか？ -->
+        <attr name="ampThumbVerticalOffset" format="dimension" />           <!-- ベースライン（Y方向基準位置：デフォルトではレールの中央）から「ThumbアイコンのY方向中心」まで垂直方向オフセット（デフォルト: 0dp)-->
         <attr name="ampThumbIconWidth" format="dimension" />                <!-- Thumbの幅（無指定ならdrawableから取得） -->
         <attr name="ampThumbIconHeight" format="dimension" />               <!-- Thumbの高さ（無指定ならdrawableから取得） -->
         <attr name="ampThumbHorizontalCenter" format="dimension" />         <!-- Thumbの左端から中央までの距離（無指定なら width/2） -->
         <attr name="ampThumbTintColor" format="color" />                    <!-- Thumbの色 -->
+        <attr name="ampThumbZOrder" format="integer"/>                      <!-- ThumbのZOrder -->
 
         <!--
         Rail上に表示する再生位置マーカーライン
+
+        ampUnderThumbVerticalOffset:
+            ベースラインに対する垂直方向オフセット
+            デフォルトは、レールの外接矩形のY方向中心位置が設定される。
+            ampUnderThumbHeightのデフォルト値とセットで、レール外接円の上端から下端までマーカーラインが引かれる。
+        ampUnderThumbHeight:
+            再生位置マーカーラインの高さ
+            デフォルトは、レールの外接矩形の高さが設定される。
+        ampUnderThumbOuterWidth:
+            再生位置マーカーラインの視認性を確保するための外枠（背景）の幅
+            デフォルトは 3dp
+        ampUnderThumbOuterColor:
+            再生位置マーカーラインの外枠（背景）の色
+            デフォルトは colorSurfaceInverse
+        ampUnderThumbInnerWidth:
+            再生位置マーカーラインの実線部分（前景）の幅
+            デフォルトは 1dp
+        ampUnderThumbInnerColor:
+            再生位置マーカーラインの実線部分（前景）の色
+            デフォルトは colorPrimaryInverse
+        ampUnderThumbZOrder:
+            再生位置マーカーラインのZOrder
+            デフォルトは 1100
         -->
         <attr name="ampUnderThumbVerticalOffset" format="dimension" />      <!-- ベースラインに対する垂直方向オフセット -->
         <attr name="ampUnderThumbHeight" format="dimension" />              <!-- マーカーラインの高さ -->
@@ -85,16 +135,39 @@
         <attr name="ampUnderThumbOuterColor" format="color" />               <!-- 外側のラインの色 (default: white) -->
         <attr name="ampUnderThumbInnerWidth" format="dimension" />           <!-- 内側のラインの幅 (default: 1dp)-->
         <attr name="ampUnderThumbInnerColor" format="color" />               <!-- 内側のラインの色 (default: black)-->
+        <attr name="ampUnderThumbZOrder" format="integer"/>                  <!-- マーカーラインのZOrder -->
 
 
         <!--
-        チャプターマーカーのアイコン
-        RangeTick の位置に表示されるので、RangeTickとセットでデザインする。
-        ampMarkerTintColor:          色（デフォルト：colorOnSurface）
-        ampMarkerZOrder: マーカーのzOrder（デフォルト: Int.MAX_VALUE）
+        チャプターマーカー
+
+        ampMarkerIcon:
+            マーカーアイコン
+            デフォルト：ic_player_slider_marker
+        ampMarkerIconEnabled:
+            マーカーアイコンを表示するか？
+            デフォルト：true
+        ampMarkerVerticalOffset:
+            ベースラインに対する垂直方向オフセット
+            デフォルト： 外接矩形の下端 + iconHeight/2 （レールの下側に接する位置）
+        ampMarkerIconWidth:
+            マーカーアイコンの幅
+            デフォルト： drawable.intrinsicWidth
+        ampMarkerIconHeight:
+            マーカーアイコンの高さ
+            デフォルト： drawable.intrinsicHeight
+        ampMarkerHorizontalCenter:
+            マーカーアイコンの左端から中央までの距離
+            デフォルト： width/2
+        ampMarkerTintColor:
+            マーカーアイコンの色
+            デフォルト：colorOnSurfaceVariant
+        ampMarkerZOrder:
+            マーカーアイコンのZOrder
+            デフォルト： 50
         -->
         <attr name="ampMarkerIcon" format="reference" />                    <!-- MarkerのDrawable -->
-        <attr name="ampMarkerUseDefaultIcon" format="boolean"/>             <!-- ampMarkerIcon が nullの場合、デフォルトのアイコンを表示するか（default=true)-->
+        <attr name="ampMarkerIconEnabled" format="boolean"/>                <!-- MarkerIconを描画するか？　-->
         <attr name="ampMarkerVerticalOffset" format="dimension" />          <!-- ベースラインに対するMarkerの垂直方向オフセット -->
         <attr name="ampMarkerIconWidth" format="dimension" />               <!-- Markerの幅（無指定ならdrawableから取得） -->
         <attr name="ampMarkerIconHeight" format="dimension" />              <!-- Markerの高さ（無指定ならdrawableから取得） -->
@@ -104,21 +177,35 @@
 
         <!--
         レールの高さ（left/right/disabled共通）
-        ベースライン位置に、この高さを背景色で塗りつぶした後、
-        left/right/disabled の順（zOrderで変更は可能）に描画する。
+        デフォルト： 6dp
+        レール（Left/Right）の高さのデフォルト値として使用される。
         -->
         <attr name="ampRailBaseHeight" format="dimension" />
+
         <!--
-        Disabled Range のように、RailBase より細いレールを描く場合、ampRailBaseColorで塗りつぶしてから、各レールを描画する。
-        指定しない場合は、TRANSPARENTで塗りつぶすが、Canvas#saveLayer() で前の描画を消すことになり、オーバーヘッドが大きいので、
+        Disabled Range のように、基本Rail(Left/Right) より細いレールを描く場合、ampRailBaseColorで塗りつぶしてから、各レールを描画する。
+        （レール描画前に背景を塗りつぶすかどうかは、ampRangeEnabledEraseRail / ampRangeDisabledEraseRail で指定する）
+        デフォルト値は、TRANSPARENT。ただし、TRANSPARENTの場合は、Canvas#saveLayer() で前の描画を消すことになり、オーバーヘッドが大きいので、
         可能なら、明示的に、ampRailBaseColor を設定することにより、このオーバーヘッドを回避できる。
         とはいうものの、実際に使ってみた範囲では、特に遅いと感じることはなかったので、あまり気にしなくてもよいのかもしれない。
         -->
         <attr name="ampRailBaseColor" format="color" />
 
         <!--
-        レール：再生済み部分（サムの左）
-        ampRailLeftColor: 再生済み部分の Rail の色（デフォルト：colorPrimary）
+        再生済みレール（Thumbの左側のレール）
+        ampRailLeftColor:
+            再生済みレール の色
+            デフォルト：colorTertiary
+        ampRailLeftHeight:
+            再生済みレールの高さ
+            デフォルト： ampRailBaseHeight (6dp)
+        ampRailLeftVerticalOffset:
+            ベースラインに対する再生済みレール（中央まで）の垂直方向オフセット
+        ampRailLeftZOrder:
+            再生済み部分のZOrder
+            デフォルト： 20
+            各レール、パーツには、ZOrderを設定できる。ZOrderの値が大きいほど、手前に描画される。
+            細い、太い、半透明などのパーツを描画するとき、必要に応じて ZOrder を調整する。
         -->
         <attr name="ampRailLeftColor" format="color" />                     <!-- Railの再生済み部分の色 -->
         <attr name="ampRailLeftHeight" format="dimension" />                <!-- Railの再生済み部分の高さ -->
@@ -127,8 +214,18 @@
 
 
         <!--
-        レール：未再生部分（サムの右）
-        ampRailRightColor: 未再生部分の Rail の色 （デフォルト：colorPrimaryContainer / colorPrimaryVariant）
+        未再生レール（Thumbの右側のレール）
+        ampRailRightColor:
+            未再生部分の Rail の色
+            デフォルト：colorSecondary
+        ampRailRightHeight:
+            未再生部分の Rail の高さ
+            デフォルト： ampRailBaseHeight (6dp)
+        ampRailRightVerticalOffset:
+            ベースラインに対する未再生部分の Rail（中央まで）の垂直方向オフセット
+        ampRailRightZOrder:
+            未再生部分の Rail のZOrder
+            デフォルト： 30
         -->
         <attr name="ampRailRightColor" format="color" />                    <!-- Railの未再生部分の色 -->
         <attr name="ampRailRightHeight" format="dimension" />               <!-- Railの未再生部分の高さ -->
@@ -137,7 +234,26 @@
 
         <!--
         有効なチャプター範囲
-        ampRangeEnabledColor: 有効なチャプター範囲の色（デフォルト: colorSecondary)
+
+        デフォルトでは、zOrder=10 で、Left/Right より下に描画され、且つ、高さが Left/Rightと同じなので、
+        有効チャプターは描画されない（＝正確には、Left/Rightで隠れる）。
+        ampRangeEnabledHeight をLeft/Rightの高さより大きい値にすることにより、有効チャプター範囲を表示することができる。
+        尚、現在のデフォルトでは、disabled を細い線で描画することにより、無効範囲の方を区別して表示する方針を採用している。
+
+        ampRangeEnabledColor:
+            有効なチャプター範囲の色
+            デフォルト: colorPrimary
+        ampRangeEnabledHeight:
+            有効なチャプター範囲の高さ
+            デフォルト: ampRailBaseHeight (6dp)
+        ampRangeEnabledVerticalOffset:
+            ベースラインに対する有効なチャプター範囲の垂直方向オフセット
+        ampRangeEnabledZOrder:
+            有効なチャプター範囲のZOrder
+            デフォルト: 10
+        ampRangeEnabledEraseRail:
+            有効なチャプター範囲を描画する前に、レールを消すかどうか
+            デフォルト: false    （消さない）
         -->
         <attr name="ampRangeEnabledColor" format="color" />                 <!-- 有効範囲の色 -->
         <attr name="ampRangeEnabledHeight" format="dimension" />            <!-- 有効範囲の高さ -->
@@ -147,7 +263,22 @@
 
         <!--
         無効なチャプター範囲
-        ampRangeEnabledColor: 無効なチャプター範囲の色（デフォルト: colorSurfaceContainerHighest)
+
+        ampRangeDisabledColor:
+            無効なチャプター範囲の色
+            デフォルト：  colorSurfaceInverse
+        ampRangeDisabledHeight:
+            無効なチャプター範囲の高さ
+            デフォルト： DEF_DISABLED_RANGE_HEIGHT   (1dp)
+        ampRangeDisabledVerticalOffset:
+            ベースラインに対する無効なチャプター範囲の垂直方向オフセット
+            デフォルト: 0
+        ampRangeDisabledZOrder:
+            無効なチャプター範囲のZOrder
+            デフォルト: 40
+        ampRangeDisabledEraseRail:
+            無効なチャプター範囲を描画する前に、レールを消すかどうか
+            デフォルト: true     （消す）
         -->
         <attr name="ampRangeDisabledColor" format="color" />                <!-- 無効範囲の色 -->
         <attr name="ampRangeDisabledHeight" format="dimension" />           <!-- 無効範囲の高さ -->
@@ -155,12 +286,37 @@
         <attr name="ampRangeDisabledZOrder" format="integer" />             <!-- 無効範囲のZOrder -->
         <attr name="ampRangeDisabledEraseRail" format="boolean" />
 
+        <!--
+        Tick（レール上のチャプター位置に表示される縦線）
+
+        ampRangeTickColor:
+            Tickの色
+            デフォルト： colorSurfaceVariant
+        ampRangeTickWidth:
+            Tickの幅
+            デフォルト： DEF_MARKER_TICK_WIDTH　(1dp)
+        ampRangeTickHeight:
+            Tickの高さ
+            デフォルト： レール外接矩形の高さ
+        ampRangeTickVerticalOffset:
+            ベースラインに対するTickの垂直方向オフセット
+            デフォルト: レールの外接矩形のY方向中心位置
+        ampRangeTickZOrder:
+            TickのZOrder
+            デフォルト: 1000
+
+        -->
         <attr name="ampRangeTickColor" format="color" />                    <!-- Tickの色 -->
         <attr name="ampRangeTickWidth" format="dimension" />                <!-- Tickの幅 -->
         <attr name="ampRangeTickHeight" format="dimension" />               <!-- Tickの高さ -->
         <attr name="ampRangeTickVerticalOffset" format="dimension" />       <!-- ベースラインに対するTickの垂直方向オフセット -->
         <attr name="ampRangeTickZOrder" format="integer" />                 <!-- TickのZOrder -->
 
+        <!--
+        チャプター(Enabled/DisabledRange, MarkerTick)を表示するか？
+        デフォルト: true
+        チャプター機能を利用しない場合は false に設定する。
+        -->
         <attr name="ampShowChapterBar" format="boolean" />                  <!-- Chaper Bar (RangeBar) を表示するか（デフォルト:true） -->
 
         <!--
