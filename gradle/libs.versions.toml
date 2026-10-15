@@ -1,7 +1,7 @@
 [versions]
 #plugins
 agp = "9.4.1"
-kotlinSerialization ="2.4.20"
+kotlinSerialization ="2.4.21"
 
 #libraries
 
