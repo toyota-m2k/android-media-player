@@ -3,6 +3,8 @@ package io.github.toyota32k.lib.player.model
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Size
 import android.widget.ImageView
@@ -325,30 +327,30 @@ open class BasicPlayerModel(
     private suspend fun loadPhoto(src:IMediaSource) {
         val photoView = photoViewRef?.get() ?: return
         state.mutable.value = PlayerState.Loading
-        // カスタムローダーがセットされていれば、それを試す。
-        val hash = if (customPhotoLoader!=null) {
-            val info = customPhotoLoader.loadBitmap(src)
-            if (info==null || info.error) {
-                // loadBitmapが null を返したときはbitmapを表示しない
-                // info.error == true なら、ERRORの文字を表示する。
-                unloadPhoto()
-                state.mutable.value = if(info?.error==true) PlayerState.Error else  PlayerState.Ready
-                return
-            }
+        // PhotoLoader （カスタムローダーがセットされていなければデフォルトのローダーを使用）
+        val loader = customPhotoLoader ?: IPhotoLoader.defaultLoader
+        val info = loader.loadBitmap(src)
+        if (info==null || info.error) {
+            // loadBitmapが null を返したときはbitmapを表示しない
+            // info.error == true なら、ERRORの文字を表示する。
+            unloadPhoto()
+            state.mutable.value = if(info?.error==true) PlayerState.Error else  PlayerState.Ready
+            return
+        }
 
-            val bitmap = info.bitmap
-            if (bitmap!=null) {
-                videoSize.mutable.value = Size(bitmap.width, bitmap.height)
-                state.mutable.value = PlayerState.Ready
-                photoView.setImageBitmap(bitmap.bitmap)
-                shownBitmap.value = bitmap
-                return
-            }
-            info.cacheHint
-        } else null
+        val bitmap = info.bitmap
+        if (bitmap!=null) {
+            // PhotoLoader が Bitmapを返したら、Glideは使わない
+            videoSize.mutable.value = Size(bitmap.width, bitmap.height)
+            state.mutable.value = PlayerState.Ready
+            photoView.setImageBitmap(bitmap.bitmap)
+            shownBitmap.value = bitmap
+            return
+        }
 
+        val hash = info.cacheHint
         val context = photoView.context
-        val currentDrawable = photoView.drawable
+//        val currentDrawable = photoView.drawable
         Glide.with(context)
             // このコードは無意味 ... asGif()が返す RequestBuilder<GifDrawable> が使われない
 //            .apply {
@@ -365,9 +367,11 @@ open class BasicPlayerModel(
 //            }
             .load(src.uri)
             // 次画像のロード中は直前画像を保持して、黒フラッシュを防ぐ
-            .placeholder(currentDrawable)
-            .fallback(currentDrawable)
-            .error(currentDrawable)
+            // これをやると、デバイス回転時に currentDrawableが Glideによってrecycleされて強制終了することがある。
+            // Glideは GIF (AnimationGIF)の表示専用とし、それ以外(JPG/PNG)は、OS標準APIで展開することで、blackout問題を回避する。
+//            .placeholder(currentDrawable)
+//            .fallback(currentDrawable)
+//            .error(currentDrawable)
             .dontAnimate()
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
@@ -401,19 +405,18 @@ open class BasicPlayerModel(
                     val height = resource.intrinsicHeight
                     videoSize.mutable.value = Size(width, height)
                     state.mutable.value = PlayerState.Ready
-                    shownBitmap.value = resource.toBitmap().toRef().apply {
-                        // Glide が Bitmap を保持しているので外部でrecycleすると状態異常を起こす
-                        // これを防ぐため、Glideで作成したBitmapは、参照カウンタを常に１以上に保つ
-                        addRef()
+//                    shownBitmap.value = resource.toBitmap().toRef().apply {
+//                        // Glide が Bitmap を保持しているので外部でrecycleすると状態異常を起こす
+//                        // これを防ぐため、Glideで作成したBitmapは、参照カウンタを常に１以上に保つ
+//                        addRef()
+//                    }
+                    shownBitmap.value = if (resource is BitmapDrawable) {
+                        resource.bitmap.let { it.copy(it.config ?: Bitmap.Config.ARGB_8888, false) }.toRef()
+                    } else {
+                        resource.toBitmap().toRef()   // GIF などは新しく作られた Bitmap なので自分のもの
                     }
                     if (isPhotoSlideShowEnabled) {
                         startSlideShow(src)
-//                        CoroutineScope(Dispatchers.Main).launch {
-//                            delay(photoSlideShowDuration)
-//                            if (src  == currentSource.value && isPhotoPlaying.value) {
-//                                ended.value = true
-//                            }
-//                        }
                     }
                     return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
                 }
