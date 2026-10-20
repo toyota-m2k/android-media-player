@@ -105,6 +105,8 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
     val isCurrentSourceVideo: StateFlow<Boolean> // get
 
     val chapterList: StateFlow<IChapterList?>
+
+    fun setItemErrorRecoveringHandler(handler:(suspend (Throwable, IMediaSource)->IMediaSource?)?)
 }
 
 interface IPlaylistHandler {
