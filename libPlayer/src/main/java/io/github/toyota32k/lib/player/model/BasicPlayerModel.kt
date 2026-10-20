@@ -719,7 +719,7 @@ open class BasicPlayerModel(
             if(!isReady.value) {
                 state.mutable.value = PlayerState.Error
             } else {
-                logger.warn("ignoring exo error.")
+                tryRecoverItemError(error)
             }
         }
 
@@ -803,11 +803,10 @@ open class BasicPlayerModel(
     override fun setSource(src:IMediaSource?) {
         reset()
         if (src == null) return
-        if (prepareAndSetSource(src)) return
-        setSourceCore(src)
+        prepareAndSetSource(src)
     }
 
-    private fun prepareAndSetSource(src: IMediaSource):Boolean {
+    private fun prepareAndSetSource(src: IMediaSource) {
         if (src is IMediaSourcePreparer) {
             CoroutineScope(Dispatchers.Main).launch {
                 if (src.onSourceLoading()) {
@@ -815,9 +814,9 @@ open class BasicPlayerModel(
                     src.onSourceLoaded()
                 }
             }
-            return true
+        } else {
+            setSourceCore(src)
         }
-        return false
     }
 
     private fun setSourceCore(src:IMediaSource) {
@@ -836,9 +835,11 @@ open class BasicPlayerModel(
         runOnPlayer {
             _frameDuration = 0L // 次回必要になれば再取得される
             if (!isPhoto) {
+                // Video or Audio
                 setMediaSource(makeMediaSource(src), pos)
                 prepare()
             } else {
+                // Photo
                 stop()
                 clearMediaItems()
             }
@@ -965,4 +966,27 @@ open class BasicPlayerModel(
     }
 
     // endregion
+
+    // Recovering Video Loading Error
+
+    private var mRecoveringErrorHandler: (suspend (Throwable, IMediaSource) -> IMediaSource?)? = null
+
+    override fun setItemErrorRecoveringHandler(handler: (suspend (Throwable, IMediaSource) -> IMediaSource?)?) {
+        mRecoveringErrorHandler = handler
+    }
+
+    private fun tryRecoverItemError(e: PlaybackException) {
+        val handler = mRecoveringErrorHandler ?: return
+        val source = currentSource.value ?: return
+        CoroutineScope(Dispatchers.Main).launch {
+            val r = handler(e, source)
+
+            if (r!=null) {
+                r.startPosition.set(playerSeekPosition.value)
+                autoPlay = true
+                setSource(r)
+            }
+        }
+    }
+
 }

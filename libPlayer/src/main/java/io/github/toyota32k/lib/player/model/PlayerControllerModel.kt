@@ -140,6 +140,7 @@ open class PlayerControllerModel(
         private var mMagnifySliderHandler:(suspend (RangedPlayModel?, duration:Long)->RangedPlayModel?)? = null
         private var mDataSourceFactory: DataSource.Factory? = null  // for ExoPlayer
         private var mOkHttpClient: OkHttpClient? = null // for Glide
+        private var mItemErrorRecoveringHandler: (suspend (Throwable, IMediaSource)->IMediaSource?)? = null
 
         fun applicationContext(context:Context): Builder {
             mContext = context
@@ -287,6 +288,11 @@ open class PlayerControllerModel(
             return this
         }
 
+        fun itemErrorRecoveringHandler(handler: suspend (Throwable, IMediaSource)->IMediaSource?): Builder {
+            mItemErrorRecoveringHandler = handler
+            return this
+        }
+
 
         @OptIn(UnstableApi::class)
         fun build():PlayerControllerModel {
@@ -307,6 +313,9 @@ open class PlayerControllerModel(
             }
             if (mEnablePhotoViewer) {
                 playerModel.enablePhotoViewer(true, mPhotoSlideShowDuration, mPhotoSizeOption)
+            }
+            if (mItemErrorRecoveringHandler!=null) {
+                playerModel.setItemErrorRecoveringHandler(mItemErrorRecoveringHandler)
             }
             return PlayerControllerModel(
                 playerModel,
