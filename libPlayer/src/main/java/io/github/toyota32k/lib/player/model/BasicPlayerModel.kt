@@ -61,6 +61,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.lang.ref.WeakReference
 import kotlin.coroutines.resume
 import kotlin.math.max
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -71,15 +72,26 @@ open class BasicPlayerModel(
     initialAutoPlay:Boolean,
     override val continuousPlay:Boolean,
     private val customPhotoLoader: IPhotoLoader?,
+    photoViewerOption: PhotoViewerOption = PhotoViewerOption.DISABLED,
     /**
      * 自己署名サーバや独自プロキシなど、ExoPlayer の既定 (HttpsURLConnection ベース) と異なる
      * トラスト設定や HTTP クライアントを使いたいときにアプリから差し替える。null なら
      * `DefaultDataSource.Factory(context)` を使う (=従来挙動)。
      */
     dataSourceFactory: DataSource.Factory? = null,
-) : IPlayerModel, IUtPropOwner, IPhotoSlideShowModel by PhotoSlideShowModelImpl() {
+) : IPlayerModel, IUtPropOwner {
     companion object {
         val logger by lazy { UtLog("PM", TpLib.logger) }
+    }
+
+    override val photoViewerOption = MutableStateFlow<PhotoViewerOption>(photoViewerOption)
+    override fun setPhotoViewerOption(option:PhotoViewerOption) {
+        val src = currentSource.value
+        stopSlideShow()
+        photoViewerOption.value = option
+        if (src!=null) {
+            startSlideShow(src)
+        }
     }
 
     // region Properties / Status
@@ -314,7 +326,7 @@ open class BasicPlayerModel(
                 } else {
                     watchPositionEvent.reset()
                 }
-                delay(50)
+                delay(50.milliseconds)
             }
         }
     }
@@ -383,7 +395,7 @@ open class BasicPlayerModel(
                     logger.error("Failed to load image: ${e?.message}")
                     unloadPhoto()
                     state.mutable.value = PlayerState.Error
-                    if (isPhotoSlideShowEnabled) {
+                    if (isPhotoViewerEnabled) {
                         CoroutineScope(Dispatchers.Main).launch {
                             delay(1.seconds)
                             if (src == currentSource.value && isPhotoPlaying.value) {
@@ -415,7 +427,7 @@ open class BasicPlayerModel(
                     } else {
                         resource.toBitmap().toRef()   // GIF などは新しく作られた Bitmap なので自分のもの
                     }
-                    if (isPhotoSlideShowEnabled) {
+                    if (isPhotoViewerEnabled) {
                         startSlideShow(src)
                     }
                     return false // falseを返すと、Glideが通常通りImageViewに画像を表示します
@@ -502,7 +514,7 @@ open class BasicPlayerModel(
                     }
                     clippingSeekTo(it, false)
                 }
-                delay(200L)
+                delay(200L.milliseconds)
             }.onCompletion {
                 logger.debug("SeekManager stopped.")
                 running = false
@@ -654,10 +666,10 @@ open class BasicPlayerModel(
                 val offset = if (stepMs < 0) {
                     // NEXT_SYNC/PREVIOUS_SYNCで、フレーム単位（最小単位）でのシークができるかと期待したが、
                     // 動かしてみると１秒程度シークしてしまう。
-                    if (forward) {
-                        seekParams = SeekParameters.NEXT_SYNC
+                    seekParams = if (forward) {
+                        SeekParameters.NEXT_SYNC
                     } else {
-                        seekParams = SeekParameters.PREVIOUS_SYNC
+                        SeekParameters.PREVIOUS_SYNC
                     }
                     sign
                 } else if (stepMs == 0L) {
@@ -695,7 +707,7 @@ open class BasicPlayerModel(
     }
 
     override fun stopFrameStepping() {
-        frameStepJob?.cancel();
+        frameStepJob?.cancel()
         frameStepJob = null
         if (playingOnStartingFrameStep) {
             playingOnStartingFrameStep = false
@@ -990,3 +1002,9 @@ open class BasicPlayerModel(
     }
 
 }
+
+val IPlayerModel.isPhotoViewerEnabled: Boolean get() = photoViewerOption.value.isEnabled
+val IPlayerModel.isPhotoSlideShowEnabled: Boolean get() = photoViewerOption.value.isSlideShowEnabled
+val IPlayerModel.photoSlideShowDuration: Duration get() = photoViewerOption.value.slideShowDuration
+val IPlayerModel.photoSizeOption: PhotoSizeOption get() = photoViewerOption.value.sizeOption
+
