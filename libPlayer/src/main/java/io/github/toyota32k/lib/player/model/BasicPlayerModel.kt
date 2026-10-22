@@ -338,7 +338,7 @@ open class BasicPlayerModel(
 
     private suspend fun loadPhoto(src:IMediaSource) {
         val photoView = photoViewRef?.get() ?: return
-        state.mutable.value = PlayerState.Loading
+        // state.mutable.value = PlayerState.Loading
         // PhotoLoader （カスタムローダーがセットされていなければデフォルトのローダーを使用）
         val loader = customPhotoLoader ?: IPhotoLoader.defaultLoader
         val info = loader.loadBitmap(src)
@@ -834,9 +834,9 @@ open class BasicPlayerModel(
     }
 
     private fun setSourceCore(src:IMediaSource) {
-        reset()
-        naturalDuration.mutable.value = 0L
-        currentSource.mutable.value = src
+//        naturalDuration.mutable.value = 0L    --> reset
+//        currentSource.mutable.value = src     --> reset
+        reset(src)
         setPlayRange(null)
 
         val isPhoto = src.isPhoto
@@ -867,15 +867,12 @@ open class BasicPlayerModel(
     // endregion
 
     // region Controlling Player
-
-    /**
-     * 再初期化
-     */
-    override fun reset() {
+    private fun reset(newSource: IMediaSource?) {
         logger.debug()
         pause()
         state.mutable.value = PlayerState.None
-        currentSource.mutable.value = null
+        naturalDuration.mutable.value = 0L
+        currentSource.mutable.value = newSource
         playRange.mutable.value = null
         seekManager.reset()
         playerSeekPosition.mutable.value = 0L
@@ -883,6 +880,13 @@ open class BasicPlayerModel(
             player.stop()
             player.clearMediaItems()
         }
+    }
+    /**
+     * 再初期化
+     */
+    override fun reset() {
+        logger.debug()
+        reset(null)
     }
 
     /**
