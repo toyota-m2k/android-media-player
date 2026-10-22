@@ -15,11 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 
-enum class PhotoSizeOption {
-    Original,
-    FitToImageView,
-    LimitByScreen,
-}
+
 
 interface IPhotoSlideShowModel {
     val isPhotoViewerEnabled: Boolean
@@ -30,7 +26,10 @@ interface IPhotoSlideShowModel {
     fun enablePhotoViewer(flag:Boolean, slideShowDuration: Duration=Duration.INFINITE, photoSizeOption: PhotoSizeOption=PhotoSizeOption.Original)
 }
 
-interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
+/**
+ * PlayerModel の基本 i/f
+ */
+interface IPlayerModel : AutoCloseable {
     fun setSource(src:IMediaSource?)
     fun setPlayRange(range:Range?)
 
@@ -105,8 +104,38 @@ interface IPlayerModel : AutoCloseable, IPhotoSlideShowModel {
     val isCurrentSourceVideo: StateFlow<Boolean> // get
 
     val chapterList: StateFlow<IChapterList?>
-
+/*
+*/
+    /**
+     * 再生中のエラーリカバリーハンドラ
+     * 再生中にトークンが切れて ExoPlayerが 401 エラーなどを受け取ったときのリカバリー処理を実装する。
+     * handler では、例外の内容に従って、IMediaSource の修復を行い、修復出来たらそのインスタンスを返し、
+     * 修復不能な場合は、null を返す。
+     *
+     * 認証トークン切れが発生したときに、再認証してリトライする例：
+     *
+     * IMediaSource で、IMediaSourcePreparerを継承し、onSourceLoading() で認証処理を実装しておく。
+     * 次に、
+     *   private suspend fun recoverItemError(e:Throwable, item: IMediaSource): IMediaSource? {
+     *       val cause = e.cause ?: return null
+     *       if (cause is HttpDataSource.InvalidResponseCodeException) {
+     *           if (cause.responseCode == 401) {
+     *               return item
+     *           }
+     *       }
+     *       return null
+     *   }
+     * を、setItemErrorRecoveringHandler(::recoverItemError) でセットする。
+     * この例では、受け取った item をそのままreturnしており、setSource() をやり直すことにより、onSourceLoadingが呼ばれて再認証が実行される。
+     */
     fun setItemErrorRecoveringHandler(handler:(suspend (Throwable, IMediaSource)->IMediaSource?)?)
+
+    // region photo viewer supports
+
+    val photoViewerOption: StateFlow<PhotoViewerOption>
+    fun setPhotoViewerOption(option:PhotoViewerOption)
+
+    // endregion
 }
 
 interface IPlaylistHandler {
@@ -127,7 +156,9 @@ interface  IChapterHandler {
  * プレイリストから、IMediaSource が setSource() される前に prepare() を呼び出すチャンスを与えるi/f
  * 利用する場合は、IMediaSource の実装クラスで、このi/f を継承する。
  * プレーヤーにURLをセットする前に認証を行う、などの用途を想定。
- * IPlaylistHandlerを使う場合にのみ有効。
+ *
+ * さらに、IPlayerModel#setItemErrorRecoveringHandler() と組み合わせることにより、再生中にトークンの有効期限が切れたときの
+ * リカバリー処理を実装できる。
  */
 interface IMediaSourcePreparer {
     suspend fun onSourceLoading():Boolean

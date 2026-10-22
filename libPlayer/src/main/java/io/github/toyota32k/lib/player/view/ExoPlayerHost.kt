@@ -30,6 +30,7 @@ import io.github.toyota32k.lib.player.TpLib
 import io.github.toyota32k.lib.player.databinding.V2VideoExoPlayerBinding
 import io.github.toyota32k.lib.player.model.PlayerControllerModel
 import io.github.toyota32k.lib.player.model.VisibleAreaParams
+import io.github.toyota32k.lib.player.model.isPhotoViewerEnabled
 import io.github.toyota32k.lib.player.view.ControlPanel.Companion.isAttrByParent
 import io.github.toyota32k.utils.FlowableEvent
 import io.github.toyota32k.utils.android.FitMode

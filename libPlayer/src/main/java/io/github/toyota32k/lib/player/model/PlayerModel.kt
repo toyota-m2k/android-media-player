@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.media3.datasource.DataSource
 import io.github.toyota32k.lib.player.model.option.ChapterHandlerImpl
 import io.github.toyota32k.lib.player.model.option.PlaylistHandlerImpl
-import io.github.toyota32k.utils.android.RefBitmap
 import kotlinx.coroutines.CoroutineScope
 
 open class PlaylistPlayerModel (private val playerModel: IPlayerModel, private val playlistHandler: IPlaylistHandler)
@@ -33,9 +32,10 @@ fun PlaylistPlayerModel(
     initialAutoPlay:Boolean,
     continuousPlay:Boolean,
     customPhotoLoader: IPhotoLoader?,
+    photoViewerOption: PhotoViewerOption = PhotoViewerOption.DISABLED,
     dataSourceFactory: DataSource.Factory? = null,
 ):PlaylistPlayerModel {
-    val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay, customPhotoLoader, dataSourceFactory)
+    val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay, customPhotoLoader, photoViewerOption, dataSourceFactory)
     val playlistHandler = PlaylistHandlerImpl(playerModel, playlist)
     return PlaylistPlayerModel(playerModel, playlistHandler)
 }
@@ -49,9 +49,10 @@ fun ChapterPlayerModel(
     hideChapterViewIfEmpty: Boolean,
     initialAutoPlay: Boolean,
     customPhotoLoader: IPhotoLoader?,
+    photoViewerOption: PhotoViewerOption = PhotoViewerOption.DISABLED,
     dataSourceFactory: DataSource.Factory? = null,
 ):ChapterPlayerModel {
-    val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay=false, customPhotoLoader, dataSourceFactory)
+    val playerModel = BasicPlayerModel(context, coroutineScope, initialAutoPlay, continuousPlay=false, customPhotoLoader, photoViewerOption, dataSourceFactory)
     val chapterHandler = ChapterHandlerImpl(playerModel,hideChapterViewIfEmpty)
     return ChapterPlayerModel(playerModel, chapterHandler)
 }
@@ -67,9 +68,10 @@ fun PlaylistChapterPlayerModel(
     continuousPlay: Boolean,
     customPhotoLoader:IPhotoLoader?,
     hideChapterViewIfEmpty:Boolean,
+    photoViewerOption: PhotoViewerOption = PhotoViewerOption.DISABLED,
     dataSourceFactory: DataSource.Factory? = null,
 ):PlaylistChapterPlayerModel {
-    val playerModel = BasicPlayerModel(context, coroutineScope,initialAutoPlay, continuousPlay, customPhotoLoader, dataSourceFactory)
+    val playerModel = BasicPlayerModel(context, coroutineScope,initialAutoPlay, continuousPlay, customPhotoLoader, photoViewerOption, dataSourceFactory)
     val playlistHandler = PlaylistHandlerImpl(playerModel, playlist)
     val chapterHandler = ChapterHandlerImpl(playerModel,hideChapterViewIfEmpty)
     return PlaylistChapterPlayerModel(playerModel, playlistHandler, chapterHandler)

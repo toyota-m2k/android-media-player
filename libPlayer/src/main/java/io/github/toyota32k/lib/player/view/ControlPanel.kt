@@ -10,7 +10,6 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.PopupMenu
-import androidx.core.content.res.getColorOrThrow
 import androidx.core.view.children
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -120,8 +119,8 @@ class ControlPanel @JvmOverloads constructor(context: Context, attrs: AttributeS
         val playlistHandler = model.playerModel as? IPlaylistHandler
 
         binder
-            .visibilityBinding(controls.playButton, combine(model.playerModel.isPlaying, model.playerModel.isCurrentSourcePhoto) { playing, photo -> !playing && (!photo||model.playerModel.isPhotoSlideShowEnabled) }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
-            .visibilityBinding(controls.pauseButton, combine(model.playerModel.isPlaying, model.playerModel.isCurrentSourcePhoto) { playing, photo -> playing && (!photo||model.playerModel.isPhotoSlideShowEnabled) }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.playButton, combine(model.playerModel.isPlaying, model.playerModel.isCurrentSourcePhoto, model.playerModel.photoViewerOption) { playing, photo, option -> !playing && (!photo||option.isSlideShowEnabled) }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
+            .visibilityBinding(controls.pauseButton, combine(model.playerModel.isPlaying, model.playerModel.isCurrentSourcePhoto, model.playerModel.photoViewerOption) { playing, photo, option -> playing && (!photo||option.isSlideShowEnabled) }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.fullscreenButton, model.windowMode.map { model.supportFullscreen && it!=PlayerControllerModel.WindowMode.FULLSCREEN }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.collapseButton, model.windowMode.map { model.supportFullscreen && it!=PlayerControllerModel.WindowMode.NORMAL }, BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)
             .visibilityBinding(controls.pinpButton, ConstantLiveData(model.supportPinP), BoolConvert.Straight, VisibilityBinding.HiddenMode.HideByGone)

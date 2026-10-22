@@ -40,7 +40,6 @@ import java.io.Closeable
 import java.io.InputStream
 import java.lang.ref.WeakReference
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * コントローラーの共通実装
@@ -130,9 +129,9 @@ open class PlayerControllerModel(
         private var mSeekLarge:RelativeSeek? = null
         private var mCounterInMs:Boolean = false
         private var mEnableVolumeController:Boolean = false
-        private var mEnablePhotoViewer:Boolean = false
-        private var mPhotoSlideShowDuration: Duration = 5.seconds
-        private var mPhotoSizeOption: PhotoSizeOption = PhotoSizeOption.Original
+//        private var mEnablePhotoViewer:Boolean = false
+//        private var mPhotoSlideShowDuration: Duration = 5.seconds
+//        private var mPhotoSizeOption: PhotoSizeOption = PhotoSizeOption.Original
         private var mCustomPhotoLoader: IPhotoLoader? = null
         private var mHideChapterViewIfEmpty = false
         private var mSnapshotSource: SnapshotSource = SnapshotSource.CAPTURE_PLAYER
@@ -226,19 +225,18 @@ open class PlayerControllerModel(
             mEnableVolumeController = enable
             return this
         }
-        fun counterInMs(sw:Boolean=true):Builder {
+        fun counterInMs(sw:Boolean=true):Builder = apply {
             mCounterInMs = sw
-            return this
         }
-        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE, photoSizeOption: PhotoSizeOption=PhotoSizeOption.Original):Builder {
-            mEnablePhotoViewer = true
-            mPhotoSlideShowDuration = slideDuration
-            mPhotoSizeOption = photoSizeOption
-            return this
+        fun enablePhotoViewer(slideDuration:Duration=Duration.INFINITE, photoSizeOption: PhotoSizeOption=PhotoSizeOption.Original):Builder = apply {
+            enablePhotoViewer(PhotoViewerOption(isEnabled = true, slideShowDuration = slideDuration, sizeOption = photoSizeOption))
         }
-        fun disablePhotoViewer():Builder {
-            mEnablePhotoViewer = false
-            return this
+        var mPhotoViewerOption: PhotoViewerOption = PhotoViewerOption.DISABLED
+        fun enablePhotoViewer(option:PhotoViewerOption):Builder = apply {
+            mPhotoViewerOption = option
+        }
+        fun disablePhotoViewer():Builder = apply {
+            mPhotoViewerOption = PhotoViewerOption.DISABLED
         }
         @Deprecated("use IPhotoLoader")
         fun customPhotoLoader(loader:suspend (IMediaSource)-> RefBitmap?):Builder = apply {
@@ -306,13 +304,10 @@ open class PlayerControllerModel(
                 )
             }
             val playerModel = when {
-                mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mHideChapterViewIfEmpty, mDataSourceFactory)
-                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay, mCustomPhotoLoader, mDataSourceFactory)
-                mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mDataSourceFactory)
-                else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false, mCustomPhotoLoader, mDataSourceFactory)
-            }
-            if (mEnablePhotoViewer) {
-                playerModel.enablePhotoViewer(true, mPhotoSlideShowDuration, mPhotoSizeOption)
+                mSupportChapter && mPlaylist!=null -> PlaylistChapterPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mHideChapterViewIfEmpty, mPhotoViewerOption, mDataSourceFactory)
+                mSupportChapter -> ChapterPlayerModel(context, coroutineScope, mHideChapterViewIfEmpty, mAutoPlay, mCustomPhotoLoader, mPhotoViewerOption, mDataSourceFactory)
+                mPlaylist!=null -> PlaylistPlayerModel(context, coroutineScope, mPlaylist!!, mAutoPlay, mContinuousPlay, mCustomPhotoLoader, mPhotoViewerOption, mDataSourceFactory)
+                else -> BasicPlayerModel(context, coroutineScope, mAutoPlay, false, mCustomPhotoLoader, mPhotoViewerOption,mDataSourceFactory)
             }
             if (mItemErrorRecoveringHandler!=null) {
                 playerModel.setItemErrorRecoveringHandler(mItemErrorRecoveringHandler)
