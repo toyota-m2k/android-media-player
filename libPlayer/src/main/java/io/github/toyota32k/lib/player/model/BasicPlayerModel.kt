@@ -990,16 +990,22 @@ open class BasicPlayerModel(
 
     private var mRecoveringErrorHandler: (suspend (Throwable, IMediaSource) -> IMediaSource?)? = null
 
+    /**
+     * エラー回復ハンドラを設定する
+     * 通常は構築時にビルダーから設定する。
+     */
     override fun setItemErrorRecoveringHandler(handler: (suspend (Throwable, IMediaSource) -> IMediaSource?)?) {
         mRecoveringErrorHandler = handler
     }
 
+    /**
+     * エラー発生時に回復を試行する。
+     */
     private fun tryRecoverItemError(e: PlaybackException) {
         val handler = mRecoveringErrorHandler ?: return
         val source = currentSource.value ?: return
         CoroutineScope(Dispatchers.Main).launch {
             val r = handler(e, source)
-
             if (r!=null) {
                 r.startPosition.set(playerSeekPosition.value)
                 autoPlay = true
